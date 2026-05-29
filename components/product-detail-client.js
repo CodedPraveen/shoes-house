@@ -1,0 +1,177 @@
+"use client";
+
+import { useState } from "react";
+import { Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import ProductGallery from "@/components/product-gallery";
+import ProductGrid from "@/components/product-grid";
+import { useCart } from "@/hooks/use-cart";
+import { formatPrice } from "@/lib/format-price";
+
+export default function ProductDetailClient({ product, related }) {
+  const { addItem } = useCart();
+  const [color, setColor] = useState(product.colors[0]?.id ?? "black");
+  const [size, setSize] = useState(product.sizes[0] ?? 40);
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    addItem({ product, color, size, quantity });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-[1400px] space-y-20 px-5 py-24 sm:px-8">
+      <div className="grid gap-12 lg:grid-cols-2">
+        <ProductGallery images={product.images} name={product.name} />
+
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.25em] text-black/45">
+              {product.brand}
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
+              {product.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4">
+              <p className="text-2xl font-medium">{formatPrice(product.price)}</p>
+              {product.compareAtPrice && (
+                <p className="text-lg text-black/40 line-through">
+                  {formatPrice(product.compareAtPrice)}
+                </p>
+              )}
+              {product.discount && (
+                <span className="rounded-full bg-black px-3 py-1 text-xs text-white">
+                  -{product.discount}%
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-black/60">
+              ★ {product.rating} · {product.reviewsCount} reviews
+            </p>
+          </div>
+
+          <p className="max-w-lg text-sm leading-relaxed text-black/65 sm:text-base">
+            {product.description}
+          </p>
+
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
+              Color
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {product.colors.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setColor(item.id)}
+                  title={item.label}
+                  className={`h-10 w-10 rounded-full border-2 transition ${
+                    color === item.id ? "border-black scale-110" : "border-black/10"
+                  }`}
+                  style={{ backgroundColor: item.hex }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
+              Size
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {product.sizes.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setSize(item)}
+                  className={`h-11 min-w-11 rounded-full border px-4 text-sm transition ${
+                    size === item
+                      ? "border-black bg-black text-white"
+                      : "border-black/15 hover:border-black/40"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
+              Quantity
+            </p>
+            <div className="inline-flex items-center rounded-full border border-black/15">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="rounded-full p-3 transition hover:bg-black/5"
+                aria-label="Decrease quantity"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="min-w-10 text-center text-sm font-medium">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => q + 1)}
+                className="rounded-full p-3 transition hover:bg-black/5"
+                aria-label="Increase quantity"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="inline-flex items-center gap-2 rounded-full bg-black px-7 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
+            >
+              <ShoppingBag size={16} />
+              {added ? "Added to Cart" : "Add To Cart"}
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
+            >
+              Buy Now
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-black/15 p-3 transition hover:bg-black/5"
+              aria-label="Add to wishlist"
+            >
+              <Heart size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-8 border-t border-black/10 pt-12 md:grid-cols-3">
+        <div>
+          <h3 className="mb-2 text-sm font-medium">Product Details</h3>
+          <p className="text-sm text-black/60">{product.description}</p>
+        </div>
+        <div>
+          <h3 className="mb-2 text-sm font-medium">Materials</h3>
+          <p className="text-sm text-black/60">{product.materials}</p>
+        </div>
+        <div>
+          <h3 className="mb-2 text-sm font-medium">Shipping & Returns</h3>
+          <p className="text-sm text-black/60">{product.shipping}</p>
+          <p className="mt-2 text-sm text-black/60">{product.returnPolicy}</p>
+        </div>
+      </div>
+
+      <section className="space-y-8">
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Related Products
+        </h2>
+        <ProductGrid products={related} />
+      </section>
+    </div>
+  );
+}
