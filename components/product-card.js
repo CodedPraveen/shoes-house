@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthSafe } from "@/hooks/use-auth-safe";
 import { Heart, Plus } from "lucide-react";
 import RankingBadge from "@/components/ranking-badge";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
+
+const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default function ProductCard({
   product,
@@ -12,16 +17,35 @@ export default function ProductCard({
   showNewBadge = false,
 }) {
   const { addItem } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const router = useRouter();
+  const { isSignedIn } = useAuthSafe();
 
-  const handleQuickAdd = (e) => {
+  const requireAuth = (e, action) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
-      product,
-      color: product.colors[0]?.id ?? "black",
-      size: product.sizes[0] ?? 40,
-      quantity: 1,
-    });
+    if (hasClerk && !isSignedIn) {
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.id}`)}`,
+      );
+      return;
+    }
+    action();
+  };
+
+  const handleQuickAdd = (e) => {
+    requireAuth(e, () =>
+      addItem({
+        product,
+        color: product.colors[0]?.id ?? "black",
+        size: product.sizes[0] ?? 40,
+        quantity: 1,
+      }),
+    );
+  };
+
+  const handleWishlist = (e) => {
+    requireAuth(e, () => toggleWishlist(product.id));
   };
 
   return (
@@ -47,11 +71,12 @@ export default function ProductCard({
 
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="absolute right-3 top-3 z-10 rounded-full bg-white/85 p-2 text-black transition hover:bg-white"
+            onClick={handleWishlist}
+            className={`absolute right-3 top-3 z-10 rounded-full p-2 transition ${
+              isInWishlist(product.id)
+                ? "bg-black text-white"
+                : "bg-white/85 text-black hover:bg-white"
+            }`}
             aria-label={`Add ${product.name} to wishlist`}
           >
             <Heart size={16} />

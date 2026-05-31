@@ -1,58 +1,63 @@
-# AERÉ — Scalable Ecommerce Architecture
+# AERÉ Architecture
 
-Frontend-first Next.js App Router structure, ready for MongoDB, Prisma, Stripe, and admin tooling.
+## Access Control
 
-## Folder Map
+**Public:** `/`, `/new-arrivals`, `/trending`, `/products`, `/category/*`, `/product/*`, `/search`, static pages, auth pages.
+
+**Protected (sign-in required):** `/profile`, `/cart`, `/checkout`, `/orders`, `/wishlist`
+
+**Admin only:** `/admin/*` — Clerk user with `publicMetadata.role = "admin"` or email in `ADMIN_EMAILS`
+
+## Folder Structure
 
 ```
 app/
-  (shop)/          # Storefront routes (navbar + footer)
-  (auth)/          # Clerk sign-in / sign-up
-components/        # Reusable UI
-context/           # Cart + Search (Context API)
-hooks/             # useCart, useProductFilters
-lib/               # Constants, filters, formatters
-data/              # Static catalog (swap for DB)
-services/          # Data access layer (DB-ready)
-actions/           # Server actions (checkout stubs)
-types-ready/       # Schema docs for future TypeScript
+  (shop)/           Storefront
+  (auth)/           Clerk sign-in/up
+  (admin)/admin/    Admin dashboard
+api/
+  admin/products/   Stub
+  webhooks/razorpay/ Stub
+components/
+  admin/            Admin UI
+context/            Cart, Search, Wishlist, Recently Viewed
+providers/          AppProviders (Clerk + contexts)
+hooks/
+lib/
+services/
+  payment/          Razorpay + webhooks (stubs)
+  upload/           Image upload abstraction
+data/
+constants/
+utils/
+prisma/             Schema ready
+database/           Setup docs
+types-ready/
+actions/
 ```
 
 ## Data Flow
 
-1. **Today:** `data/catalog.js` → `services/product-service.js` → pages/components
-2. **Later:** Prisma/MongoDB → same service interface → no UI rewrites
+`data/catalog.js` → `services/product-service.js` → UI
 
-## Cart
+Replace catalog with Prisma when `DATABASE_URL` is set.
 
-Client `CartContext` + `localStorage` (`aere-cart-v1`).
+## Cart / Wishlist
 
-```js
-{ id, productId, name, image, price, color, size, quantity }
-```
+Client Context + localStorage. Protected routes require auth to view; add actions redirect guests to sign-in.
 
-Replace with server cart when auth + DB are connected.
+## Payments
 
-## Auth
+`services/payment/razorpay-service.js` + webhook route — not integrated.
 
-Clerk protects `/profile`. Middleware in `middleware.js`.
+## Invoices
 
-## Routes
+`services/invoice-service.js` — PDF generation stub.
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Homepage |
-| `/new-arrivals` | Latest products + sort |
-| `/trending` | Best sellers, weekly, favorites |
-| `/category/[slug]` | shoes, boys, men, footwear |
-| `/product/[id]` | PDP with gallery + options |
-| `/search` | Full-page live filters |
-| `/cart` | Cart management |
-| `/profile` | Account (protected) |
-| `/sign-in`, `/sign-up` | Clerk auth |
+## Admin
 
-## Setup
+Mock data in `data/admin-mock.js`. Product/inventory/order/user management UI ready for API + DB.
 
-1. Copy `.env.local.example` → `.env.local`
-2. Add Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
-3. `npm run dev`
+## Env
+
+See `.env.local.example` — Clerk, `ADMIN_EMAILS`, future `DATABASE_URL`, Razorpay keys.
