@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/product-detail-client";
+import ProductViewTracker from "@/components/product-view-tracker";
 import { productService } from "@/services/product-service";
 import { products } from "@/data/catalog";
 
@@ -28,5 +29,10 @@ export default async function ProductPage({ params }) {
 
   const related = productService.getRelated(id, 4);
 
-  return <ProductDetailClient product={product} related={related} />;
+  return (
+    <>
+      <ProductViewTracker productId={product.id} />
+      <ProductDetailClient product={product} related={related} />
+    </>
+  );
 }

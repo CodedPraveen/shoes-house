@@ -1,23 +1,55 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthSafe } from "@/hooks/use-auth-safe";
 import { Heart, Minus, Plus, ShoppingBag } from "lucide-react";
 import ProductGallery from "@/components/product-gallery";
 import ProductGrid from "@/components/product-grid";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
+
+const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default function ProductDetailClient({ product, related }) {
   const { addItem } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const router = useRouter();
+  const { isSignedIn } = useAuthSafe();
   const [color, setColor] = useState(product.colors[0]?.id ?? "black");
   const [size, setSize] = useState(product.sizes[0] ?? 40);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const requireAuth = (action) => {
+    if (hasClerk && !isSignedIn) {
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.id}`)}`,
+      );
+      return false;
+    }
+    action();
+    return true;
+  };
+
   const handleAddToCart = () => {
-    addItem({ product, color, size, quantity });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    requireAuth(() => {
+      addItem({ product, color, size, quantity });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    });
+  };
+
+  const handleWishlist = () => {
+    requireAuth(() => toggleWishlist(product.id));
+  };
+
+  const handleBuyNow = () => {
+    requireAuth(() => {
+      addItem({ product, color, size, quantity });
+      router.push("/checkout");
+    });
   };
 
   return (
@@ -135,13 +167,17 @@ export default function ProductDetailClient({ product, related }) {
             </button>
             <button
               type="button"
+              onClick={handleBuyNow}
               className="rounded-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
             >
               Buy Now
             </button>
             <button
               type="button"
-              className="rounded-full border border-black/15 p-3 transition hover:bg-black/5"
+              onClick={handleWishlist}
+              className={`rounded-full border border-black/15 p-3 transition hover:bg-black/5 ${
+                isInWishlist(product.id) ? "bg-black text-white" : ""
+              }`}
               aria-label="Add to wishlist"
             >
               <Heart size={18} />

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
@@ -11,6 +12,7 @@ export default function CartPage() {
     useCart();
 
   return (
+    <AuthGate>
     <main className="pt-20">
       <PageHeader
         eyebrow="Cart"
@@ -122,5 +124,6 @@ export default function CartPage() {
         )}
       </div>
     </main>
+    </AuthGate>
   );
 }
