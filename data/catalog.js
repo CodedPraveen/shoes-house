@@ -1,4 +1,7 @@
-/** @typedef {import('@/types-ready/product.schema.md')} Product */
+/**
+ * SEED-ONLY — used by prisma/seed.js to populate Supabase.
+ * Storefront reads products via productService → Prisma.
+ */
 
 const img = (id, w = 1200) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
@@ -14,8 +17,6 @@ export const products = [
     price: 6499,
     compareAtPrice: 7999,
     discount: 19,
-    rating: 4.8,
-    reviewsCount: 214,
     image: img("1608231387042-66d1773070a5"),
     hoverImage: img("1560769629-975ec94e6a86"),
     images: [
@@ -52,8 +53,6 @@ export const products = [
     price: 7299,
     compareAtPrice: 8999,
     discount: 19,
-    rating: 4.9,
-    reviewsCount: 318,
     image: img("1549298916-b41d501d3772"),
     hoverImage: img("1491553895911-0055eca6402d"),
     images: [
@@ -89,8 +88,6 @@ export const products = [
     price: 4999,
     compareAtPrice: 5999,
     discount: 17,
-    rating: 4.7,
-    reviewsCount: 156,
     image: img("1600185365926-3a2ce3cdb9eb"),
     hoverImage: img("1465453869711-7e174808ace9"),
     images: [img("1600185365926-3a2ce3cdb9eb"), img("1465453869711-7e174808ace9")],
@@ -118,8 +115,6 @@ export const products = [
     description:
       "Lightweight running profile with breathable knit and adaptive fit system.",
     price: 5899,
-    rating: 4.6,
-    reviewsCount: 98,
     image: img("1463100099107-aa0980c362e6"),
     hoverImage: img("1552346154-21d32810aba3"),
     images: [img("1463100099107-aa0980c362e6"), img("1552346154-21d32810aba3")],
@@ -150,8 +145,6 @@ export const products = [
     price: 8999,
     compareAtPrice: 10999,
     discount: 18,
-    rating: 4.9,
-    reviewsCount: 402,
     image: img("1515955656352-a1fa3ffcd111"),
     hoverImage: img("1612181346599-a6bfbd67be86"),
     images: [
@@ -182,8 +175,6 @@ export const products = [
     description:
       "Everyday essential with cloud-soft cushioning and understated branding.",
     price: 4599,
-    rating: 4.5,
-    reviewsCount: 73,
     image: img("1525966222134-fcfa99b8ae77"),
     hoverImage: img("1529810313688-44ea1c2d81d3"),
     images: [img("1525966222134-fcfa99b8ae77"), img("1529810313688-44ea1c2d81d3")],
@@ -211,8 +202,6 @@ export const products = [
     description:
       "Lightweight boys trainer with durable outsole and flexible forefoot.",
     price: 2999,
-    rating: 4.7,
-    reviewsCount: 89,
     image: img("1511556532299-8f662fc26c06"),
     hoverImage: img("1556906781-9a412961c28c"),
     images: [img("1511556532299-8f662fc26c06"), img("1556906781-9a412961c28c")],
@@ -240,8 +229,6 @@ export const products = [
     description:
       "Classic court style scaled for younger athletes with premium comfort.",
     price: 3499,
-    rating: 4.6,
-    reviewsCount: 64,
     image: img("1597045566677-8cf032ed6634"),
     hoverImage: img("1549298916-b41d501d3772"),
     images: [img("1597045566677-8cf032ed6634")],
@@ -269,8 +256,6 @@ export const products = [
     description:
       "Low-profile luxury sneaker with tonal paneling and refined silhouette.",
     price: 9499,
-    rating: 4.9,
-    reviewsCount: 267,
     image: img("1543163521-1bf539c55dd2"),
     hoverImage: img("1514989940723-e8e51635b782"),
     images: [img("1543163521-1bf539c55dd2"), img("1514989940723-e8e51635b782")],
@@ -298,8 +283,6 @@ export const products = [
     description:
       "Outdoor-inspired tread with urban refinement for versatile daily wear.",
     price: 5599,
-    rating: 4.4,
-    reviewsCount: 51,
     image: img("1605348532760-6753d2c43329"),
     hoverImage: img("1600185365926-3a2ce3cdb9eb"),
     images: [img("1605348532760-6753d2c43329")],
@@ -327,8 +310,6 @@ export const products = [
     description:
       "Retro runner reborn with modern cushioning and archival design lines.",
     price: 1899,
-    rating: 4.3,
-    reviewsCount: 42,
     image: img("1542291026-7eec264c27ff"),
     hoverImage: img("1608231387042-66d1773070a5"),
     images: [img("1542291026-7eec264c27ff")],
@@ -356,8 +337,6 @@ export const products = [
     description:
       "Reflective details and bold profile for after-hours city movement.",
     price: 6799,
-    rating: 4.8,
-    reviewsCount: 133,
     image: img("1552346154-21d32810aba3"),
     hoverImage: img("1463100099107-aa0980c362e6"),
     images: [img("1552346154-21d32810aba3")],
@@ -378,43 +357,3 @@ export const products = [
     returnPolicy: "30-day returns.",
   },
 ];
-
-export function getProductById(id) {
-  return products.find((p) => p.id === id) ?? null;
-}
-
-export function getProductsByCategory(category) {
-  return products.filter((p) => p.category === category);
-}
-
-export function getNewArrivals() {
-  return products
-    .filter((p) => p.isNew)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-export function getTrendingProducts() {
-  return products
-    .filter((p) => p.isTrending)
-    .sort((a, b) => b.purchaseCount - a.purchaseCount);
-}
-
-export function getBestSellers(limit = 6) {
-  return [...products]
-    .sort((a, b) => b.purchaseCount - a.purchaseCount)
-    .slice(0, limit);
-}
-
-export function getRelatedProducts(productId, limit = 4) {
-  const current = getProductById(productId);
-  if (!current) return [];
-
-  return products
-    .filter(
-      (p) =>
-        p.id !== productId &&
-        (p.category === current.category ||
-          p.tags.some((t) => current.tags.includes(t))),
-    )
-    .slice(0, limit);
-}

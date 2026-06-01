@@ -2,20 +2,22 @@ import PageHeader from "@/components/page-header";
 import ProductGrid from "@/components/product-grid";
 import { productService } from "@/services/product-service";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Trending | AERÉ",
   description: "Best sellers and trending sneakers this week.",
 };
 
-export default function TrendingPage() {
-  const bestSellers = productService
-    .getBestSellers(6)
-    .map((product, index) => ({
+export default async function TrendingPage() {
+  const bestSellers = (await productService.getBestSellers(6)).map(
+    (product, index) => ({
       ...product,
       rank: index < 3 ? index + 1 : product.rank,
-    }));
-  const trendingWeek = productService.getTrendingThisWeek(6);
-  const favorites = productService.getCustomerFavorites(6);
+    }),
+  );
+  const trendingWeek = await productService.getTrendingThisWeek(6);
+  const favorites = await productService.getCustomerFavorites(6);
 
   return (
     <main className="pt-20">

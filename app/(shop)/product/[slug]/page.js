@@ -2,15 +2,12 @@ import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/product-detail-client";
 import ProductViewTracker from "@/components/product-view-tracker";
 import { productService } from "@/services/product-service";
-import { products } from "@/data/catalog";
 
-export async function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
-  const { id } = await params;
-  const product = productService.getById(id);
+  const { slug } = await params;
+  const product = await productService.getBySlug(slug);
   if (!product) return { title: "Product | AERÉ" };
 
   return {
@@ -20,14 +17,14 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const { id } = await params;
-  const product = productService.getById(id);
+  const { slug } = await params;
+  const product = await productService.getBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const related = productService.getRelated(id, 4);
+  const related = await productService.getRelatedBySlug(slug, 4);
 
   return (
     <>

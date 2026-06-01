@@ -7,9 +7,9 @@ import Link from "next/link";
 import SearchFilters from "@/components/search-filters";
 import ProductGrid from "@/components/product-grid";
 import { useSearchContext } from "@/context/search-context";
-import { productService } from "@/services/product-service";
+import { filterProducts, sortProducts } from "@/lib/filter-products";
 
-export default function SearchModal() {
+export default function SearchModal({ allProducts = [] }) {
   const {
     isOpen,
     closeSearch,
@@ -19,10 +19,10 @@ export default function SearchModal() {
     resetFilters,
   } = useSearchContext();
 
-  const results = useMemo(
-    () => productService.search(filters, "latest"),
-    [filters],
-  );
+  const results = useMemo(() => {
+    const filtered = filterProducts(allProducts, filters);
+    return sortProducts(filtered, "latest");
+  }, [allProducts, filters]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";

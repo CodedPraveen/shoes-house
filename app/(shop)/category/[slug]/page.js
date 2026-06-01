@@ -3,16 +3,14 @@ import CatalogPageClient from "@/components/catalog-page-client";
 import { CATEGORY_SLUGS } from "@/lib/constants";
 import { productService } from "@/services/product-service";
 
+export const dynamic = "force-dynamic";
+
 const labels = {
   shoes: "Shoes",
   boys: "Boys",
   men: "Men",
   footwear: "Footwear",
 };
-
-export async function generateStaticParams() {
-  return CATEGORY_SLUGS.map((slug) => ({ slug }));
-}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -30,7 +28,7 @@ export default async function CategoryPage({ params }) {
     notFound();
   }
 
-  const products = productService.getByCategory(slug);
+  const products = await productService.getByCategory(slug);
   const label = labels[slug];
 
   return (

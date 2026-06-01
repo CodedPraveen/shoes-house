@@ -8,11 +8,18 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useAuthSafe } from "@/hooks/use-auth-safe";
+import {
+  addToCartAction,
+  getCartAction,
+  removeFromCartAction,
+  updateCartQuantityAction,
+} from "@/actions/cart-actions";
 import { CART_STORAGE_KEY } from "@/lib/constants";
 
 const CartContext = createContext(null);
 
-function loadCart() {
+function loadGuestCart() {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
@@ -22,72 +29,125 @@ function loadCart() {
   }
 }
 
-function saveCart(items) {
+function saveGuestCart(items) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
 }
 
-function buildCartItemId(productId, color, size) {
+function buildGuestLineId(productId, color, size) {
   return `${productId}-${color}-${size}`;
 }
 
 export function CartProvider({ children }) {
+  const { isSignedIn, isLoaded } = useAuthSafe();
   const [items, setItems] = useState([]);
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    setItems(loadCart());
-    setHydrated(true);
+  const syncFromServer = useCallback(async () => {
+    try {
+      const data = await getCartAction();
+      setItems(data.items);
+    } catch {
+      setItems([]);
+    }
   }, []);
 
   useEffect(() => {
-    if (hydrated) saveCart(items);
-  }, [items, hydrated]);
+    if (!isLoaded) return;
 
-  const addItem = useCallback((payload) => {
-    const { product, color, size, quantity = 1 } = payload;
-    const lineId = buildCartItemId(product.id, color, size);
+    if (isSignedIn) {
+      syncFromServer().finally(() => setHydrated(true));
+    } else {
+      setItems(loadGuestCart());
+      setHydrated(true);
+    }
+  }, [isLoaded, isSignedIn, syncFromServer]);
 
-    setItems((prev) => {
-      const existing = prev.find((item) => item.id === lineId);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === lineId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item,
-        );
-      }
+  useEffect(() => {
+    if (hydrated && !isSignedIn) saveGuestCart(items);
+  }, [items, hydrated, isSignedIn]);
 
-      return [
-        ...prev,
-        {
-          id: lineId,
+  const addItem = useCallback(
+    async (payload) => {
+      const { product, color, size, quantity = 1 } = payload;
+
+      if (isSignedIn) {
+        const data = await addToCartAction({
           productId: product.id,
-          name: product.name,
-          image: product.image,
-          price: product.price,
           color,
           size,
           quantity,
-        },
-      ];
-    });
-  }, []);
+        });
+        setItems(data.items);
+        return;
+      }
 
-  const removeItem = useCallback((lineId) => {
-    setItems((prev) => prev.filter((item) => item.id !== lineId));
-  }, []);
+      const lineId = buildGuestLineId(product.id, color, size);
+      setItems((prev) => {
+        const existing = prev.find((item) => item.id === lineId);
+        if (existing) {
+          return prev.map((item) =>
+            item.id === lineId
+              ? { ...item, quantity: item.quantity + quantity }
+              : item,
+          );
+        }
+        return [
+          ...prev,
+          {
+            id: lineId,
+            productId: product.id,
+            name: product.name,
+            image: product.image,
+            price: product.price,
+            color,
+            size,
+            quantity,
+          },
+        ];
+      });
+    },
+    [isSignedIn],
+  );
 
-  const updateQuantity = useCallback((lineId, quantity) => {
-    if (quantity < 1) return;
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === lineId ? { ...item, quantity } : item,
-      ),
-    );
-  }, []);
+  const removeItem = useCallback(
+    async (lineId) => {
+      if (isSignedIn) {
+        const data = await removeFromCartAction(lineId);
+        setItems(data.items);
+        return;
+      }
+      setItems((prev) => prev.filter((item) => item.id !== lineId));
+    },
+    [isSignedIn],
+  );
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const updateQuantity = useCallback(
+    async (lineId, quantity) => {
+      if (quantity < 1) return;
+      if (isSignedIn) {
+        const data = await updateCartQuantityAction(lineId, quantity);
+        setItems(data.items);
+        return;
+      }
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === lineId ? { ...item, quantity } : item,
+        ),
+      );
+    },
+    [isSignedIn],
+  );
+
+  const clearCart = useCallback(async () => {
+    if (isSignedIn) {
+      const { clearCartAction } = await import("@/actions/cart-actions");
+      const data = await clearCartAction();
+      setItems(data.items);
+      return;
+    }
+    setItems([]);
+  }, [isSignedIn]);
 
   const value = useMemo(() => {
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);

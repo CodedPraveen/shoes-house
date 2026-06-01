@@ -3,8 +3,8 @@ import ProductCard from "@/components/product-card";
 import SectionReveal from "@/components/section-reveal";
 import { productService } from "@/services/product-service";
 
-export default function FeaturedProducts() {
-  const products = productService.getBestSellers(6);
+export default async function FeaturedProducts() {
+  const products = await productService.getBestSellers(6);
 
   return (
     <SectionReveal className="px-5 py-20 sm:px-8 lg:py-28">

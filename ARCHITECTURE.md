@@ -1,63 +1,44 @@
 # AERÉ Architecture
 
-## Access Control
+## Stack
 
-**Public:** `/`, `/new-arrivals`, `/trending`, `/products`, `/category/*`, `/product/*`, `/search`, static pages, auth pages.
+Supabase PostgreSQL · Prisma 6 · Clerk · Cloudinary (ready) · Razorpay (ready) · Vercel
 
-**Protected (sign-in required):** `/profile`, `/cart`, `/checkout`, `/orders`, `/wishlist`
+## Product URLs
 
-**Admin only:** `/admin/*` — Clerk user with `publicMetadata.role = "admin"` or email in `ADMIN_EMAILS`
+**Slug-based:** `/product/aero-one`
 
-## Folder Structure
+## Schema highlights
+
+- **ProductVariant** — SKU per color + size, stock per variant
+- **Soft delete** — `deletedAt` on Product, Category, User, Order, CartItem, etc.
+- **OrderStatus** enum — `PENDING | PROCESSING | SHIPPED | DELIVERED | CANCELLED`
+- **featuredCollection** — static in `data/products.js` (homepage editorial only)
+
+## Data flow
 
 ```
-app/
-  (shop)/           Storefront
-  (auth)/           Clerk sign-in/up
-  (admin)/admin/    Admin dashboard
-api/
-  admin/products/   Stub
-  webhooks/razorpay/ Stub
-components/
-  admin/            Admin UI
-context/            Cart, Search, Wishlist, Recently Viewed
-providers/          AppProviders (Clerk + contexts)
-hooks/
-lib/
-services/
-  payment/          Razorpay + webhooks (stubs)
-  upload/           Image upload abstraction
-data/
-constants/
-utils/
-prisma/             Schema ready
-database/           Setup docs
-types-ready/
-actions/
+Prisma (Supabase) → services/* → Server Components / Server Actions → UI (unchanged)
 ```
 
-## Data Flow
+## Cart & wishlist
 
-`data/catalog.js` → `services/product-service.js` → UI
+- **Signed in:** Supabase via `cart-service` / `wishlist-service` + server actions
+- **Guest:** localStorage fallback until sign-in
 
-Replace catalog with Prisma when `DATABASE_URL` is set.
+## Clerk
 
-## Cart / Wishlist
+- Webhook: `api/webhooks/clerk/route.js` → `userService.upsertFromClerk`
+- Profile page syncs user on load
 
-Client Context + localStorage. Protected routes require auth to view; add actions redirect guests to sign-in.
+## Commands
 
-## Payments
-
-`services/payment/razorpay-service.js` + webhook route — not integrated.
-
-## Invoices
-
-`services/invoice-service.js` — PDF generation stub.
-
-## Admin
-
-Mock data in `data/admin-mock.js`. Product/inventory/order/user management UI ready for API + DB.
+```bash
+npm run db:push    # apply schema
+npm run db:seed    # catalog + variants
+npm run dev
+```
 
 ## Env
 
-See `.env.local.example` — Clerk, `ADMIN_EMAILS`, future `DATABASE_URL`, Razorpay keys.
+See `.env.local.example` — `DATABASE_URL` (pooler) + `DIRECT_URL` (migrations)

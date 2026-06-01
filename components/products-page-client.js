@@ -8,10 +8,8 @@ import SearchFilters from "@/components/search-filters";
 import SortSelect from "@/components/sort-select";
 import { usePagination } from "@/hooks/use-pagination";
 import { useProductFilters } from "@/hooks/use-product-filters";
-import { productService } from "@/services/product-service";
 
-export default function ProductsPageClient() {
-  const allProducts = productService.getAll();
+export default function ProductsPageClient({ initialProducts = [] }) {
   const {
     products: filtered,
     sortBy,
@@ -20,7 +18,7 @@ export default function ProductsPageClient() {
     setFilters,
     toggleArrayFilter,
     resetFilters,
-  } = useProductFilters({ initialProducts: allProducts });
+  } = useProductFilters({ initialProducts });
 
   const { data, page, totalPages, setPage, resetPage, total } = usePagination(
     filtered,
