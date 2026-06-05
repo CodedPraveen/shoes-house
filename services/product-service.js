@@ -3,16 +3,6 @@ import { mapProduct, mapProducts } from "@/lib/mappers/product-mapper";
 import { productInclude } from "@/lib/product-include";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { prisma } from "@/lib/db";
-import {
-  getBestSellers,
-  getNewArrivals,
-  getProductById,
-  getProductsByCategory,
-  getRelatedProducts,
-  getTrendingProducts,
-  products,
-} from "@/data/catalog";
-
 const productWhere = { ...notDeleted, category: { deletedAt: null } };
 
 async function fetchAllRaw() {

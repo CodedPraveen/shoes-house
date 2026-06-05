@@ -7,6 +7,8 @@ import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
 import { createCheckoutSessionAction } from "@/actions/checkout-actions";
 import { getAddressesAction } from "@/actions/address-actions";
+import { reverseGeocodeAction } from "@/actions/geocode-actions";
+import LoadingButton from "@/components/ui/loading-button";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -61,6 +63,7 @@ export default function CheckoutClient() {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -96,6 +99,45 @@ export default function CheckoutClient() {
     setAddressMode("new");
     setSelectedAddressId(null);
     setForm(emptyForm);
+  }
+
+  async function useMyLocation() {
+    setError("");
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported in this browser.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const addr = await reverseGeocodeAction(
+            position.coords.latitude,
+            position.coords.longitude,
+          );
+          setAddressMode("new");
+          setSelectedAddressId(null);
+          setForm((prev) => ({
+            ...prev,
+            line1: addr.line1 || prev.line1,
+            line2: addr.line2 || prev.line2,
+            city: addr.city || prev.city,
+            state: addr.state || prev.state,
+            country: addr.country || "India",
+            pincode: addr.pincode || prev.pincode,
+          }));
+        } catch (err) {
+          setError(err.message || "Could not detect address");
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setError("Location permission denied or unavailable.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, timeout: 15000 },
+    );
   }
 
   async function handlePay(e) {
@@ -234,6 +276,18 @@ export default function CheckoutClient() {
         ) : null}
 
         {(addressMode === "new" || savedAddresses.length === 0) && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <LoadingButton
+                type="button"
+                loading={locating}
+                onClick={useMyLocation}
+                className="rounded-full border border-black/15 px-4 py-2 text-xs"
+              >
+                Use my location
+              </LoadingButton>
+              <span className="text-xs text-black/45">or enter address manually</span>
+            </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <input
               required
@@ -283,6 +337,7 @@ export default function CheckoutClient() {
               value={form.pincode}
               onChange={(e) => updateField("pincode", e.target.value)}
             />
+          </div>
           </div>
         )}
 

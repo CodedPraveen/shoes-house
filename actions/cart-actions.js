@@ -3,6 +3,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { cartService } from "@/services/cart-service";
 import { userService } from "@/services/user-service";
+import { assertRateLimit } from "@/lib/rate-limit";
+
+// async function requireDbUser() {
+//   const { userId: clerkId } = await auth();
+//   if (!clerkId) throw new Error("Unauthorized");
+//   const user = await userService.getByClerkId(clerkId);
+//   if (!user) throw new Error("User not synced. Sign in again.");
+//   return user;
+// }
 
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
@@ -10,6 +19,10 @@ async function requireDbUser() {
   const user = await userService.getByClerkId(clerkId);
   if (!user) throw new Error("User not synced. Sign in again.");
   return user;
+}
+
+async function rateLimitCart() {
+  await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
 }
 
 export async function getCartAction() {
@@ -24,6 +37,7 @@ export async function getCartAction() {
 }
 
 export async function addToCartAction({ productId, color, size, quantity }) {
+  await rateLimitCart();
   const user = await requireDbUser();
   await cartService.addItem(user.id, { productId, color, size, quantity });
   return getCartAction();

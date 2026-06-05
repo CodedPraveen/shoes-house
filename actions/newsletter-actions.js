@@ -1,6 +1,7 @@
 "use server";
 
 import { newsletterService } from "@/services/newsletter-service";
+import { assertRateLimit } from "@/lib/rate-limit";
 
 export async function subscribeNewsletterAction(formData) {
   const email = formData.get("email");
@@ -9,6 +10,7 @@ export async function subscribeNewsletterAction(formData) {
   }
 
   try {
+    await assertRateLimit({ prefix: "newsletter", limit: 5, windowMs: 60_000 });
     await newsletterService.subscribe(email);
     return { ok: true };
   } catch (err) {

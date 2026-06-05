@@ -14,7 +14,6 @@ export default function ClerkAuthNav() {
   if (isSignedIn) {
     return <UserButton afterSignOutUrl="/" />;
   }
-
   return (
     <Link
       href="/sign-in"

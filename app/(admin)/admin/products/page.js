@@ -18,12 +18,12 @@ export default async function AdminProductsPage() {
             Live inventory from Supabase via Prisma.
           </p>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/admin/products/new"
           className="rounded-full bg-black px-5 py-2.5 text-sm text-white"
         >
           Add Product
-        </button>
+        </Link>
       </div>
       <div className="overflow-x-auto rounded-2xl border border-black/10">
         <table className="w-full min-w-[720px] text-left text-sm">
@@ -50,9 +50,12 @@ export default async function AdminProductsPage() {
                   >
                     View
                   </Link>
-                  <button type="button" className="text-black/60 hover:text-black">
+                  <Link
+                    href={`/admin/products/${p.id}/edit`}
+                    className="text-black/60 hover:text-black"
+                  >
                     Edit
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}

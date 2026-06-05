@@ -4,11 +4,27 @@ import { auth } from "@clerk/nextjs/server";
 import { wishlistService } from "@/services/wishlist-service";
 import { userService } from "@/services/user-service";
 
+// async function requireDbUser() {
+//   const { userId: clerkId } = await auth();
+//   if (!clerkId) throw new Error("Unauthorized");
+//   const user = await userService.getByClerkId(clerkId);
+//   if (!user) throw new Error("User not synced");
+//   return user;
+// }
+
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
+
+  console.log("CLERK ID:", clerkId);
+
   if (!clerkId) throw new Error("Unauthorized");
+
   const user = await userService.getByClerkId(clerkId);
+
+  console.log("DB USER:", user);
+
   if (!user) throw new Error("User not synced");
+
   return user;
 }
 

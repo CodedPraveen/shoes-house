@@ -7,6 +7,7 @@ import {
   addressService,
   toCheckoutAddress,
 } from "@/services/address-service";
+import { assertRateLimit } from "@/lib/rate-limit";
 
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
@@ -43,6 +44,7 @@ export async function createCheckoutSessionAction(input) {
   const user = await requireDbUser();
 
   try {
+    await assertRateLimit({ prefix: "checkout", limit: 8, windowMs: 60_000 });
     const shipping = await resolveShippingAddress(user.id, input);
     const session = await checkoutService.createPaymentSession(user.id, {
       ...shipping,
