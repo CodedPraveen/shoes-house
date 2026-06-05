@@ -72,11 +72,10 @@ export default function ProductCard({
           <button
             type="button"
             onClick={handleWishlist}
-            className={`absolute right-3 top-3 z-10 rounded-full p-2 transition ${
-              isInWishlist(product.id)
-                ? "bg-black text-white"
-                : "bg-white/85 text-black hover:bg-white"
-            }`}
+            className={`absolute right-3 top-3 z-10 rounded-full p-2 transition ${isInWishlist(product.id)
+              ? "bg-black text-white"
+              : "bg-white/85 text-black hover:bg-white"
+              }`}
             aria-label={`Add ${product.name} to wishlist`}
           >
             <Heart size={16} />
