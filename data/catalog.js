@@ -357,3 +357,42 @@ export const products = [
     returnPolicy: "30-day returns.",
   },
 ];
+export function getProductById(id) {
+  return products.find((p) => p.id === id) ?? null;
+}
+
+export function getProductsByCategory(category) {
+  return products.filter((p) => p.category === category);
+}
+
+export function getNewArrivals() {
+  return products
+    .filter((p) => p.isNew)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+export function getTrendingProducts() {
+  return products
+    .filter((p) => p.isTrending)
+    .sort((a, b) => b.purchaseCount - a.purchaseCount);
+}
+
+export function getBestSellers(limit = 6) {
+  return [...products]
+    .sort((a, b) => b.purchaseCount - a.purchaseCount)
+    .slice(0, limit);
+}
+
+export function getRelatedProducts(productId, limit = 4) {
+  const current = getProductById(productId);
+  if (!current) return [];
+
+  return products
+    .filter(
+      (p) =>
+        p.id !== productId &&
+        (p.category === current.category ||
+          p.tags.some((t) => current.tags.includes(t))),
+    )
+    .slice(0, limit);
+}

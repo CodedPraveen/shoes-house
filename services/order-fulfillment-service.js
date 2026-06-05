@@ -9,6 +9,11 @@ import {
   logDuplicatePayment,
 } from "@/services/payment/payment-idempotency";
 import { logWebhook } from "@/lib/webhook-logger";
+import { decrementStockForSale } from "@/services/inventory-service";
+import {
+  InsufficientStockError,
+  PaymentAmountMismatchError,
+} from "@/lib/inventory-errors";
 
 /**
  * Webhook-only fulfillment: create Order, Payment PAID, decrement stock, clear cart.
@@ -82,7 +87,12 @@ export async function fulfillPaidCheckout({
 
   const paidRupees = fromPaise(amountPaise);
   if (paidRupees !== session.total) {
-    throw new Error("Payment amount mismatch");
+    throw new PaymentAmountMismatchError("Payment amount mismatch", {
+      expected: session.total,
+      received: paidRupees,
+      razorpayOrderId,
+      razorpayPaymentId,
+    });
   }
 
   const user = await prisma.user.findFirst({
@@ -119,25 +129,6 @@ export async function fulfillPaidCheckout({
         return { duplicate: true, orderId: paidAgain.orderId };
       }
 
-      for (const line of session.items) {
-        if (!line.variantId) {
-          throw new Error(`Missing variant for ${line.productSku}`);
-        }
-
-        const updated = await tx.productVariant.updateMany({
-          where: {
-            id: line.variantId,
-            ...notDeleted,
-            stock: { gte: line.quantity },
-          },
-          data: { stock: { decrement: line.quantity } },
-        });
-
-        if (updated.count === 0) {
-          throw new Error(`Insufficient stock for SKU ${line.productSku}`);
-        }
-      }
-
       const order = await tx.order.create({
         data: {
           orderNumber,
@@ -169,6 +160,20 @@ export async function fulfillPaidCheckout({
           },
         },
       });
+
+      for (const line of session.items) {
+        if (!line.variantId) {
+          throw new Error(`Missing variant for ${line.productSku}`);
+        }
+
+        await decrementStockForSale(tx, {
+          variantId: line.variantId,
+          quantity: line.quantity,
+          orderId: order.id,
+          reason: `Sale · order ${order.orderNumber}`,
+          sku: line.productSku,
+        });
+      }
 
       await tx.payment.create({
         data: {
@@ -211,7 +216,7 @@ export async function fulfillPaidCheckout({
 
     await cartService.clearCart(session.userId);
 
-    logWebhook("fulfilled", {
+    logWebhook("FULFILLED", {
       razorpayPaymentId,
       razorpayOrderId,
       orderId: result.order.id,
@@ -226,6 +231,12 @@ export async function fulfillPaidCheckout({
       orderNumber: result.order.orderNumber,
     };
   } catch (err) {
+    if (err instanceof InsufficientStockError) {
+      throw err;
+    }
+    if (err instanceof PaymentAmountMismatchError) {
+      throw err;
+    }
     if (err.code === "P2002") {
       const dup = await findProcessedPayment(razorpayPaymentId);
       if (dup) {

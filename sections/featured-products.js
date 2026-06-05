@@ -7,7 +7,7 @@ export default async function FeaturedProducts() {
   const products = await productService.getBestSellers(6);
 
   return (
-    <SectionReveal className="px-5 py-20 sm:px-8 lg:py-28">
+    <SectionReveal className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-3">

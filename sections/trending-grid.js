@@ -7,7 +7,7 @@ export default async function TrendingGrid() {
   const trendingShoes = (await productService.getTrending()).slice(0, 6);
 
   return (
-    <SectionReveal id="trending" className="px-5 py-20 sm:px-8 lg:py-28">
+    <SectionReveal id="trending" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-3">

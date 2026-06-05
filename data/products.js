@@ -1,4 +1,4 @@
-/** Homepage marketing data — product lists come from Prisma via productService */
+import { products, getNewArrivals, getTrendingProducts } from "@/data/catalog";
 
 export const navLinks = [
   { label: "New Arrivals", href: "/new-arrivals" },
@@ -23,6 +23,8 @@ export const featuredCollection = [
       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80",
   },
 ];
+
+export const trendingShoes = getTrendingProducts().slice(0, 6);
 
 export const categories = [
   {
@@ -51,6 +53,8 @@ export const categories = [
     title: "Lifestyle",
     href: "/category/footwear",
     image:
-      "https://images.unsplash.com/photo-1519744346366-d1796261c3b1?auto=format&fit=crop&w=1200&q=80",
+      "https://res.cloudinary.com/dtgdnok1h/image/upload/q_auto/f_auto/v1780143418/samples/ecommerce/shoes.png",
   },
 ];
+
+export { products, getNewArrivals };

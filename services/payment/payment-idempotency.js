@@ -24,7 +24,7 @@ export function logDuplicatePayment({
   orderId,
   orderNumber,
 }) {
-  logWebhook("duplicate", {
+  logWebhook("DUPLICATE_EVENT", {
     reason: "payment_already_processed",
     razorpayPaymentId,
     razorpayOrderId,
@@ -32,46 +32,4 @@ export function logDuplicatePayment({
     orderId,
     orderNumber,
   });
-}
-
-/**
- * Razorpay may retry the same webhook event — dedupe by x-razorpay-event-id.
- */
-export async function findWebhookEvent(eventId) {
-  if (!eventId) return null;
-  return prisma.webhookEvent.findUnique({ where: { eventId } });
-}
-
-export async function recordWebhookEvent({
-  eventId,
-  eventType,
-  razorpayPaymentId,
-  razorpayOrderId,
-  status,
-  payload,
-}) {
-  if (!eventId) return null;
-
-  try {
-    return await prisma.webhookEvent.create({
-      data: {
-        eventId,
-        eventType,
-        razorpayPaymentId: razorpayPaymentId ?? null,
-        razorpayOrderId: razorpayOrderId ?? null,
-        status,
-        payload,
-      },
-    });
-  } catch (err) {
-    if (err.code === "P2002") {
-      logWebhook("duplicate", {
-        reason: "webhook_event_id_replay",
-        eventId,
-        eventType,
-      });
-      return findWebhookEvent(eventId);
-    }
-    throw err;
-  }
 }

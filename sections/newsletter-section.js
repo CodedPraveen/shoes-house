@@ -3,7 +3,7 @@ import NewsletterForm from "@/components/newsletter-form";
 
 export default function NewsletterSection() {
   return (
-    <SectionReveal className="px-5 py-20 sm:px-8 lg:py-28">
+    <SectionReveal className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] rounded-[2rem] border border-black/10 bg-zinc-100 px-6 py-12 sm:px-10 lg:px-14">
         <div className="mx-auto max-w-2xl space-y-6 text-center">
           <p className="text-xs uppercase tracking-[0.25em] text-black/45">

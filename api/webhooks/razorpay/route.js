@@ -13,7 +13,9 @@ export async function POST(request) {
       webhookEventId,
     );
     if (!result.ok) {
-      return NextResponse.json(result, { status: 400 });
+      const status =
+        result.code === "INVALID_SIGNATURE" ? 401 : 400;
+      return NextResponse.json(result, { status });
     }
     return NextResponse.json(result);
   } catch (err) {
