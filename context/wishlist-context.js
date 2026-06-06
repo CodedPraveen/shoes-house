@@ -8,11 +8,16 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useAuthSafe } from "@/hooks/use-auth-safe";
+import {
+  getWishlistIdsAction,
+  toggleWishlistAction,
+} from "@/actions/wishlist-actions";
 import { WISHLIST_STORAGE_KEY } from "@/lib/constants";
 
 const WishlistContext = createContext(null);
 
-function loadWishlist() {
+function loadGuestWishlist() {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
@@ -22,41 +27,52 @@ function loadWishlist() {
   }
 }
 
-function saveWishlist(ids) {
+function saveGuestWishlist(ids) {
   if (typeof window === "undefined") return;
   localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(ids));
 }
 
 export function WishlistProvider({ children }) {
+  const { isSignedIn, isLoaded } = useAuthSafe();
   const [productIds, setProductIds] = useState([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setProductIds(loadWishlist());
-    setHydrated(true);
-  }, []);
+    if (!isLoaded) return;
+
+    if (isSignedIn) {
+      getWishlistIdsAction()
+        .then(setProductIds)
+        .catch(() => setProductIds([]))
+        .finally(() => setHydrated(true));
+    } else {
+      setProductIds(loadGuestWishlist());
+      setHydrated(true);
+    }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
-    if (hydrated) saveWishlist(productIds);
-  }, [productIds, hydrated]);
+    if (hydrated && !isSignedIn) saveGuestWishlist(productIds);
+  }, [productIds, hydrated, isSignedIn]);
 
-  const addToWishlist = useCallback((productId) => {
-    setProductIds((prev) =>
-      prev.includes(productId) ? prev : [...prev, productId],
-    );
-  }, []);
+  const toggleWishlist = useCallback(
+    async (productId) => {
+      if (isSignedIn) {
+        const result = await toggleWishlistAction(productId);
+        setProductIds(result.productIds);
+        return result.added;
+      }
 
-  const removeFromWishlist = useCallback((productId) => {
-    setProductIds((prev) => prev.filter((id) => id !== productId));
-  }, []);
-
-  const toggleWishlist = useCallback((productId) => {
-    setProductIds((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
-    );
-  }, []);
+      setProductIds((prev) => {
+        const next = prev.includes(productId)
+          ? prev.filter((id) => id !== productId)
+          : [...prev, productId];
+        return next;
+      });
+      return !productIds.includes(productId);
+    },
+    [isSignedIn, productIds],
+  );
 
   const isInWishlist = useCallback(
     (productId) => productIds.includes(productId),
@@ -68,19 +84,10 @@ export function WishlistProvider({ children }) {
       productIds,
       count: productIds.length,
       hydrated,
-      addToWishlist,
-      removeFromWishlist,
       toggleWishlist,
       isInWishlist,
     }),
-    [
-      productIds,
-      hydrated,
-      addToWishlist,
-      removeFromWishlist,
-      toggleWishlist,
-      isInWishlist,
-    ],
+    [productIds, hydrated, toggleWishlist, isInWishlist],
   );
 
   return (

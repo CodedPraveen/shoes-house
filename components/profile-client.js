@@ -6,20 +6,19 @@ import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { formatPrice } from "@/lib/format-price";
-import { productService } from "@/services/product-service";
+import AddressManager from "@/components/address-manager";
 
-export default function ProfileClient({ user }) {
+export default function ProfileClient({ user, allProducts = [] }) {
   const { items, subtotal, itemCount } = useCart();
   const { productIds: wishlistIds } = useWishlist();
   const { productIds: recentIds } = useRecentlyViewed();
 
-  const wishlistProducts = productService
-    .getAll()
+  const wishlistProducts = allProducts
     .filter((p) => wishlistIds.includes(p.id))
     .slice(0, 4);
 
   const recentProducts = recentIds
-    .map((id) => productService.getById(id))
+    .map((id) => allProducts.find((p) => p.id === id))
     .filter(Boolean)
     .slice(0, 4);
 
@@ -82,6 +81,8 @@ export default function ProfileClient({ user }) {
           <ProductGrid products={wishlistProducts} />
         </section>
       )}
+
+      <AddressManager />
 
       {recentProducts.length > 0 && (
         <section className="space-y-6">

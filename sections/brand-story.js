@@ -2,7 +2,7 @@ import SectionReveal from "@/components/section-reveal";
 
 export default function BrandStory() {
   return (
-    <SectionReveal id="story" className="px-5 py-20 sm:px-8 lg:py-28">
+    <SectionReveal id="story" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto grid w-full max-w-[1400px] gap-8 overflow-hidden rounded-[2rem] border border-black/10 bg-zinc-50 lg:grid-cols-2">
         <div className="overflow-hidden">
           <img

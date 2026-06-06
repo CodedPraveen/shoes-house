@@ -1,10 +1,9 @@
-import { products } from "@/data/catalog";
+/** Admin mock data — orders/users/stats until Phase 4+ (Prisma orders/users) */
 
 export const adminStats = {
   totalUsers: 1284,
   totalOrders: 342,
   totalRevenue: 2847500,
-  totalProducts: products.length,
 };
 
 export const adminOrders = [
@@ -13,7 +12,7 @@ export const adminOrders = [
     customer: "Arjun Mehta",
     email: "arjun@email.com",
     total: 12498,
-    status: "delivered",
+    status: "DELIVERED",
     createdAt: "2026-05-20",
   },
   {
@@ -21,7 +20,7 @@ export const adminOrders = [
     customer: "Sneha Rao",
     email: "sneha@email.com",
     total: 7299,
-    status: "shipped",
+    status: "SHIPPED",
     createdAt: "2026-05-22",
   },
   {
@@ -29,7 +28,7 @@ export const adminOrders = [
     customer: "Rohan Das",
     email: "rohan@email.com",
     total: 4999,
-    status: "processing",
+    status: "PROCESSING",
     createdAt: "2026-05-25",
   },
   {
@@ -37,7 +36,7 @@ export const adminOrders = [
     customer: "Priya Nair",
     email: "priya@email.com",
     total: 8999,
-    status: "pending",
+    status: "PENDING",
     createdAt: "2026-05-28",
   },
 ];
@@ -65,16 +64,3 @@ export const adminUsers = [
     joined: "2026-03-08",
   },
 ];
-
-export function getAdminProducts() {
-  return products.map((p, index) => {
-    const stock = p.stock ?? (index % 5 === 0 ? 3 : index % 7 === 0 ? 0 : 48);
-    const status =
-      stock === 0 ? "out_of_stock" : stock <= 5 ? "low_stock" : "in_stock";
-    return { ...p, stock, status };
-  });
-}
-
-export function getLowStockProducts() {
-  return getAdminProducts().filter((p) => p.stock <= 5);
-}

@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { getAdminProducts } from "@/data/admin-mock";
+import { productService } from "@/services/product-service";
 import { formatPrice } from "@/lib/format-price";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Products | Admin | AERÉ" };
 
-export default function AdminProductsPage() {
-  const products = getAdminProducts();
+export default async function AdminProductsPage() {
+  const products = await productService.getAll();
 
   return (
     <div className="space-y-8">
@@ -13,15 +15,15 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Products</h1>
           <p className="mt-2 text-sm text-black/60">
-            Add, edit, delete — wire to Prisma + image upload service.
+            Live inventory from Supabase via Prisma.
           </p>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/admin/products/new"
           className="rounded-full bg-black px-5 py-2.5 text-sm text-white"
         >
           Add Product
-        </button>
+        </Link>
       </div>
       <div className="overflow-x-auto rounded-2xl border border-black/10">
         <table className="w-full min-w-[720px] text-left text-sm">
@@ -40,27 +42,26 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3 font-medium">{p.name}</td>
                 <td className="px-4 py-3 capitalize">{p.category}</td>
                 <td className="px-4 py-3">{formatPrice(p.price)}</td>
-                <td className="px-4 py-3">{p.stock}</td>
+                <td className="px-4 py-3">{p.stock ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/product/${p.id}`}
+                    href={`/product/${p.slug}`}
                     className="mr-3 text-black/60 hover:text-black"
                   >
                     View
                   </Link>
-                  <button type="button" className="text-black/60 hover:text-black">
+                  <Link
+                    href={`/admin/products/${p.id}/edit`}
+                    className="text-black/60 hover:text-black"
+                  >
                     Edit
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-black/45">
-        Fields: name, brand, description, category, price, discount, stock,
-        sizes, colors, images — form UI ready for API connection.
-      </p>
     </div>
   );
 }

@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { filterProducts, sortProducts } from "@/lib/filter-products";
-import { productService } from "@/services/product-service";
 
-export function useProductFilters({ initialProducts = null, category = null } = {}) {
+export function useProductFilters({ initialProducts = [], category = null } = {}) {
   const [sortBy, setSortBy] = useState("latest");
   const [filters, setFilters] = useState({
     query: "",
@@ -15,8 +14,10 @@ export function useProductFilters({ initialProducts = null, category = null } = 
   });
 
   const products = useMemo(() => {
-    const source = initialProducts ?? productService.getAll();
-    const filtered = filterProducts(source, { ...filters, category: category ?? filters.category });
+    const filtered = filterProducts(initialProducts, {
+      ...filters,
+      category: category ?? filters.category,
+    });
     return sortProducts(filtered, sortBy);
   }, [filters, sortBy, initialProducts, category]);
 

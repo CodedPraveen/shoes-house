@@ -1,61 +1,176 @@
-import {
-  filterProducts,
-  sortProducts,
-} from "@/lib/filter-products";
-import {
-  getBestSellers,
-  getNewArrivals,
-  getProductById,
-  getProductsByCategory,
-  getRelatedProducts,
-  getTrendingProducts,
-  products,
-} from "@/data/catalog";
+import { filterProducts, sortProducts } from "@/lib/filter-products";
+import { mapProduct, mapProducts } from "@/lib/mappers/product-mapper";
+import { productInclude } from "@/lib/product-include";
+import { notDeleted } from "@/lib/prisma-helpers";
+import { prisma } from "@/lib/db";
+const productWhere = { ...notDeleted, category: { deletedAt: null } };
 
-/**
- * Product service — swap implementations when MongoDB/Prisma is added.
- */
+async function fetchAllRaw() {
+  return prisma.product.findMany({
+    where: productWhere,
+    include: productInclude,
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export const productService = {
-  getAll() {
-    return products;
+  async getAll() {
+    const rows = await fetchAllRaw();
+    return mapProducts(rows);
   },
 
-  getById(id) {
-    return getProductById(id);
+  async getById(id) {
+    const row = await prisma.product.findFirst({
+      where: { id, ...notDeleted },
+      include: productInclude,
+    });
+    return row ? mapProduct(row) : null;
   },
 
-  getByCategory(category) {
-    return getProductsByCategory(category);
+  async getBySlug(slug) {
+    const row = await prisma.product.findFirst({
+      where: { slug, ...notDeleted },
+      include: productInclude,
+    });
+    return row ? mapProduct(row) : null;
   },
 
-  getNewArrivals() {
-    return getNewArrivals();
+  async getByCategory(categorySlug) {
+    const rows = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        category: { slug: categorySlug, deletedAt: null },
+      },
+      include: productInclude,
+      orderBy: { createdAt: "desc" },
+    });
+    return mapProducts(rows);
   },
 
-  getTrending() {
-    return getTrendingProducts();
+  async getNewArrivals() {
+    const rows = await prisma.product.findMany({
+      where: { ...notDeleted, isNew: true, category: { deletedAt: null } },
+      include: productInclude,
+      orderBy: { createdAt: "desc" },
+    });
+    return mapProducts(rows);
   },
 
-  getBestSellers(limit) {
-    return getBestSellers(limit);
+  async getTrending() {
+    const rows = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        isTrending: true,
+        category: { deletedAt: null },
+      },
+      include: productInclude,
+      orderBy: { purchaseCount: "desc" },
+    });
+    return mapProducts(rows);
   },
 
-  getRelated(productId, limit) {
-    return getRelatedProducts(productId, limit);
+  async getBestSellers(limit = 6) {
+    const rows = await prisma.product.findMany({
+      where: productWhere,
+      include: productInclude,
+      orderBy: { purchaseCount: "desc" },
+      take: limit,
+    });
+    return mapProducts(rows);
   },
 
-  search(filters = {}, sortBy = "latest") {
-    const filtered = filterProducts(products, filters);
+  async getRelated(productId, limit = 4) {
+    const current = await prisma.product.findFirst({
+      where: { id: productId, ...notDeleted },
+      include: { category: true },
+    });
+    if (!current) return [];
+
+    const rows = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        id: { not: productId },
+        category: { deletedAt: null },
+        OR: [
+          { categoryId: current.categoryId },
+          { tags: { hasSome: current.tags } },
+        ],
+      },
+      include: productInclude,
+      take: limit,
+    });
+    return mapProducts(rows);
+  },
+
+  async getRelatedBySlug(slug, limit = 4) {
+    const product = await this.getBySlug(slug);
+    if (!product) return [];
+    return this.getRelated(product.id, limit);
+  },
+
+  async search(filters = {}, sortBy = "latest") {
+    const all = await this.getAll();
+    const filtered = filterProducts(all, filters);
     return sortProducts(filtered, sortBy);
   },
 
-  getCustomerFavorites(limit = 6) {
-    return [...products]
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, limit);
+  async getCustomerFavorites(limit = 6) {
+    return this.getBestSellers(limit);
   },
 
-  getTrendingThisWeek(limit = 6) {
-    return getTrendingProducts().slice(0, limit);
+  async getTrendingThisWeek(limit = 6) {
+    return this.getTrending().then((items) => items.slice(0, limit));
+  },
+
+  async getAllSlugs() {
+    return prisma.product.findMany({
+      where: notDeleted,
+      select: { slug: true },
+    });
   },
 };
+
+// export const productService = {
+//   getAll() {
+//     return products;
+//   },
+
+//   getById(id) {
+//     return getProductById(id);
+//   },
+
+//   getByCategory(category) {
+//     return getProductsByCategory(category);
+//   },
+
+//   getNewArrivals() {
+//     return getNewArrivals();
+//   },
+
+//   getTrending() {
+//     return getTrendingProducts();
+//   },
+
+//   getBestSellers(limit) {
+//     return getBestSellers(limit);
+//   },
+
+//   getRelated(productId, limit) {
+//     return getRelatedProducts(productId, limit);
+//   },
+
+//   search(filters = {}, sortBy = "latest") {
+//     const filtered = filterProducts(products, filters);
+//     return sortProducts(filtered, sortBy);
+//   },
+
+//   getCustomerFavorites(limit = 6) {
+//     return [...products]
+//       .sort((a, b) => b.rating - a.rating)
+//       .slice(0, limit);
+//   },
+
+//   getTrendingThisWeek(limit = 6) {
+//     return getTrendingProducts().slice(0, limit);
+//   },
+// };

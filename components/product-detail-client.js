@@ -25,7 +25,7 @@ export default function ProductDetailClient({ product, related }) {
   const requireAuth = (action) => {
     if (hasClerk && !isSignedIn) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.id}`)}`,
+        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.slug}`)}`,
       );
       return false;
     }
@@ -78,9 +78,6 @@ export default function ProductDetailClient({ product, related }) {
                 </span>
               )}
             </div>
-            <p className="text-sm text-black/60">
-              ★ {product.rating} · {product.reviewsCount} reviews
-            </p>
           </div>
 
           <p className="max-w-lg text-sm leading-relaxed text-black/65 sm:text-base">

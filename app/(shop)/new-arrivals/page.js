@@ -1,13 +1,15 @@
 import CatalogPageClient from "@/components/catalog-page-client";
 import { productService } from "@/services/product-service";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "New Arrivals | AERÉ",
   description: "Recently added premium sneakers and latest collections.",
 };
 
-export default function NewArrivalsPage() {
-  const products = productService.getNewArrivals();
+export default async function NewArrivalsPage() {
+  const products = await productService.getNewArrivals();
 
   return (
     <CatalogPageClient

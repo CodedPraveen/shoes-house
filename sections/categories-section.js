@@ -3,7 +3,7 @@ import SectionReveal from "@/components/section-reveal";
 import { categories } from "@/data/products";
 
 export default function CategoriesSection() {  return (
-    <SectionReveal id="categories" className="px-5 py-20 sm:px-8 lg:py-28">
+    <SectionReveal id="categories" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.25em] text-black/45">
