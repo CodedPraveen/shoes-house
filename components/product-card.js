@@ -49,7 +49,7 @@ export default function ProductCard({
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block">
+    <Link href={`/product/${product.slug}`} className="block">
       <article className="group rounded-3xl border border-black/5 bg-white p-3 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
         <div className="relative overflow-hidden rounded-2xl bg-zinc-100">
           {showRank && product.rank && <RankingBadge rank={product.rank} />}

@@ -1,13 +1,20 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-
 function getClient() {
+  console.log("KEY ID:", process.env.RAZORPAY_KEY_ID);
+  console.log("HAS SECRET:", !!process.env.RAZORPAY_KEY_SECRET);
+
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
   if (!keyId || !keySecret) {
     throw new Error("Razorpay keys not configured");
   }
-  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
 }
 
 export const razorpayService = {
