@@ -5,13 +5,19 @@ import { mapProduct } from "@/lib/mappers/product-mapper";
 
 export const cartService = {
   async getOrCreateCart(userId) {
-    let cart = await prisma.cart.findFirst({
-      where: { userId, ...notDeleted },
+    let cart = await prisma.cart.findUnique({
+      where: {
+        userId,
+      },
       include: {
         items: {
-          where: { deletedAt: null },
+          where: {
+            deletedAt: null,
+          },
           include: {
-            product: { include: productInclude },
+            product: {
+              include: productInclude,
+            },
             variant: true,
           },
         },
@@ -53,44 +59,96 @@ export const cartService = {
     });
   },
 
-  async addItem(userId, { productId, color, size, quantity = 1 }) {
+  // async addItem(userId, { productId, color, size, quantity = 1 }) {
+  //   const cart = await this.getOrCreateCart(userId);
+
+  //   const variant = await prisma.productVariant.findFirst({
+  //     where: {
+  //       productId,
+  //       colorKey: color,
+  //       size: Number(size),
+  //       ...notDeleted,
+  //       isActive: true,
+  //     },
+  //   });
+
+  //   const existing = await prisma.cartItem.findFirst({
+  //     where: {
+  //       cartId: cart.id,
+  //       productId,
+  //       color,
+  //       size: Number(size),
+  //       ...notDeleted,
+  //     },
+  //   });
+
+  //   if (existing) {
+  //     return prisma.cartItem.update({
+  //       where: { id: existing.id },
+  //       data: { quantity: existing.quantity + quantity },
+  //     });
+  //   }
+
+  //   return prisma.cartItem.create({
+  //     data: {
+  //       cartId: cart.id,
+  //       productId,
+  //       variantId: variant?.id ?? null,
+  //       color,
+  //       size: Number(size),
+  //       quantity,
+  //     },
+  //   });
+  // },
+  async addItem(userId, data) {
+    console.time("addItem");
+
     const cart = await this.getOrCreateCart(userId);
+    console.timeLog("addItem", "getOrCreateCart");
 
     const variant = await prisma.productVariant.findFirst({
       where: {
-        productId,
-        colorKey: color,
-        size: Number(size),
+        productId: data.productId,
+        colorKey: data.color,
+        size: Number(data.size),
         ...notDeleted,
         isActive: true,
       },
     });
+    console.timeLog("addItem", "variant");
 
     const existing = await prisma.cartItem.findFirst({
       where: {
         cartId: cart.id,
-        productId,
-        color,
-        size: Number(size),
+        productId: data.productId,
+        color: data.color,
+        size: Number(data.size),
         ...notDeleted,
       },
     });
+    console.timeLog("addItem", "existing");
+
+    console.timeEnd("addItem");
 
     if (existing) {
       return prisma.cartItem.update({
-        where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
+        where: {
+          id: existing.id,
+        },
+        data: {
+          quantity: existing.quantity + (data.quantity || 1),
+        },
       });
     }
 
     return prisma.cartItem.create({
       data: {
         cartId: cart.id,
-        productId,
+        productId: data.productId,
         variantId: variant?.id ?? null,
-        color,
-        size: Number(size),
-        quantity,
+        color: data.color,
+        size: Number(data.size),
+        quantity: data.quantity || 1,
       },
     });
   },

@@ -117,7 +117,7 @@ export default function CartPage() {
                 type="button"
                 className="mt-6 w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
               >
-                Checkout (Coming Soon)
+                Checkout
               </button>
             </aside>
           </div>

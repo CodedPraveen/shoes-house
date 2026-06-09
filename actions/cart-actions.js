@@ -5,14 +5,6 @@ import { cartService } from "@/services/cart-service";
 import { userService } from "@/services/user-service";
 import { assertRateLimit } from "@/lib/rate-limit";
 
-// async function requireDbUser() {
-//   const { userId: clerkId } = await auth();
-//   if (!clerkId) throw new Error("Unauthorized");
-//   const user = await userService.getByClerkId(clerkId);
-//   if (!user) throw new Error("User not synced. Sign in again.");
-//   return user;
-// }
-
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
@@ -36,11 +28,35 @@ export async function getCartAction() {
   };
 }
 
-export async function addToCartAction({ productId, color, size, quantity }) {
+// export async function addToCartAction({ productId, color, size, quantity }) {
+//   await rateLimitCart();
+//   const user = await requireDbUser();
+//   await cartService.addItem(user.id, { productId, color, size, quantity });
+//   return getCartAction();
+// }
+export async function addToCartAction(data) {
   await rateLimitCart();
+  await rateLimitCart();
+
   const user = await requireDbUser();
-  await cartService.addItem(user.id, { productId, color, size, quantity });
-  return getCartAction();
+
+  await cartService.addItem(user.id, data);
+
+  const items = await cartService.getCartItemsForClient(user.id);
+
+  const subtotal = items.reduce(
+    (s, i) => s + i.price * i.quantity,
+    0
+  );
+
+  return {
+    items,
+    itemCount: items.reduce(
+      (s, i) => s + i.quantity,
+      0
+    ),
+    subtotal,
+  };
 }
 
 export async function updateCartQuantityAction(lineId, quantity) {
