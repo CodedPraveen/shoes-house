@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AERÉ — Scalable Ecommerce 
 
-## Getting Started
+Frontend-first Next.js App Router structure, ready for MongoDB, Prisma, Stripe, and admin tooling.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Folder Map
+```
+app/
+  (shop)/          # Storefront routes (navbar + footer)
+  (auth)/          # Clerk sign-in / sign-up
+components/        # Reusable UI
+context/           # Cart + Search (Context API)
+hooks/             # useCart, useProductFilters
+lib/               # Constants, filters, formatters
+data/              # Static catalog (swap for DB)
+services/          # Data access layer (DB-ready)
+actions/           # Server actions (checkout stubs)
+types-ready/       # Schema docs for future TypeScript
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Data Flow
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. **Today:** `data/catalog.js` → `services/product-service.js` → pages/components
+2. **Later:** Prisma/MongoDB → same service interface → no UI rewrites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Cart
 
-## Learn More
+Client `CartContext` + `localStorage` (`aere-cart-v1`).
 
-To learn more about Next.js, take a look at the following resources:
+```js
+{ id, productId, name, image, price, color, size, quantity }
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Replace with server cart when auth + DB are connected.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Auth
 
-## Deploy on Vercel
+Clerk protects `/profile`. Middleware in `middleware.js`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | Purpose |
+|-------|---------|
+| `/` | Homepage |
+| `/new-arrivals` | Latest products + sort |
+| `/trending` | Best sellers, weekly, favorites |
+| `/category/[slug]` | shoes, boys, men, footwear |
+| `/product/[id]` | PDP with gallery + options |
+| `/search` | Full-page live filters |
+| `/cart` | Cart management |
+| `/profile` | Account (protected) |
+| `/sign-in`, `/sign-up` | Clerk auth |
+
+## Setup
+
+1. Copy `.env.local.example` → `.env.local`
+2. Add Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
+3. `npm run dev`
