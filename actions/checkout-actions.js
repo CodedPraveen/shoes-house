@@ -40,6 +40,29 @@ async function resolveShippingAddress(userId, { addressId, ...manual }) {
   };
 }
 
+export async function createBuyNowCheckoutSessionAction(input) {
+  const user = await requireDbUser();
+
+  try {
+    await assertRateLimit({ prefix: "checkout-buy-now", limit: 8, windowMs: 60_000 });
+    const shipping = await resolveShippingAddress(user.id, input);
+    const { productId, color, size, quantity = 1 } = input;
+
+    if (!productId || !color || !size) {
+      return { ok: false, error: "Missing product selection" };
+    }
+
+    const session = await checkoutService.createBuyNowPaymentSession(
+      user.id,
+      { ...shipping, email: user.email },
+      { productId, color, size, quantity: Number(quantity) || 1 },
+    );
+    return { ok: true, ...session };
+  } catch (err) {
+    return { ok: false, error: err.message || "Checkout failed" };
+  }
+}
+
 export async function createCheckoutSessionAction(input) {
   const user = await requireDbUser();
 

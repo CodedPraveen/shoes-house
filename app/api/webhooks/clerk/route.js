@@ -15,7 +15,8 @@ export async function POST(request) {
         { status: 500 },
       );
     }
-
+    console.log("WEBHOOK RECEIVED");
+    console.log(evt.type);
     const payload = await request.text();
     const headers = {
       "svix-id": request.headers.get("svix-id"),

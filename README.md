@@ -1,57 +1,56 @@
-# AERÉ — Scalable Ecommerce 
+# AERÉ — Premium Sneaker Ecommerce
 
-Frontend-first Next.js App Router structure, ready for MongoDB, Prisma, Stripe, and admin tooling.
+Next.js storefront + admin with Supabase, Prisma, Clerk, Razorpay, and Cloudinary.
 
-## Folder Map
-```
-app/
-  (shop)/          # Storefront routes (navbar + footer)
-  (auth)/          # Clerk sign-in / sign-up
-components/        # Reusable UI
-context/           # Cart + Search (Context API)
-hooks/             # useCart, useProductFilters
-lib/               # Constants, filters, formatters
-data/              # Static catalog (swap for DB)
-services/          # Data access layer (DB-ready)
-actions/           # Server actions (checkout stubs)
-types-ready/       # Schema docs for future TypeScript
+## Quick start
+
+```bash
+cp .env.local.example .env.local   # fill in keys
+npm install
+npm run db:push
+npm run db:seed
+npm run dev
 ```
 
-## Data Flow
+## Documentation
 
-1. **Today:** `data/catalog.js` → `services/product-service.js` → pages/components
-2. **Later:** Prisma/MongoDB → same service interface → no UI rewrites
+| File | Purpose |
+|------|---------|
+| [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) | Stack, folders, flows — start here for AI/human onboarding |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Mermaid diagrams, tables, webhooks |
+| [PERFORMANCE_REPORT.md](./PERFORMANCE_REPORT.md) | Measured bottlenecks + fixes |
+| [ROADMAP.md](./ROADMAP.md) | Phase plan |
+| [DECISIONS.md](./DECISIONS.md) | Architecture decision records |
 
-## Cart
+## Key routes
 
-Client `CartContext` + `localStorage` (`aere-cart-v1`).
-
-```js
-{ id, productId, name, image, price, color, size, quantity }
-```
-
-Replace with server cart when auth + DB are connected.
-
-## Auth
-
-Clerk protects `/profile`. Middleware in `middleware.js`.
-
-## Routes
-
-| Route | Purpose |
-|-------|---------|
+| Route | Description |
+|-------|-------------|
 | `/` | Homepage |
-| `/new-arrivals` | Latest products + sort |
-| `/trending` | Best sellers, weekly, favorites |
-| `/category/[slug]` | shoes, boys, men, footwear |
-| `/product/[id]` | PDP with gallery + options |
-| `/search` | Full-page live filters |
-| `/cart` | Cart management |
-| `/profile` | Account (protected) |
-| `/sign-in`, `/sign-up` | Clerk auth |
+| `/products` | Catalog |
+| `/product/[slug]` | Product detail + recommendations |
+| `/cart` | Cart |
+| `/checkout` | Cart checkout (Razorpay) |
+| `/checkout/buy-now` | Single-item checkout (isolated from cart) |
+| `/orders` | Order history |
+| `/admin` | Admin dashboard |
 
-## Setup
+## Performance debugging
 
-1. Copy `.env.local.example` → `.env.local`
-2. Add Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
-3. `npm run dev`
+```bash
+PERF_LOG=1 npm run dev
+```
+
+Watch terminal for `[perf] cart.add`, `[perf] checkout.create.*`, etc.
+
+## Apply schema changes
+
+```bash
+npm run db:push
+```
+
+After pulling performance updates, run `db:push` for `CheckoutSession.mode` enum.
+
+## Stack
+
+Next.js · Supabase PostgreSQL · Prisma · Clerk · Razorpay · Cloudinary · Vercel

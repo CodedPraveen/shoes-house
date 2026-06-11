@@ -236,6 +236,7 @@ model CheckoutSession {
   total           Int
   currency        String                @default("INR")
   status          CheckoutSessionStatus @default(PENDING)
+  mode            CheckoutSessionMode   @default(CART)
   shipFullName    String
   shipPhone       String
   shipLine1       String
@@ -254,6 +255,7 @@ model CheckoutSession {
 
   @@index([userId])
   @@index([status])
+  @@index([mode])
   @@index([razorpayOrderId])
   @@index([expiresAt])
   @@index([createdAt])
@@ -441,6 +443,11 @@ enum CheckoutSessionStatus {
   COMPLETED
   EXPIRED
   FAILED
+}
+
+enum CheckoutSessionMode {
+  CART
+  BUY_NOW
 }
 
 enum InventoryMovementType {
