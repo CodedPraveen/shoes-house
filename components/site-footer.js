@@ -28,6 +28,7 @@ export default function SiteFooter() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
+                      prefetch={false}
                       className="transition hover:text-black"
                     >
                       {link.label}
@@ -45,3 +46,4 @@ export default function SiteFooter() {
     </footer>
   );
 }
+

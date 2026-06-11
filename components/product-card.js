@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
@@ -11,7 +13,7 @@ import { formatPrice } from "@/lib/format-price";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-export default function ProductCard({
+function ProductCard({
   product,
   showRank = false,
   showNewBadge = false,
@@ -51,22 +53,29 @@ export default function ProductCard({
   return (
     <Link href={`/product/${product.slug}`} className="block">
       <article className="group rounded-3xl border border-black/5 bg-white p-3 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
-        <div className="relative overflow-hidden rounded-2xl bg-zinc-100">
+        <div
+          className="relative overflow-hidden rounded-2xl bg-zinc-100"
+          style={{
+            backgroundImage: `url(${product.hoverImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           {showRank && product.rank && <RankingBadge rank={product.rank} />}
           {showNewBadge && product.isNew && (
             <span className="absolute right-3 top-3 z-10 rounded-full bg-black px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-white">
               New
             </span>
           )}
-          <img
+          <Image
             src={product.image}
             alt={product.name}
-            className="h-[320px] w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-          <img
-            src={product.hoverImage}
-            alt={`${product.name} alternate view`}
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
+            width={400}
+            height={320}
+            quality={80}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="h-[320px] w-full object-cover transition duration-500 group-hover:scale-105 group-hover:opacity-0"
+            loading="lazy"
           />
 
           <button
@@ -106,3 +115,12 @@ export default function ProductCard({
     </Link>
   );
 }
+
+export default memo(ProductCard, (prevProps, nextProps) => {
+  return (
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.showRank === nextProps.showRank &&
+    prevProps.showNewBadge === nextProps.showNewBadge
+  );
+});
+

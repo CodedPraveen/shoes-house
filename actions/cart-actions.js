@@ -6,27 +6,11 @@ import { userService } from "@/services/user-service";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { withPerf } from "@/lib/perf";
 
-// async function requireDbUser() {
-//   const { userId: clerkId } = await auth();
-//   if (!clerkId) throw new Error("Unauthorized");
-//   const user = await userService.getByClerkId(clerkId);
-//   if (!user) throw new Error("User not synced. Sign in again.");
-//   return user;
-// }
-
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
-
-  console.log("CLERK ID:", clerkId);
-
+  if (!clerkId) throw new Error("Unauthorized");
   const user = await userService.getByClerkId(clerkId);
-
-  console.log("DB USER:", user);
-
-  if (!user) {
-    throw new Error("User not synced. Sign in again.");
-  }
-
+  if (!user) throw new Error("User not synced. Sign in again.");
   return user;
 }
 
