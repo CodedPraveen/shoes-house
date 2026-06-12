@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cartService } from "@/services/cart-service";
 import { userService } from "@/services/user-service";
 import { assertRateLimit } from "@/lib/rate-limit";
@@ -17,15 +17,24 @@ import { withPerf } from "@/lib/perf";
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
 
-  console.log("CLERK ID:", clerkId);
-
-  const user = await userService.getByClerkId(clerkId);
-
-  console.log("DB USER:", user);
-
-  if (!user) {
-    throw new Error("User not synced. Sign in again.");
+  if (!clerkId) {
+    throw new Error("Unauthorized");
   }
+
+  let user = await userService.getByClerkId(clerkId);
+
+  if (user) return user;
+
+  console.log("AUTO CREATING USER");
+
+  const client = await clerkClient();
+  const clerkUser = await client.users.getUser(clerkId);
+
+  user = await userService.upsertFromClerk({
+    clerkId: clerkUser.id,
+    email: clerkUser.emailAddresses[0].emailAddress,
+    name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
+  });
 
   return user;
 }

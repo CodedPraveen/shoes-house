@@ -9,10 +9,12 @@ export const invoiceService = {
     const payment = order.payments[0];
 
     return {
+      invoiceNumber: order.orderNumber,
       orderNumber: order.orderNumber,
       createdAt: order.createdAt,
       status: order.status,
       paymentStatus: payment?.status ?? "PENDING",
+      paymentMethod: "Razorpay",
       razorpayPaymentId: payment?.razorpayPaymentId,
       customer: {
         name: order.shipFullName,
@@ -46,259 +48,162 @@ export const invoiceService = {
   buildInvoiceHtml(data) {
     if (!data) return "";
 
-    const rows = data.items
-      .map(
-        (item) => `
-      <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee;">
-          ${item.name}<br/>
-          <span style="color:#666;font-size:12px;">SKU: ${item.sku} · ${item.color} · ${item.size}</span>
-        </td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${formatPrice(item.lineTotal)}</td>
-      </tr>`,
-      )
-      .join("");
-
-
     return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
-
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <title>Invoice ${data.invoiceNumber}</title>  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice ${data.orderNumber}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #fff; }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #f0f0f0; padding-bottom: 30px; }
+    .brand { flex: 1; }
+    .brand h1 { font-size: 32px; font-weight: 700; letter-spacing: 0.15em; margin-bottom: 5px; }
+    .brand p { font-size: 13px; color: #666; margin-top: 5px; }
+    .invoice-info { text-align: right; }
+    .invoice-info h2 { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+    .invoice-info p { font-size: 13px; color: #666; margin: 3px 0; }
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+    .detail-box { border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; }
+    .detail-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .detail-box p { font-size: 13px; margin: 4px 0; color: #444; }
+    .detail-box p.label { color: #999; }
+    .address-box { grid-column: 1 / -1; }
+    .address-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .address-section > div h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .address-section > div { border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; }
+    .address-section p { font-size: 13px; margin: 4px 0; color: #444; }
+    table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+    table thead { background: #000; color: #fff; }
+    table thead th { padding: 15px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    table tbody tr { border-bottom: 1px solid #e0e0e0; }
+    table tbody td { padding: 15px; font-size: 13px; }
+    table .product-name { font-weight: 600; }
+    table .product-details { font-size: 11px; color: #999; margin-top: 2px; }
+    table .qty { text-align: center; }
+    table .amount { text-align: right; font-weight: 600; }
+    .totals { display: flex; justify-content: flex-end; margin: 40px 0; }
+    .totals-box { width: 350px; }
+    .totals-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 13px; }
+    .totals-row.label { color: #666; }
+    .totals-row.total { border-top: 2px solid #000; padding-top: 12px; font-weight: 700; font-size: 16px; margin-top: 5px; }
+    .footer { text-align: center; padding-top: 30px; border-top: 1px solid #f0f0f0; margin-top: 30px; }
+    .footer p { font-size: 12px; color: #999; }
+    .footer a { color: #0066cc; text-decoration: none; }
+    @media print { body { background: none; } }
+  </style>
 </head>
-
-<body class="bg-white text-gray-900">
-
-<div class="max-w-5xl mx-auto p-8">
-
-  <!-- Header -->
-  <div class="flex justify-between items-start border-b pb-6">
-    
-    <div>
-      <h1 class="text-4xl font-bold tracking-[0.3em]">
-        AERÉ
-      </h1>
-
-      <p class="text-gray-500 mt-2">
-        Premium Footwear
-      </p>
-
-      <p class="text-sm text-gray-500">
-        support@aere.com
-      </p>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <h1>AERÉ</h1>
+        <p>Premium Sneaker Ecommerce</p>
+        <p style="margin-top: 10px; font-size: 12px;">support@aere.com</p>
+      </div>
+      <div class="invoice-info">
+        <h2>Invoice</h2>
+        <p><strong>Invoice #:</strong> ${data.orderNumber}</p>
+        <p><strong>Order #:</strong> ${data.orderNumber}</p>
+        <p><strong>Date:</strong> ${new Date(data.createdAt).toLocaleDateString("en-IN")}</p>
+      </div>
     </div>
 
-    <div class="text-right">
-      <h2 class="text-2xl font-semibold">
-        Invoice
-      </h2>
+    <!-- Customer & Payment Details -->
+    <div class="details-grid">
+      <div class="detail-box">
+        <h3>Customer Details</h3>
+        <p><strong>${data.customer.name}</strong></p>
+        ${data.customer.email ? `<p>${data.customer.email}</p>` : ""}
+        <p>${data.customer.phone}</p>
+      </div>
+      <div class="detail-box">
+        <h3>Payment Details</h3>
+        <p><span class="label">Payment Method:</span> <strong>${data.paymentMethod}</strong></p>
+        <p><span class="label">Payment Status:</span> <strong>${data.paymentStatus}</strong></p>
+        ${data.razorpayPaymentId ? `<p><span class="label">Payment ID:</span> <code style="font-size: 11px; word-break: break-all;">${data.razorpayPaymentId}</code></p>` : ""}
+      </div>
 
-      <p class="text-sm text-gray-600 mt-2">
-        Invoice #: ${data.invoiceNumber}
-      </p>
-
-      <p class="text-sm text-gray-600">
-        Order #: ${data.orderNumber}
-      </p>
-
-      <p class="text-sm text-gray-600">
-        ${new Date(data.createdAt).toLocaleDateString("en-IN")}
-      </p>
+      <!-- Shipping & Billing -->
+      <div class="address-box">
+        <div class="address-section">
+          <div>
+            <h3>Shipping Address</h3>
+            <p>${data.customer.name}</p>
+            <p>${data.shipping.line1}</p>
+            ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
+            <p>${data.shipping.city}, ${data.shipping.state}</p>
+            <p>${data.shipping.country} - ${data.shipping.pincode}</p>
+          </div>
+          <div>
+            <h3>Billing Address</h3>
+            <p>${data.customer.name}</p>
+            <p>${data.shipping.line1}</p>
+            ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
+            <p>${data.shipping.city}, ${data.shipping.state}</p>
+            <p>${data.shipping.country} - ${data.shipping.pincode}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-  </div>
-
-  <!-- Customer + Payment -->
-  <div class="grid grid-cols-2 gap-6 mt-8">
-
-    <div class="border rounded-xl p-5">
-      <h3 class="font-semibold text-lg mb-3">
-        Customer Details
-      </h3>
-
-      <p class="font-medium">
-        ${data.customer.name}
-      </p>
-
-      ${data.customer.email
-        ? `<p class="text-gray-600">${data.customer.email}</p>`
-        : ""
-      }
-
-      <p class="text-gray-600">
-        ${data.customer.phone}
-      </p>
-    </div>
-
-    <div class="border rounded-xl p-5">
-      <h3 class="font-semibold text-lg mb-3">
-        Payment Details
-      </h3>
-
-      <p>
-        <span class="font-medium">
-          Status:
-        </span>
-        ${data.paymentStatus}
-      </p>
-
-      <p>
-        <span class="font-medium">
-          Method:
-        </span>
-        ${data.paymentMethod}
-      </p>
-
-      ${data.razorpayPaymentId
-        ? `
-            <p class="break-all">
-              <span class="font-medium">
-                Payment ID:
-              </span>
-              ${data.razorpayPaymentId}
-            </p>
-          `
-        : ""
-      }
-    </div>
-
-  </div>
-
-  <!-- Shipping -->
-  <div class="border rounded-xl p-5 mt-6">
-
-    <h3 class="font-semibold text-lg mb-3">
-      Shipping Address
-    </h3>
-
-    <p>${data.customer.name}</p>
-
-    <p>${data.shipping.line1}</p>
-
-    ${data.shipping.line2
-        ? `<p>${data.shipping.line2}</p>`
-        : ""
-      }
-
-    <p>
-      ${data.shipping.city},
-      ${data.shipping.state}
-    </p>
-
-    <p>
-      ${data.shipping.country}
-      -
-      ${data.shipping.pincode}
-    </p>
-
-  </div>
-
-  <!-- Items -->
-  <div class="mt-8">
-
-    <table class="w-full border border-gray-200">
-
-      <thead class="bg-black text-white">
-
+    <!-- Items Table -->
+    <table>
+      <thead>
         <tr>
-          <th class="text-left p-3">
-            Product
-          </th>
-
-          <th class="p-3">
-            Qty
-          </th>
-
-          <th class="text-right p-3">
-            Unit Price
-          </th>
-
-          <th class="text-right p-3">
-            Total
-          </th>
+          <th style="text-align: left;">Product</th>
+          <th style="text-align: center;">Qty</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Total</th>
         </tr>
-
       </thead>
-
       <tbody>
-
         ${data.items
-        .map(
-          (item) => `
-            <tr class="border-t">
-
-              <td class="p-4">
-
-                <div class="font-medium">
-                  ${item.name}
-                </div>
-
-                <div class="text-xs text-gray-500 mt-1">
-                  SKU: ${item.sku}
-                  ${item.color ? ` • ${item.color}` : ""}
-                  ${item.size ? ` • ${item.size}` : ""}
-                </div>
-
-              </td>
-
-              <td class="text-center">
-                ${item.quantity}
-              </td>
-
-              <td class="text-right p-4">
-                ${formatPrice(item.unitPrice)}
-              </td>
-
-              <td class="text-right p-4 font-medium">
-                ${formatPrice(item.lineTotal)}
-              </td>
-
-            </tr>
-          `,
-        )
-        .join("")}
-
+          .map(
+            (item) => `
+          <tr>
+            <td>
+              <div class="product-name">${item.name}</div>
+              <div class="product-details">SKU: ${item.sku} ${item.color ? `• ${item.color}` : ""} ${item.size ? `• Size ${item.size}` : ""}</div>
+            </td>
+            <td class="qty">${item.quantity}</td>
+            <td style="text-align: right;">${formatPrice(item.unitPrice)}</td>
+            <td class="amount">${formatPrice(item.lineTotal)}</td>
+          </tr>
+        `,
+          )
+          .join("")}
       </tbody>
-
     </table>
 
-  </div>
-
-  <!-- Totals -->
-  <div class="flex justify-end mt-8">
-
-    <div class="w-80">
-
-      <div class="flex justify-between py-2">
-        <span>Subtotal</span>
-        <span>${formatPrice(data.subtotal)}</span>
+    <!-- Totals -->
+    <div class="totals">
+      <div class="totals-box">
+        <div class="totals-row label">
+          <span>Subtotal</span>
+          <span>${formatPrice(data.subtotal)}</span>
+        </div>
+        <div class="totals-row label">
+          <span>Shipping</span>
+          <span>${formatPrice(data.shippingCost)}</span>
+        </div>
+        <div class="totals-row total">
+          <span>Grand Total</span>
+          <span>${formatPrice(data.total)}</span>
+        </div>
       </div>
-
-      <div class="flex justify-between py-2">
-        <span>Shipping</span>
-        <span>${formatPrice(data.shippingCost)}</span>
-      </div>
-
-      <div class="flex justify-between py-4 border-t text-xl font-bold">
-        <span>Total</span>
-        <span>${formatPrice(data.total)}</span>
-      </div>
-
     </div>
 
+    <!-- Footer -->
+    <div class="footer">
+      <p>Thank you for shopping with AERÉ. For order status and support, visit our website.</p>
+      <p style="margin-top: 8px; font-size: 11px;">This is not a GST invoice. For tax purposes, refer to your order confirmation email.</p>
+    </div>
   </div>
-
-  <div class="mt-12 text-center text-sm text-gray-500">
-    Thank you for shopping with AERÉ.
-  </div>
-
-</div>
-
 </body>
 </html>
 `;

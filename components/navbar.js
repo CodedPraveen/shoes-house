@@ -24,6 +24,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const shouldPrefetch = (href) => {
+    return href === "/new-arrivals" || href === "/trending";
+  };
+
   return (
     <>
       <header
@@ -43,6 +47,7 @@ export default function Navbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={shouldPrefetch(item.href)}
                   className="text-black/75 transition hover:text-black"
                 >
                   {item.label}
@@ -67,6 +72,7 @@ export default function Navbar() {
             </button>
             <Link
               href="/cart"
+              prefetch={true}
               className="relative rounded-full p-2 transition hover:bg-black/5"
               aria-label="Cart"
             >
@@ -94,3 +100,4 @@ export default function Navbar() {
     </>
   );
 }
+
