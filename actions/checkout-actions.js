@@ -1,21 +1,12 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { checkoutService } from "@/services/checkout-service";
-import { userService } from "@/services/user-service";
 import {
   addressService,
   toCheckoutAddress,
 } from "@/services/address-service";
 import { assertRateLimit } from "@/lib/rate-limit";
-
-async function requireDbUser() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("Unauthorized");
-  const user = await userService.getByClerkId(clerkId);
-  if (!user) throw new Error("User not synced. Sign in again.");
-  return user;
-}
+import { requireDbUser } from "@/lib/require-db-user";
 
 async function resolveShippingAddress(userId, { addressId, ...manual }) {
   if (addressId) {
