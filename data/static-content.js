@@ -10,7 +10,7 @@ export const staticPages = {
       },
       {
         heading: "Flagship",
-        body: "Shoes House Studio, Bandra Kurla Complex, Mumbai, India",
+        body: "Shoes House, Dhorimanna, Balotra, Rajasthan, India",
       },
     ],
   },
@@ -116,18 +116,15 @@ export const staticPages = {
       },
     ],
   },
+
   stores: {
     eyebrow: "Stores",
     title: "Experience Shoes House",
     description: "Visit our studios for fit sessions and exclusive drops.",
     sections: [
       {
-        heading: "Mumbai Studio",
-        body: "BKC — Appointments recommended. Walk-ins welcome Fri–Sun.",
-      },
-      {
-        heading: "Delhi Studio",
-        body: "Hauz Khas — Opening soon. Join the waitlist via Contact.",
+        heading: "Shoes House ",
+        body: "Dhorimanna, Balotra, Rajasthan, India",
       },
     ],
   },
