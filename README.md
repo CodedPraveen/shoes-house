@@ -1,4 +1,4 @@
-# AERÉ — Scalable Ecommerce 
+# Shoes House — Scalable Ecommerce 
 
 Frontend-first Next.js App Router structure, ready for MongoDB, Prisma, Stripe, and admin tooling.
 

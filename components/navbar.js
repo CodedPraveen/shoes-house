@@ -35,7 +35,7 @@ export default function Navbar() {
       >
         <nav className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-5 sm:px-8">
           <Link href="/" className="text-lg font-semibold tracking-[0.25em]">
-            AERÉ
+            SHOES HOUSE
           </Link>
 
           <ul className="hidden items-center gap-8 text-sm md:flex">

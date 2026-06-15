@@ -2,7 +2,7 @@ export const staticPages = {
   contact: {
     eyebrow: "Contact",
     title: "We're here to help",
-    description: "Reach the AERÉ team for orders, sizing, and support.",
+    description: "Reach the Shoes House team for orders, sizing, and support.",
     sections: [
       {
         heading: "Customer Care",
@@ -10,7 +10,7 @@ export const staticPages = {
       },
       {
         heading: "Flagship",
-        body: "AERÉ Studio, Bandra Kurla Complex, Mumbai, India",
+        body: "Shoes House Studio, Bandra Kurla Complex, Mumbai, India",
       },
     ],
   },
@@ -67,14 +67,14 @@ export const staticPages = {
       },
       {
         heading: "Authenticity",
-        body: "Every AERÉ pair ships with a unique authenticity card.",
+        body: "Every Shoes House pair ships with a unique authenticity card.",
       },
     ],
   },
   about: {
     eyebrow: "About",
     title: "Quiet luxury in motion",
-    description: "AERÉ designs premium sneakers for modern city life.",
+    description: "Shoes House designs premium sneakers for modern city life.",
     sections: [
       {
         heading: "Philosophy",
@@ -103,7 +103,7 @@ export const staticPages = {
   },
   careers: {
     eyebrow: "Careers",
-    title: "Join AERÉ",
+    title: "Join Shoes House",
     description: "Build the future of premium sneaker retail with us.",
     sections: [
       {
@@ -118,7 +118,7 @@ export const staticPages = {
   },
   stores: {
     eyebrow: "Stores",
-    title: "Experience AERÉ",
+    title: "Experience Shoes House",
     description: "Visit our studios for fit sessions and exclusive drops.",
     sections: [
       {

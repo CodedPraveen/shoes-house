@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const product = await productService.getBySlug(slug);
-  if (!product) return { title: "Product | AERÉ" };
+  if (!product) return { title: "Product | Shoes House" };
 
   return {
-    title: `${product.name} | AERÉ`,
+    title: `${product.name} | Shoes House`,
     description: product.description,
   };
 }

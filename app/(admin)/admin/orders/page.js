@@ -2,7 +2,7 @@ import { ORDER_STATUSES } from "@/lib/constants";
 import { getAdminOrdersAction } from "@/actions/order-actions";
 import AdminOrdersClient from "@/components/admin-orders-client";
 
-export const metadata = { title: "Orders | Admin | AERÉ" };
+export const metadata = { title: "Orders | Admin | Shoes House" };
 
 export default async function AdminOrdersPage() {
   let orders = [];

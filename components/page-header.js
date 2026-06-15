@@ -1,6 +1,6 @@
 export default function PageHeader({ eyebrow, title, description, children }) {
   return (
-    <div className="mx-auto w-full max-w-[1400px] space-y-4 px-5 py-16 sm:px-8 lg:py-20">
+    <div className="mx-auto w-full max-w-[1400px] space-y-4 px-5 py-10 sm:px-8 lg:py-5 lg:pb-12">
       {eyebrow && (
         <p className="text-xs uppercase tracking-[0.25em] text-black/45">
           {eyebrow}

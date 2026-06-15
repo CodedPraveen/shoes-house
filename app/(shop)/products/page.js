@@ -4,8 +4,8 @@ import { productService } from "@/services/product-service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "All Shoes | AERÉ",
-  description: "Browse the complete AERÉ premium sneaker collection.",
+  title: "All Shoes | Shoes House",
+  description: "Browse the complete Shoes House premium sneaker collection.",
 };
 
 export default async function ProductsPage() {

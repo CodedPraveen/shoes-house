@@ -5,7 +5,7 @@ import { productService } from "@/services/product-service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Trending | AERÉ",
+  title: "Trending | Shoes House",
   description: "Best sellers and trending sneakers this week.",
 };
 

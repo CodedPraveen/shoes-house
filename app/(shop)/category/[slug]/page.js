@@ -16,8 +16,8 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const label = labels[slug] ?? "Category";
   return {
-    title: `${label} | AERÉ`,
-    description: `Shop ${label.toLowerCase()} from AERÉ premium collection.`,
+    title: `${label} | Shoes House`,
+    description: `Shop ${label.toLowerCase()} from Shoes House premium collection.`,
   };
 }
 

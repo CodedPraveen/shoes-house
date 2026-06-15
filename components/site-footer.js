@@ -12,7 +12,7 @@ export default function SiteFooter() {
     <footer className="border-t border-black/10 bg-white">
       <div className="mx-auto grid w-full max-w-[1400px] gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1.4fr_2fr]">
         <div className="space-y-6">
-          <p className="text-lg font-semibold tracking-[0.2em]">AERÉ</p>
+          <p className="text-lg font-semibold tracking-[0.2em]">Shoes House</p>
           <p className="max-w-xs text-sm leading-relaxed text-black/60">
             Elevated footwear for modern movement. Crafted with clean form and
             premium function.
@@ -40,7 +40,7 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-black/10 py-6 text-center text-xs text-black/45">
-        Copyright {new Date().getFullYear()} AERÉ. All rights reserved.
+        Copyright {new Date().getFullYear()} Shoes House. All rights reserved.
       </div>
     </footer>
   );

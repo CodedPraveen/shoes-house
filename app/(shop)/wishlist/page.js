@@ -4,7 +4,7 @@ import { productService } from "@/services/product-service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Wishlist | AERÉ",
+  title: "Wishlist | Shoes House",
 };
 
 export default async function WishlistPage() {

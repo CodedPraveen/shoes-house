@@ -17,7 +17,7 @@ export default function AdminSidebar() {
   return (
     <aside className="w-56 shrink-0 border-r border-black/10 bg-zinc-50 p-6">
       <Link href="/" className="text-sm font-semibold tracking-[0.2em]">
-        AERÉ
+        Shoes House
       </Link>
       <p className="mt-1 text-xs text-black/45">Admin</p>
       <nav className="mt-8 space-y-1">

@@ -1,4 +1,4 @@
-# AERÉ Architecture
+# Shoes House Architecture
 
 ## System diagram
 

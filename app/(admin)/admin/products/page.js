@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/format-price";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Products | Admin | AERÉ" };
+export const metadata = { title: "Products | Admin | Shoes House" };
 
 export default async function AdminProductsPage() {
   const products = await productService.getAll();

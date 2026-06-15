@@ -64,7 +64,7 @@ export const invoiceService = {
 <html>
 <head><meta charset="utf-8"/><title>Invoice ${data.orderNumber}</title></head>
 <body style="font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;">
-  <h1 style="letter-spacing:0.2em;font-weight:600;">AERÉ</h1>
+  <h1 style="letter-spacing:0.2em;font-weight:600;">Shoes House</h1>
   <p style="color:#666;">Tax Invoice / Receipt</p>
   <p><strong>Order:</strong> ${data.orderNumber}<br/>
   <strong>Date:</strong> ${new Date(data.createdAt).toLocaleDateString("en-IN")}<br/>
@@ -83,7 +83,7 @@ export const invoiceService = {
     <p>Shipping: ${formatPrice(data.shippingCost)}</p>
     <p style="font-size:18px;font-weight:600;">Total: ${formatPrice(data.total)}</p>
   </div>
-  <p style="margin-top:40px;font-size:12px;color:#888;">Domestic shipping only. Thank you for shopping with AERÉ.</p>
+  <p style="margin-top:40px;font-size:12px;color:#888;">Domestic shipping only. Thank you for shopping with Shoes House.</p>
 </body>
 </html>`;
   },

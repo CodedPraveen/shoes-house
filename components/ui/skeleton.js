@@ -1,4 +1,4 @@
-/** Premium neutral skeletons — matches AERÉ zinc/black palette */
+/** Premium neutral skeletons — matches Shoes House zinc/black palette */
 
 export function Skeleton({ className = "" }) {
   return (
