@@ -167,7 +167,7 @@ export default function ProductDetailClient({ product, related }) {
               onClick={handleBuyNow}
               className="rounded-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
             >
-              Buy Now
+              Buy Now2
             </button>
             <button
               type="button"
