@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
@@ -16,8 +17,7 @@ import {
   updateCartQuantityAction,
 } from "@/actions/cart-actions";
 import { CART_STORAGE_KEY } from "@/lib/constants";
-
-const CartContext = createContext(null);
+import { buildCartSummary, optimisticAddItem } from "@/lib/cart-utils";
 
 function loadGuestCart() {
   if (typeof window === "undefined") return [];
@@ -34,23 +34,26 @@ function saveGuestCart(items) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
 }
 
-function buildGuestLineId(productId, color, size) {
-  return `${productId}-${color}-${size}`;
-}
+const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const { isSignedIn, isLoaded } = useAuthSafe();
   const [items, setItems] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const syncLock = useRef(0);
+
+  const applySummary = useCallback((summary) => {
+    setItems(summary.items);
+  }, []);
 
   const syncFromServer = useCallback(async () => {
     try {
       const data = await getCartAction();
-      setItems(data.items);
+      applySummary(data);
     } catch {
       setItems([]);
     }
-  }, []);
+  }, [applySummary]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -72,90 +75,90 @@ export function CartProvider({ children }) {
       const { product, color, size, quantity = 1 } = payload;
 
       if (isSignedIn) {
-        const data = await addToCartAction({
-          productId: product.id,
-          color,
-          size,
-          quantity,
-        });
-        setItems(data.items);
-        return;
-      }
-
-      const lineId = buildGuestLineId(product.id, color, size);
-      setItems((prev) => {
-        const existing = prev.find((item) => item.id === lineId);
-        if (existing) {
-          return prev.map((item) =>
-            item.id === lineId
-              ? { ...item, quantity: item.quantity + quantity }
-              : item,
-          );
-        }
-        return [
-          ...prev,
-          {
-            id: lineId,
+        const previous = items;
+        setItems(optimisticAddItem(items, payload));
+        const lock = ++syncLock.current;
+        try {
+          const data = await addToCartAction({
             productId: product.id,
-            name: product.name,
-            image: product.image,
-            price: product.price,
             color,
             size,
             quantity,
-          },
-        ];
-      });
+          });
+          if (lock === syncLock.current) applySummary(data);
+        } catch {
+          if (lock === syncLock.current) setItems(previous);
+          throw new Error("Could not add to cart");
+        }
+        return;
+      }
+
+      setItems((prev) => optimisticAddItem(prev, payload));
     },
-    [isSignedIn],
+    [isSignedIn, items, applySummary],
   );
 
   const removeItem = useCallback(
     async (lineId) => {
       if (isSignedIn) {
-        const data = await removeFromCartAction(lineId);
-        setItems(data.items);
+        const previous = items;
+        setItems((prev) => prev.filter((item) => item.id !== lineId));
+        const lock = ++syncLock.current;
+        try {
+          const data = await removeFromCartAction(lineId);
+          if (lock === syncLock.current) applySummary(data);
+        } catch {
+          if (lock === syncLock.current) setItems(previous);
+        }
         return;
       }
       setItems((prev) => prev.filter((item) => item.id !== lineId));
     },
-    [isSignedIn],
+    [isSignedIn, items, applySummary],
   );
 
   const updateQuantity = useCallback(
     async (lineId, quantity) => {
       if (quantity < 1) return;
+
       if (isSignedIn) {
-        const data = await updateCartQuantityAction(lineId, quantity);
-        setItems(data.items);
+        const previous = items;
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === lineId ? { ...item, quantity } : item,
+          ),
+        );
+        const lock = ++syncLock.current;
+        try {
+          const data = await updateCartQuantityAction(lineId, quantity);
+          if (lock === syncLock.current) applySummary(data);
+        } catch {
+          if (lock === syncLock.current) setItems(previous);
+        }
         return;
       }
+
       setItems((prev) =>
         prev.map((item) =>
           item.id === lineId ? { ...item, quantity } : item,
         ),
       );
     },
-    [isSignedIn],
+    [isSignedIn, items, applySummary],
   );
 
   const clearCart = useCallback(async () => {
     if (isSignedIn) {
       const { clearCartAction } = await import("@/actions/cart-actions");
       const data = await clearCartAction();
-      setItems(data.items);
+      applySummary(data);
       return;
     }
     setItems([]);
-  }, [isSignedIn]);
+  }, [isSignedIn, applySummary]);
 
   const value = useMemo(() => {
-    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
-
+    const { itemCount, subtotal } = buildCartSummary(items);
     return {
       items,
       itemCount,

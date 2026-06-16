@@ -1,15 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, subtotal, itemCount, updateQuantity, removeItem, hydrated } =
     useCart();
+
+  const handleBuyNow = (item) => {
+    const q = new URLSearchParams({
+      productId: item.productId,
+      color: item.color,
+      size: String(item.size),
+      quantity: String(item.quantity),
+    });
+    router.push(`/checkout/buy-now?${q.toString()}`);
+  };
 
   return (
     <AuthGate>
@@ -59,7 +71,7 @@ export default function CartPage() {
                         {formatPrice(item.price)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="inline-flex items-center rounded-full border border-black/15">
                         <button
                           type="button"
@@ -94,6 +106,15 @@ export default function CartPage() {
                         aria-label="Remove item"
                       >
                         <Trash2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBuyNow(item)}
+                        className="ml-auto flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs font-medium text-white transition hover:scale-[1.01]"
+                        aria-label="Buy now"
+                      >
+                        <ShoppingBag size={14} />
+                        Buy Now
                       </button>
                     </div>
                   </div>

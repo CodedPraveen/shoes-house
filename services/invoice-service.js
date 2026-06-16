@@ -9,10 +9,12 @@ export const invoiceService = {
     const payment = order.payments[0];
 
     return {
+      invoiceNumber: order.orderNumber,
       orderNumber: order.orderNumber,
       createdAt: order.createdAt,
       status: order.status,
       paymentStatus: payment?.status ?? "PENDING",
+      paymentMethod: "Razorpay",
       razorpayPaymentId: payment?.razorpayPaymentId,
       customer: {
         name: order.shipFullName,
@@ -46,21 +48,8 @@ export const invoiceService = {
   buildInvoiceHtml(data) {
     if (!data) return "";
 
-    const rows = data.items
-      .map(
-        (item) => `
-      <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee;">
-          ${item.name}<br/>
-          <span style="color:#666;font-size:12px;">SKU: ${item.sku} · ${item.color} · ${item.size}</span>
-        </td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${formatPrice(item.lineTotal)}</td>
-      </tr>`,
-      )
-      .join("");
-
-    return `<!DOCTYPE html>
+    return `
+<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"/><title>Invoice ${data.orderNumber}</title></head>
 <body style="font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;color:#111;">
@@ -85,6 +74,7 @@ export const invoiceService = {
   </div>
   <p style="margin-top:40px;font-size:12px;color:#888;">Domestic shipping only. Thank you for shopping with Shoes House.</p>
 </body>
-</html>`;
+</html>
+`;
   },
 };

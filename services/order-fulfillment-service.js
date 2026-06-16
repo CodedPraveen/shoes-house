@@ -225,7 +225,9 @@ export async function fulfillPaidCheckout({
       return { ok: true, duplicate: true, orderId: result.orderId };
     }
 
-    await cartService.clearCart(session.userId);
+    if (session.mode !== "BUY_NOW") {
+      await cartService.clearCart(session.userId);
+    }
 
     logWebhook("FULFILLED", {
       razorpayPaymentId,

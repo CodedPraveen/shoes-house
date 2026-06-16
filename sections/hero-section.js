@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen overflow-hidden px-5 pt-20 sm:px-8">
@@ -50,9 +52,14 @@ export default function HeroSection() {
             Limited Edition
           </div>
           <div className="overflow-hidden rounded-[2.5rem] border border-black/5 shadow-2xl shadow-black/10">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1605348532760-6753d2c43329?auto=format&fit=crop&w=1400&q=80"
               alt="Premium sneaker showcase"
+              width={1400}
+              height={520}
+              quality={85}
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="h-[420px] w-full object-cover sm:h-[520px]"
             />
           </div>
@@ -61,3 +68,4 @@ export default function HeroSection() {
     </section>
   );
 }
+

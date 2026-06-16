@@ -2,16 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { addressService } from "@/services/address-service";
-import { userService } from "@/services/user-service";
 import { revalidatePath } from "next/cache";
-
-async function requireDbUser() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("Unauthorized");
-  const user = await userService.getByClerkId(clerkId);
-  if (!user) throw new Error("User not synced");
-  return user;
-}
+import { requireDbUser } from "@/lib/require-db-user";
 
 export async function getAddressesAction() {
   const user = await requireDbUser();

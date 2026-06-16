@@ -3,7 +3,7 @@ import CatalogPageClient from "@/components/catalog-page-client";
 import { CATEGORY_SLUGS } from "@/lib/constants";
 import { productService } from "@/services/product-service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 const labels = {
   shoes: "Shoes",
