@@ -1,22 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/admin-auth";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { productAdminService } from "@/services/product-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
 
 function revalidateProductPaths(slug) {
-  revalidatePath("/products");
-  revalidatePath("/search");
-  revalidatePath("/new-arrivals");
-  revalidatePath("/trending");
+  revalidateTag("products");
+  revalidateTag("search-catalog");
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
-  if (slug) {
-    revalidatePath(`/product/${slug}`);
-    revalidatePath(`/category`);
-  }
+  if (slug) revalidatePath(`/product/${slug}`);
 }
 
 export async function getAdminCategoriesAction() {

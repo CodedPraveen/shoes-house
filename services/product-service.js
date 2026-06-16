@@ -128,49 +128,113 @@ export const productService = {
       select: { slug: true },
     });
   },
+
+  /** Lightweight catalog for search modal (no variants/colors join) */
+  async getSearchCatalog() {
+    const rows = await prisma.product.findMany({
+      where: productWhere,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        compareAtPrice: true,
+        discount: true,
+        isNew: true,
+        isTrending: true,
+        purchaseCount: true,
+        tags: true,
+        brand: true,
+        category: { select: { slug: true, name: true } },
+        images: {
+          where: { deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+          take: 2,
+          select: { url: true, isHover: true },
+        },
+        sizes: { select: { size: true } },
+        colors: { select: { colorKey: true, label: true, hex: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return rows.map((p) => {
+      const primary = p.images.find((i) => !i.isHover) ?? p.images[0];
+      const hover = p.images.find((i) => i.isHover) ?? p.images[1] ?? primary;
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        brand: p.brand,
+        price: p.price,
+        compareAtPrice: p.compareAtPrice ?? undefined,
+        discount: p.discount ?? undefined,
+        isNew: p.isNew,
+        isTrending: p.isTrending,
+        purchaseCount: p.purchaseCount,
+        tags: p.tags,
+        category: p.category.slug,
+        categoryLabel: p.category.name,
+        image: primary?.url ?? "",
+        hoverImage: hover?.url ?? primary?.url ?? "",
+        images: p.images.map((i) => i.url),
+        sizes: p.sizes.map((s) => s.size).sort((a, b) => a - b),
+        colors: p.colors.map((c) => ({
+          id: c.colorKey,
+          label: c.label,
+          hex: c.hex,
+        })),
+      };
+    });
+  },
+
+  async getSimilarBySlug(slug, limit = 4) {
+    const product = await this.getBySlug(slug);
+    if (!product) return [];
+
+    const min = Math.floor(product.price * 0.8);
+    const max = Math.ceil(product.price * 1.2);
+
+    const rows = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        id: { not: product.id },
+        category: { slug: product.category, deletedAt: null },
+        price: { gte: min, lte: max },
+      },
+      include: productInclude,
+      take: limit,
+      orderBy: { purchaseCount: "desc" },
+    });
+    return mapProducts(rows);
+  },
+
+  async getByBrand(brand, excludeId, limit = 4) {
+    const rows = await prisma.product.findMany({
+      where: {
+        ...notDeleted,
+        brand,
+        id: { not: excludeId },
+        category: { deletedAt: null },
+      },
+      include: productInclude,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+    return mapProducts(rows);
+  },
+
+  async getByIds(ids, limit = 4) {
+    const unique = [...new Set(ids)].filter(Boolean).slice(0, limit);
+    if (!unique.length) return [];
+
+    const rows = await prisma.product.findMany({
+      where: { id: { in: unique }, ...notDeleted },
+      include: productInclude,
+    });
+    const order = new Map(unique.map((id, i) => [id, i]));
+    return mapProducts(rows).sort(
+      (a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99),
+    );
+  },
 };
-
-// export const productService = {
-//   getAll() {
-//     return products;
-//   },
-
-//   getById(id) {
-//     return getProductById(id);
-//   },
-
-//   getByCategory(category) {
-//     return getProductsByCategory(category);
-//   },
-
-//   getNewArrivals() {
-//     return getNewArrivals();
-//   },
-
-//   getTrending() {
-//     return getTrendingProducts();
-//   },
-
-//   getBestSellers(limit) {
-//     return getBestSellers(limit);
-//   },
-
-//   getRelated(productId, limit) {
-//     return getRelatedProducts(productId, limit);
-//   },
-
-//   search(filters = {}, sortBy = "latest") {
-//     const filtered = filterProducts(products, filters);
-//     return sortProducts(filtered, sortBy);
-//   },
-
-//   getCustomerFavorites(limit = 6) {
-//     return [...products]
-//       .sort((a, b) => b.rating - a.rating)
-//       .slice(0, limit);
-//   },
-
-//   getTrendingThisWeek(limit = 6) {
-//     return getTrendingProducts().slice(0, limit);
-//   },
-// };

@@ -1,7 +1,7 @@
 import ProductsPageClient from "@/components/products-page-client";
 import { productService } from "@/services/product-service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export const metadata = {
   title: "All Shoes | Shoes House",

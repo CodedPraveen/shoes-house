@@ -1,78 +1,38 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { cartService } from "@/services/cart-service";
-import { userService } from "@/services/user-service";
 import { assertRateLimit } from "@/lib/rate-limit";
-
-async function requireDbUser() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("Unauthorized");
-  const user = await userService.getByClerkId(clerkId);
-  if (!user) throw new Error("User not synced. Sign in again.");
-  return user;
-}
-
-async function rateLimitCart() {
-  await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
-}
+import { withPerf } from "@/lib/perf";
+import { requireDbUser } from "@/lib/require-db-user";
 
 export async function getCartAction() {
   const user = await requireDbUser();
-  const items = await cartService.getCartItemsForClient(user.id);
-  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  return {
-    items,
-    itemCount: items.reduce((s, i) => s + i.quantity, 0),
-    subtotal,
-  };
+  return withPerf("cart.get", () => cartService.getCartSummary(user.id));
 }
 
-// export async function addToCartAction({ productId, color, size, quantity }) {
-//   await rateLimitCart();
-//   const user = await requireDbUser();
-//   await cartService.addItem(user.id, { productId, color, size, quantity });
-//   return getCartAction();
-// }
-export async function addToCartAction(data) {
-  await rateLimitCart();
-  await rateLimitCart();
-
+export async function addToCartAction({ productId, color, size, quantity = 1 }) {
+  await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
   const user = await requireDbUser();
-
-  await cartService.addItem(user.id, data);
-
-  const items = await cartService.getCartItemsForClient(user.id);
-
-  const subtotal = items.reduce(
-    (s, i) => s + i.price * i.quantity,
-    0
+  return withPerf("cart.add", () =>
+    cartService.addItem(user.id, { productId, color, size, quantity }),
   );
-
-  return {
-    items,
-    itemCount: items.reduce(
-      (s, i) => s + i.quantity,
-      0
-    ),
-    subtotal,
-  };
 }
 
 export async function updateCartQuantityAction(lineId, quantity) {
+  await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
   const user = await requireDbUser();
-  await cartService.updateQuantity(user.id, lineId, quantity);
-  return getCartAction();
+  return withPerf("cart.update", () =>
+    cartService.updateQuantity(user.id, lineId, quantity),
+  );
 }
 
 export async function removeFromCartAction(lineId) {
+  await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
   const user = await requireDbUser();
-  await cartService.removeItem(user.id, lineId);
-  return getCartAction();
+  return withPerf("cart.remove", () => cartService.removeItem(user.id, lineId));
 }
 
 export async function clearCartAction() {
   const user = await requireDbUser();
-  await cartService.clearCart(user.id);
-  return getCartAction();
+  return withPerf("cart.clear", () => cartService.clearCart(user.id));
 }

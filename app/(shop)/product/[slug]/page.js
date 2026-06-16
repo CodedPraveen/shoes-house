@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/product-detail-client";
 import ProductViewTracker from "@/components/product-view-tracker";
-import { productService } from "@/services/product-service";
+import { getCachedProductBySlug } from "@/lib/product-cache";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = await productService.getBySlug(slug);
+  const product = await getCachedProductBySlug(slug);
   if (!product) return { title: "Product | Shoes House" };
 
   return {
@@ -18,18 +18,16 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
-  const product = await productService.getBySlug(slug);
+  const product = await getCachedProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const related = await productService.getRelatedBySlug(slug, 4);
-
   return (
     <>
       <ProductViewTracker productId={product.id} />
-      <ProductDetailClient product={product} related={related} />
+      <ProductDetailClient product={product} />
     </>
   );
 }

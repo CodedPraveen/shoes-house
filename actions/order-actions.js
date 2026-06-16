@@ -1,18 +1,9 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { orderService } from "@/services/order-service";
-import { userService } from "@/services/user-service";
 import { isAdminUser } from "@/lib/auth";
 import { currentUser } from "@clerk/nextjs/server";
-
-async function requireDbUser() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("Unauthorized");
-  const user = await userService.getByClerkId(clerkId);
-  if (!user) throw new Error("User not synced");
-  return user;
-}
+import { requireDbUser } from "@/lib/require-db-user";
 
 export async function getMyOrdersAction() {
   const user = await requireDbUser();

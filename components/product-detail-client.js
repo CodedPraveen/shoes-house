@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
 import { Heart, Minus, Plus, ShoppingBag } from "lucide-react";
 import ProductGallery from "@/components/product-gallery";
-import ProductGrid from "@/components/product-grid";
+import ProductRecommendations from "@/components/product-recommendations";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-export default function ProductDetailClient({ product, related }) {
+export default function ProductDetailClient({ product }) {
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
@@ -47,8 +47,13 @@ export default function ProductDetailClient({ product, related }) {
 
   const handleBuyNow = () => {
     requireAuth(() => {
-      addItem({ product, color, size, quantity });
-      router.push("/checkout");
+      const q = new URLSearchParams({
+        productId: product.id,
+        color,
+        size: String(size),
+        quantity: String(quantity),
+      });
+      router.push(`/checkout/buy-now?${q.toString()}`);
     });
   };
 
@@ -199,12 +204,13 @@ export default function ProductDetailClient({ product, related }) {
         </div>
       </div>
 
-      <section className="space-y-8">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          Related Products
-        </h2>
-        <ProductGrid products={related} />
-      </section>
+      <ProductRecommendations
+        slug={product.slug}
+        productId={product.id}
+        brand={product.brand}
+        category={product.category}
+        price={product.price}
+      />
     </div>
   );
 }
