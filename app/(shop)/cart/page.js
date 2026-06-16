@@ -13,6 +13,11 @@ export default function CartPage() {
   const { items, subtotal, itemCount, updateQuantity, removeItem, hydrated } =
     useCart();
 
+  const handleCheckoutAll = () => {
+    const cartItems = encodeURIComponent(JSON.stringify(items));
+    router.push(`/checkout?cart=${cartItems}`);
+  };
+
   const handleBuyNow = (item) => {
     const q = new URLSearchParams({
       productId: item.productId,
@@ -136,6 +141,7 @@ export default function CartPage() {
               </div>
               <button
                 type="button"
+                onClick={handleCheckoutAll}
                 className="mt-6 w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
               >
                 Checkout
