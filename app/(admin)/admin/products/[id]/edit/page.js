@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import AdminProductForm from "@/components/admin/admin-product-form";
 import { productAdminService } from "@/services/product-admin-service";
 
-export const metadata = { title: "Edit Product | Admin | AERÉ" };
+export const metadata = { title: "Edit Product | Admin | Shoes House" };
 
 export default async function AdminEditProductPage({ params }) {
   const { id } = await params;

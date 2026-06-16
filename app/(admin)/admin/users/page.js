@@ -1,6 +1,6 @@
 import { adminUsers } from "@/data/admin-mock";
 
-export const metadata = { title: "Users | Admin | AERÉ" };
+export const metadata = { title: "Users | Admin | Shoes House" };
 
 export default function AdminUsersPage() {
   return (

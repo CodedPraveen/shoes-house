@@ -24,7 +24,7 @@ export default function MobileMenuDrawer({ open, onClose }) {
             className="fixed right-0 top-0 z-50 flex h-full w-[min(100%,320px)] flex-col bg-white shadow-2xl md:hidden"
           >
             <div className="border-b border-black/10 px-5 py-6">
-              <p className="text-lg font-semibold tracking-[0.2em]">AERÉ</p>
+            <p className="text-lg font-semibold tracking-[0.2em]">SHOES HOUSE</p>
             </div>
             <nav className="flex-1 overflow-y-auto px-5 py-6">
               <ul className="space-y-1">

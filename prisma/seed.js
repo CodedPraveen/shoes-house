@@ -69,7 +69,7 @@ function buildVariants(item, baseStock) {
 }
 
 async function main() {
-  console.log("Seeding AERÉ database...");
+  console.log("Seeding Shoes House database...");
 
   const categoryMap = {};
 

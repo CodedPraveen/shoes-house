@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "AERÉ - Premium Sneakers",
+  title: "Shoes House - Premium Sneakers",
   description:
     "Quiet luxury premium sneaker ecommerce — modern fashion, elevated design.",
 };

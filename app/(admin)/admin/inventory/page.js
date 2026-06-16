@@ -2,7 +2,7 @@ import { productService } from "@/services/product-service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Inventory | Admin | AERÉ" };
+export const metadata = { title: "Inventory | Admin | Shoes House" };
 
 function stockStatus(stock) {
   if (stock === 0) return "out_of_stock";

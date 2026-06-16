@@ -8,7 +8,7 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-screen overflow-hidden px-5 pt-20 sm:px-8">
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_20%_15%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_80%_40%,rgba(0,0,0,0.07),transparent_32%),linear-gradient(#fff,#f7f7f7)]" />
-      <div className="mx-auto grid w-full max-w-[1400px] items-center gap-12 py-8 lg:grid-cols-2 lg:py-20">
+      <div className="mx-auto grid w-full max-w-[1400px] items-center gap-12 py-8 lg:grid-cols-2 lg:py-13">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

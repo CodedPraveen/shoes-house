@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Admin | AERÉ" };
+export const metadata = { title: "Admin | Shoes House" };
 
 export default async function AdminDashboardPage() {
   const totalProducts = await prisma.product.count();

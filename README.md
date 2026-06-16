@@ -1,4 +1,4 @@
-# AERÉ — Premium Sneaker Ecommerce
+# Shoes House — Scalable Ecommerce 
 
 Next.js storefront + admin with Supabase, Prisma, Clerk, Razorpay, and Cloudinary.
 

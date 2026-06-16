@@ -1,4 +1,4 @@
-# AERÉ Database Setup (Supabase + Prisma)
+# Shoes House Database Setup (Supabase + Prisma)
 
 ## 1. Create Supabase project
 
