@@ -69,7 +69,7 @@ function buildVariants(item, baseStock) {
 }
 
 async function main() {
-  console.log("Seeding Shoes House database...");
+  // console.log("Seeding Shoes House database...");
 
   const categoryMap = {};
 
@@ -177,7 +177,7 @@ async function main() {
     prisma.product.count({ where: { deletedAt: null } }),
     prisma.productVariant.count({ where: { deletedAt: null } }),
   ]);
-  console.log(`Done. ${products} products, ${variants} variants.`);
+  // console.log(`Done. ${products} products, ${variants} variants.`);
 }
 
 main()

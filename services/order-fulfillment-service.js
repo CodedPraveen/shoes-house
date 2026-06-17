@@ -161,11 +161,11 @@ export async function fulfillPaidCheckout({
         },
       });
 
-      console.log("ORDER CREATED", order.id);
+      // console.log("ORDER CREATED", order.id);
 
       for (const line of session.items) {
 
-        console.log("DECREMENTING", line.productSku);
+        // console.log("DECREMENTING", line.productSku);
 
         if (!line.variantId) {
           throw new Error(`Missing variant for ${line.productSku}`);
@@ -178,10 +178,10 @@ export async function fulfillPaidCheckout({
           reason: `Sale · order ${order.orderNumber}`,
           sku: line.productSku,
         });
-        console.log("DECREMENTED SUCCESSFULLY", line.productSku);
+        // console.log("DECREMENTED SUCCESSFULLY", line.productSku);
       }
 
-      console.log("CREATING PAYMENT");
+      // console.log("CREATING PAYMENT");
 
       await tx.payment.create({
         data: {
@@ -196,14 +196,14 @@ export async function fulfillPaidCheckout({
           webhookEventId: webhookEventId ?? undefined,
         },
       });
-      console.log("UPDATING SESSION");
+      // console.log("UPDATING SESSION");
 
       await tx.checkoutSession.update({
         where: { id: session.id },
         data: { status: "COMPLETED", orderId: order.id },
       });
 
-      console.log("UPDATING PURCHASE COUNT");
+      //console.log("UPDATING PURCHASE COUNT");
 
       for (const line of session.items) {
         await tx.product.update({
