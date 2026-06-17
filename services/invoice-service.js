@@ -14,7 +14,7 @@ export const invoiceService = {
       createdAt: order.createdAt,
       status: order.status,
       paymentStatus: payment?.status ?? "PENDING",
-      paymentMethod: "Razorpay",
+      paymentMethod: payment?.paymentMethod ?? "Cod Cash",
       razorpayPaymentId: payment?.razorpayPaymentId,
       customer: {
         name: order.shipFullName,
@@ -133,14 +133,13 @@ export const invoiceService = {
         <div class="address-section">
           <div>
             <h3>Shipping Address</h3>
-            <p>${data.customer.name}</p>
-            <p>${data.shipping.line1}</p>
-            ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
-            <p>${data.shipping.city}, ${data.shipping.state}</p>
-            <p>${data.shipping.country} - ${data.shipping.pincode}</p>
+            <p>Shoes House</p>
+            <p>Sanchore Road, Dhorimanna</p>
+            <p>Dhorimanna, Rajasthan</p>
+            <p>India - 344704</p>
           </div>
           <div>
-            <h3>Billing Address</h3>
+            <h3>Delivery Address</h3>
             <p>${data.customer.name}</p>
             <p>${data.shipping.line1}</p>
             ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
