@@ -227,4 +227,85 @@ export const checkoutService = {
       return createSessionWithRazorpay(userId, address, [line], "BUY_NOW");
     });
   },
+
+  /** Create order directly for Cash on Delivery */
+  async createBuyNowOrder(
+    userId,
+    address,
+    { productId, color, size, quantity = 1 },
+    paymentMethod = "cod",
+  ) {
+    return withPerf("checkout.create.buy_now.cod", async () => {
+      const [product, variant] = await Promise.all([
+        prisma.product.findFirst({
+          where: { id: productId, ...notDeleted },
+          include: {
+            images: {
+              where: { deletedAt: null },
+              orderBy: { sortOrder: "asc" },
+              take: 2,
+            },
+          },
+        }),
+        prisma.productVariant.findFirst({
+          where: {
+            productId,
+            colorKey: color,
+            size: Number(size),
+            ...notDeleted,
+            isActive: true,
+          },
+        }),
+      ]);
+
+      if (!product) throw new Error("Product unavailable");
+      if (!variant) throw new Error("Selected variant unavailable");
+      if (variant.stock < quantity) {
+        throw new Error(`Only ${variant.stock} left in stock`);
+      }
+
+      const line = await buildLineFromProductVariant(
+        product,
+        variant,
+        color,
+        size,
+        quantity,
+      );
+
+      const subtotal = line.priceAtPurchase * line.quantity;
+      const shippingCost = calculateShipping(subtotal);
+      const total = subtotal + shippingCost;
+
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      const order = await prisma.order.create({
+        data: {
+          orderNumber,
+          userId,
+          subtotal,
+          shippingCost,
+          total,
+          status: "PENDING",
+          shipFullName: address.fullName,
+          shipPhone: address.phone,
+          shipLine1: address.line1,
+          shipLine2: address.line2 || null,
+          shipCity: address.city,
+          shipState: address.state,
+          shipCountry: address.country || "India",
+          shipPincode: address.pincode,
+          items: { create: [line] },
+          payments: {
+            create: {
+              paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
+              status: "PENDING",
+            },
+          },
+        },
+        include: { items: true },
+      });
+
+      return order;
+    });
+  },
 };

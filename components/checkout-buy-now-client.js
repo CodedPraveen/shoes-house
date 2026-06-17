@@ -56,6 +56,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   useEffect(() => {
     (async () => {
@@ -113,11 +114,17 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         color,
         size,
         quantity,
+        paymentMethod,
       });
 
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
         setLoading(false);
+        return;
+      }
+
+      if (paymentMethod === "cod") {
+        router.push(`/orders/${result.orderId}?status=confirmed`);
         return;
       }
 
@@ -220,8 +227,34 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           <span>Total</span>
           <span>{formatPrice(total)}</span>
         </div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="radio"
+              id="razorpay"
+              name="payment"
+              value="razorpay"
+              checked={paymentMethod === "razorpay"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="cursor-pointer"
+            />
+            <label htmlFor="razorpay" className="cursor-pointer text-sm">Pay with Razorpay</label>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="radio"
+              id="cod"
+              name="payment"
+              value="cod"
+              checked={paymentMethod === "cod"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="cursor-pointer"
+            />
+            <label htmlFor="cod" className="cursor-pointer text-sm">Cash on Delivery</label>
+          </div>
+        </div>
         <LoadingButton type="submit" loading={loading} className="w-full rounded-full bg-black py-3 text-sm font-medium text-white">
-          Pay with Razorpay
+          {paymentMethod === "cod" ? "Place Order" : "Pay with Razorpay"}
         </LoadingButton>
       </section>
     </form>

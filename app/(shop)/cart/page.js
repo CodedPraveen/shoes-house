@@ -28,7 +28,7 @@ export default function CartPage() {
     <main className="pt-20">
       <PageHeader
         eyebrow="Cart"
-        title="Your bag"
+        title="Your bag" 
         description={`${itemCount} item${itemCount !== 1 ? "s" : ""} in cart`}
       />
 
@@ -134,12 +134,20 @@ export default function CartPage() {
                   <span>Calculated at checkout</span>
                 </div>
               </div>
-              <button
-                type="button"
-                className="mt-6 w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
-              >
-                Checkout
-              </button>
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  className="w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
+                >
+                  Checkout
+                </button>
+                <Link
+                  href="/orders"
+                  className="block w-full text-center rounded-full border border-black/20 py-3 text-sm font-medium text-black transition hover:bg-black/5"
+                >
+                  View Orders
+                </Link>
+              </div>
             </aside>
           </div>
         )}
