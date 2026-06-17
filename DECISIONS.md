@@ -1,4 +1,4 @@
-# AERÉ — Architecture Decisions
+# Shoes House — Architecture Decisions
 
 ## ADR-001: Slug-based product URLs
 

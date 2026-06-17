@@ -1,4 +1,4 @@
-# AERÉ Homepage Performance Optimization Report
+# Shoes House Homepage Performance Optimization Report
 
 ## Executive Summary
 
@@ -346,7 +346,7 @@ These optimizations are beyond current scope but recommended for Phase 6:
 
 ## Summary
 
-This optimization pass transformed the AERÉ homepage from a render-blocked architecture to a streaming, progressive architecture. By prioritizing the critical path (Navbar → Hero → Hero Image) and deferring secondary content (Product Sections), we've achieved:
+This optimization pass transformed the Shoes House homepage from a render-blocked architecture to a streaming, progressive architecture. By prioritizing the critical path (Navbar → Hero → Hero Image) and deferring secondary content (Product Sections), we've achieved:
 
 1. **Instant Hero rendering** (before product queries complete)
 2. **Progressive content loading** (skeleton → data → hydration)
@@ -354,7 +354,7 @@ This optimization pass transformed the AERÉ homepage from a render-blocked arch
 4. **Reduced re-renders** (80% fewer ProductCard updates)
 5. **Smart prefetch strategy** (hot routes prefetch, cold routes don't)
 
-All changes maintain the exact AERÉ UI design and visual hierarchy. The homepage now feels instant to users while maintaining efficient resource usage and progressive enhancement.
+All changes maintain the exact Shoes House UI design and visual hierarchy. The homepage now feels instant to users while maintaining efficient resource usage and progressive enhancement.
 
 ---
 
