@@ -48,6 +48,7 @@ export async function createBuyNowCheckoutSessionAction(input) {
         user.id,
         { ...shipping, email: user.email },
         { productId, color, size, quantity: Number(quantity) || 1 },
+        paymentMethod,
       );
       return { ok: true, orderId: order.id };
     }

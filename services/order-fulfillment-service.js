@@ -192,6 +192,7 @@ export async function fulfillPaidCheckout({
           amount: session.total,
           currency: "INR",
           status: "PAID",
+          paymentMethod: "Razorpay",
           rawPayload: rawPayload ?? undefined,
           webhookEventId: webhookEventId ?? undefined,
         },

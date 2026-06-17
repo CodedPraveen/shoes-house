@@ -1,6 +1,13 @@
 import { formatPrice } from "@/lib/format-price";
 import { orderService } from "@/services/order-service";
 
+function getPaymentMethodLabel(order, payment) {
+  if (payment?.paymentMethod) return payment.paymentMethod;
+  if (payment?.status === "PAID") return "Razorpay";
+  if (payment?.status === "PENDING") return "Cash on Delivery";
+  return order?.status === "PENDING" ? "Cash on Delivery" : "Razorpay";
+}
+
 export const invoiceService = {
   async getInvoiceData(orderId) {
     const order = await orderService.getById(orderId);
@@ -14,7 +21,7 @@ export const invoiceService = {
       createdAt: order.createdAt,
       status: order.status,
       paymentStatus: payment?.status ?? "PENDING",
-      paymentMethod: payment?.paymentMethod ?? "Cod Cash",
+      paymentMethod: getPaymentMethodLabel(order, payment),
       razorpayPaymentId: payment?.razorpayPaymentId,
       customer: {
         name: order.shipFullName,

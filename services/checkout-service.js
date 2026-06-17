@@ -233,6 +233,7 @@ export const checkoutService = {
     userId,
     address,
     { productId, color, size, quantity = 1 },
+    paymentMethod = "cod",
   ) {
     return withPerf("checkout.create.buy_now.cod", async () => {
       const [product, variant] = await Promise.all([
@@ -294,6 +295,12 @@ export const checkoutService = {
           shipCountry: address.country || "India",
           shipPincode: address.pincode,
           items: { create: [line] },
+          payments: {
+            create: {
+              paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
+              status: "PENDING",
+            },
+          },
         },
         include: { items: true },
       });
