@@ -236,7 +236,6 @@ model CheckoutSession {
   total           Int
   currency        String                @default("INR")
   status          CheckoutSessionStatus @default(PENDING)
-  mode            CheckoutSessionMode   @default(CART)
   shipFullName    String
   shipPhone       String
   shipLine1       String
@@ -249,6 +248,7 @@ model CheckoutSession {
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   orderId         String?               @unique
+  mode            CheckoutSessionMode   @default(CART)
   order           Order?                @relation(fields: [orderId], references: [id])
   user            User                  @relation(fields: [userId], references: [id])
   items           CheckoutSessionItem[]
@@ -338,7 +338,7 @@ model OrderItem {
 model Payment {
   id                String        @id @default(cuid())
   orderId           String
-  razorpayOrderId   String        @unique
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
   razorpaySignature String?
   webhookEventId    String?       @unique
@@ -350,11 +350,11 @@ model Payment {
   updatedAt         DateTime      @updatedAt
   deletedAt         DateTime?
   refundedAt        DateTime?
+  paymentMethod     String        @default("RAZORPAY")
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([status])
-  @@index([razorpayOrderId])
   @@index([refundedAt])
   @@index([createdAt])
   @@index([orderId, status])

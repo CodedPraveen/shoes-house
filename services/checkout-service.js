@@ -299,6 +299,8 @@ export const checkoutService = {
             create: {
               paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
               status: "PENDING",
+              amount: total,
+              currency: "INR",
             },
           },
         },
