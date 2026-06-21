@@ -17,6 +17,11 @@ export default async function AdminDashboardPage() {
       total: true,
     },
   });
+  const totalSubscribers = await prisma.newsletterSubscriber.count({
+    where: {
+      deletedAt: null,
+    },
+  });
 
   return (
     <div className="space-y-8">
@@ -48,6 +53,12 @@ export default async function AdminDashboardPage() {
           className="block transition hover:scale-[1.02]"
         >
           <StatCard label="Total Products" value={totalProducts} />
+        </Link>
+        <Link
+          href="/admin/newsletters-email"
+          className="block transition hover:scale-[1.02]"
+        >
+          <StatCard label="Total Subscribers" value={totalSubscribers} />
         </Link>
       </div >
     </div >

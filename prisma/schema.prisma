@@ -236,7 +236,6 @@ model CheckoutSession {
   total           Int
   currency        String                @default("INR")
   status          CheckoutSessionStatus @default(PENDING)
-  mode            CheckoutSessionMode   @default(CART)
   shipFullName    String
   shipPhone       String
   shipLine1       String
@@ -249,6 +248,7 @@ model CheckoutSession {
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   orderId         String?               @unique
+  mode            CheckoutSessionMode   @default(CART)
   order           Order?                @relation(fields: [orderId], references: [id])
   user            User                  @relation(fields: [userId], references: [id])
   items           CheckoutSessionItem[]
@@ -335,53 +335,22 @@ model OrderItem {
   @@index([productSku])
 }
 
-// model Payment {
-//   id                String        @id @default(cuid())
-//   orderId           String
-//   razorpayOrderId   String        @unique
-//   razorpayPaymentId String?       @unique
-//   razorpaySignature String?
-//   webhookEventId    String?       @unique
-//   amount            Int
-//   currency          String        @default("INR")
-//   status            PaymentStatus @default(PENDING)
-//   rawPayload        Json?
-//   createdAt         DateTime      @default(now())
-//   updatedAt         DateTime      @updatedAt
-//   deletedAt         DateTime?
-//   refundedAt        DateTime?
-//   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-//   @@index([orderId])
-//   @@index([status])
-//   @@index([razorpayOrderId])
-//   @@index([refundedAt])
-//   @@index([createdAt])
-//   @@index([orderId, status])
-// }
 model Payment {
   id                String        @id @default(cuid())
   orderId           String
-
-  // Razorpay fields (optional for COD)
   razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
   razorpaySignature String?
   webhookEventId    String?       @unique
-
   amount            Int
   currency          String        @default("INR")
-
-  paymentMethod     String        @default("RAZORPAY") // RAZORPAY | COD
-
   status            PaymentStatus @default(PENDING)
   rawPayload        Json?
-
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   deletedAt         DateTime?
   refundedAt        DateTime?
-
+  paymentMethod     String        @default("RAZORPAY")
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
