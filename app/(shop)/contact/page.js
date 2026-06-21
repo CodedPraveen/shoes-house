@@ -1,5 +1,8 @@
 import { createStaticPage } from "@/utils/static-page";
 
-export const metadata = { title: "Contact | Shoes House" };
+export const metadata = {
+    title: "Contact | Shoes House",
+    description: "Get in touch with Shoes House for any inquiries, support, or feedback. Our team is here to assist you with your questions and ensure you have the best shopping experience possible."
+};
 
 export default createStaticPage("contact");

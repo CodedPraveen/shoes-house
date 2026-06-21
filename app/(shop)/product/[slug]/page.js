@@ -3,18 +3,23 @@ import ProductDetailClient from "@/components/product-detail-client";
 import ProductViewTracker from "@/components/product-view-tracker";
 import { getCachedProductBySlug } from "@/lib/product-cache";
 
+export const metadata = {
+  title: "Products | Shoes House",
+  description: "Explore our collection of high-quality shoes for every occasion. Find the perfect pair that matches your style and needs.",
+};
+
 export const revalidate = 120;
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const product = await getCachedProductBySlug(slug);
-  if (!product) return { title: "Product | Shoes House" };
+// export async function generateMetadata({ params }) {
+//   const { slug } = await params;
+//   const product = await getCachedProductBySlug(slug);
+//   if (!product) return { title: "Product | Shoes House" };
 
-  return {
-    title: `${product.name} | Shoes House`,
-    description: product.description,
-  };
-}
+//   return {
+//     title: `${product.name} | Shoes House`,
+//     description: product.description,
+//   };
+// }
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;

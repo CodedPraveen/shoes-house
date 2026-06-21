@@ -335,26 +335,57 @@ model OrderItem {
   @@index([productSku])
 }
 
+// model Payment {
+//   id                String        @id @default(cuid())
+//   orderId           String
+//   razorpayOrderId   String        @unique
+//   razorpayPaymentId String?       @unique
+//   razorpaySignature String?
+//   webhookEventId    String?       @unique
+//   amount            Int
+//   currency          String        @default("INR")
+//   status            PaymentStatus @default(PENDING)
+//   rawPayload        Json?
+//   createdAt         DateTime      @default(now())
+//   updatedAt         DateTime      @updatedAt
+//   deletedAt         DateTime?
+//   refundedAt        DateTime?
+//   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+//   @@index([orderId])
+//   @@index([status])
+//   @@index([razorpayOrderId])
+//   @@index([refundedAt])
+//   @@index([createdAt])
+//   @@index([orderId, status])
+// }
 model Payment {
   id                String        @id @default(cuid())
   orderId           String
-  razorpayOrderId   String        @unique
+
+  // Razorpay fields (optional for COD)
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
   razorpaySignature String?
   webhookEventId    String?       @unique
+
   amount            Int
   currency          String        @default("INR")
+
+  paymentMethod     String        @default("RAZORPAY") // RAZORPAY | COD
+
   status            PaymentStatus @default(PENDING)
   rawPayload        Json?
+
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   deletedAt         DateTime?
   refundedAt        DateTime?
+
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([status])
-  @@index([razorpayOrderId])
   @@index([refundedAt])
   @@index([createdAt])
   @@index([orderId, status])

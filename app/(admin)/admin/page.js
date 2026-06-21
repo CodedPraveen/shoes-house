@@ -1,3 +1,4 @@
+import Link from "next/link";
 import StatCard from "@/components/admin/stat-card";
 import { adminStats } from "@/data/admin-mock";
 import { formatPrice } from "@/lib/format-price";
@@ -9,6 +10,13 @@ export const metadata = { title: "Admin | Shoes House" };
 
 export default async function AdminDashboardPage() {
   const totalProducts = await prisma.product.count();
+  const totalUsers = await prisma.user.count();
+  const totalOrders = await prisma.order.count();
+  const totalRevenue = await prisma.order.aggregate({
+    _sum: {
+      total: true,
+    },
+  });
 
   return (
     <div className="space-y-8">
@@ -19,14 +27,29 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Users" value={adminStats.totalUsers} />
-        <StatCard label="Total Orders" value={adminStats.totalOrders} />
+        <Link
+          href="/admin/users"
+          className="block transition hover:scale-[1.02]"
+        >
+          <StatCard label="Total Users" value={totalUsers} />
+        </Link>
+        <Link
+          href="/admin/orders"
+          className="block transition hover:scale-[1.02]"
+        >
+          <StatCard label="Total Orders" value={totalOrders} />
+        </Link>
         <StatCard
           label="Total Revenue"
-          value={formatPrice(adminStats.totalRevenue)}
+          value={formatPrice(totalRevenue?._sum?.total ?? 0)}
         />
-        <StatCard label="Total Products" value={totalProducts} />
-      </div>
-    </div>
+        <Link
+          href="/admin/products"
+          className="block transition hover:scale-[1.02]"
+        >
+          <StatCard label="Total Products" value={totalProducts} />
+        </Link>
+      </div >
+    </div >
   );
 }
