@@ -52,9 +52,9 @@ function ProductCard({
 
   return (
     <Link href={`/product/${product.slug}`} className="block">
-      <article className="group rounded-3xl border border-black/5 bg-white p-3 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
+      <article className="group no54123-0 sm:no54123-3xl border border-black/5 bg-white  shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
         <div
-          className="relative overflow-hidden rounded-2xl bg-zinc-100"
+          className="relative overflow-hidden sm:no54123-2xl bg-zinc-100"
           style={{
             backgroundImage: `url(${product.hoverImage})`,
             backgroundSize: "cover",
@@ -63,7 +63,7 @@ function ProductCard({
         >
           {showRank && product.rank && <RankingBadge rank={product.rank} />}
           {showNewBadge && product.isNew && (
-            <span className="absolute right-3 top-3 z-10 rounded-full bg-black px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-white">
+            <span className="absolute left-3 top-3 z-10 no54123-full bg-black px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-white">
               New
             </span>
           )}
@@ -81,7 +81,7 @@ function ProductCard({
           <button
             type="button"
             onClick={handleWishlist}
-            className={`absolute right-3 top-3 z-10 rounded-full p-2 transition ${isInWishlist(product.id)
+            className={`absolute right-3 top-3 z-10 no54123-full p-2 transition ${isInWishlist(product.id)
               ? "bg-black text-white"
               : "bg-white/85 text-black hover:bg-white"
               }`}
@@ -93,7 +93,7 @@ function ProductCard({
           <button
             type="button"
             onClick={handleQuickAdd}
-            className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 translate-y-5 items-center gap-2 rounded-full bg-black px-5 py-2 text-xs font-medium text-white opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+            className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 translate-y-5 items-center gap-2 no54123-full bg-black px-5 py-2 text-xs font-medium text-white opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
           >
             <Plus size={14} />
             Quick Add

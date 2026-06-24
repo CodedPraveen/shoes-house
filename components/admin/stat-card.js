@@ -1,6 +1,6 @@
 export default function StatCard({ label, value, hint }) {
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-6">
+    <div className="no54123-2xl border border-black/10 bg-white p-6">
       <p className="text-xs uppercase tracking-[0.2em] text-black/45">
         {label}
       </p>

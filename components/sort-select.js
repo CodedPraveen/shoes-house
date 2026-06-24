@@ -16,11 +16,11 @@ export default function SortSelect({ value, onChange }) {
     <div className="relative">
 
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-[190px] h-12 p-5 rounded-full ">
+        <SelectTrigger className="w-[190px] h-12 p-5 no54123-full ">
           <SelectValue />
         </SelectTrigger>
 
-        <SelectContent className="rounded-2xl p-2 w-[195px] ">
+        <SelectContent className="no54123-2xl p-2 w-[195px] ">
           <SelectItem value="latest">Latest</SelectItem>
           <SelectItem value="low-high">Price Low to High</SelectItem>
           <SelectItem value="high-low">Price High to Low</SelectItem>

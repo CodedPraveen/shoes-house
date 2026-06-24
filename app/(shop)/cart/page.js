@@ -36,14 +36,14 @@ export default function CartPage() {
         {!hydrated ? (
           <p className="text-sm text-black/50">Loading cart...</p>
         ) : items.length === 0 ? (
-          <div className="rounded-3xl border border-black/10 bg-zinc-50 px-8 py-16 text-center">
+          <div className="no54123-3xl border border-black/10 bg-zinc-50 px-8 py-16 text-center">
             <p className="text-lg font-medium">Your cart is empty</p>
             <p className="mt-2 text-sm text-black/60">
               Explore new arrivals and trending drops.
             </p>
             <Link
               href="/new-arrivals"
-              className="mt-6 inline-block rounded-full bg-black px-6 py-3 text-sm text-white"
+              className="mt-6 inline-block no54123-full bg-black px-6 py-3 text-sm text-white"
             >
               Shop New Arrivals
             </Link>
@@ -54,12 +54,12 @@ export default function CartPage() {
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className="flex flex-wrap gap-5 rounded-3xl border border-black/10 bg-white p-4 sm:flex-nowrap"
+                  className="flex flex-wrap gap-5 no54123-3xl border border-black/10 bg-white p-4 sm:flex-nowrap"
                 >
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="h-28 w-28 rounded-2xl object-cover"
+                    className="h-28 w-28 no54123-2xl object-cover"
                   />
                   <div className="flex flex-1 flex-col justify-between gap-4">
                     <div>
@@ -72,7 +72,7 @@ export default function CartPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="inline-flex items-center rounded-full border border-black/15">
+                      <div className="inline-flex items-center no54123-full border border-black/15">
                         <button
                           type="button"
                           onClick={() =>
@@ -102,7 +102,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="rounded-full p-2 text-black/50 transition hover:bg-black/5 hover:text-black"
+                        className="no54123-full p-2 text-black/50 transition hover:bg-black/5 hover:text-black"
                         aria-label="Remove item"
                       >
                         <Trash2 size={16} />
@@ -110,7 +110,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => handleBuyNow(item)}
-                        className="ml-auto flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs font-medium text-white transition hover:scale-[1.01]"
+                        className="ml-auto flex items-center gap-2 no54123-full bg-black px-4 py-2 text-xs font-medium text-white transition hover:scale-[1.01]"
                         aria-label="Buy now"
                       >
                         <ShoppingBag size={14} />
@@ -122,7 +122,7 @@ export default function CartPage() {
               ))}
             </ul>
 
-            <aside className="h-fit rounded-3xl border border-black/10 bg-zinc-50 p-6">
+            <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
               <h3 className="text-lg font-medium">Order Summary</h3>
               <div className="mt-6 space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -136,7 +136,7 @@ export default function CartPage() {
               </div>
               <button
                 type="button"
-                className="mt-6 w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
+                className="mt-6 w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
               >
                 Checkout
               </button>

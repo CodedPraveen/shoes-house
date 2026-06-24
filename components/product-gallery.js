@@ -9,7 +9,7 @@ export default function ProductGallery({ images, name }) {
   return (
     <div className="space-y-4">
       <div
-        className="group relative overflow-hidden rounded-[2rem] border border-black/5 bg-zinc-100"
+        className="group relative overflow-hidden no54123-[2rem] border border-black/5 bg-zinc-100"
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
       >
@@ -27,7 +27,7 @@ export default function ProductGallery({ images, name }) {
             key={src}
             type="button"
             onClick={() => setActiveIndex(index)}
-            className={`h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition ${
+            className={`h-20 w-20 shrink-0 overflow-hidden no54123-2xl border-2 transition ${
               activeIndex === index
                 ? "border-black"
                 : "border-transparent opacity-70 hover:opacity-100"

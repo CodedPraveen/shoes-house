@@ -13,12 +13,12 @@ export default function CategoriesSection() {  return (
             Shop by lifestyle.
           </h2>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 grid-cols-2 lg:grid-cols-4 bg-blue-600">
           {categories.map((category) => (
             <Link
               key={category.id}
               href={category.href}
-              className="group relative block overflow-hidden rounded-3xl"
+              className="group relative block overflow-hidden no54123-3xl"
             >
               <img
                 src={category.image}

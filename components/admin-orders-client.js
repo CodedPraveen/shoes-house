@@ -20,7 +20,7 @@ export default function AdminOrdersClient({ initialOrders }) {
       {orders.map((order) => (
         <div
           key={order.id}
-          className="flex flex-wrap items-center gap-4 rounded-2xl border border-black/10 p-4"
+          className="flex flex-wrap items-center gap-4 no54123-2xl border border-black/10 p-4"
         >
           <div className="min-w-[140px]">
             <p className="font-medium">{order.orderNumber}</p>
@@ -40,7 +40,7 @@ export default function AdminOrdersClient({ initialOrders }) {
           <select
             value={order.status}
             onChange={(e) => onStatusChange(order.id, e.target.value)}
-            className="h-10 rounded-xl border border-black/15 px-3 text-sm capitalize"
+            className="h-10 no54123-xl border border-black/15 px-3 text-sm capitalize"
           >
             {ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>

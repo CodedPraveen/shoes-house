@@ -7,9 +7,9 @@ export default async function TrendingGrid() {
   const trendingShoes = (await productService.getTrending()).slice(0, 6);
 
   return (
-    <SectionReveal id="trending" className="px-5 py-8 sm:px-8 lg:py-10">
+    <SectionReveal id="trending" className="sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-8">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.25em] text-black/45">
               Trending Shoes
@@ -20,12 +20,12 @@ export default async function TrendingGrid() {
           </div>
           <Link
             href="/trending"
-            className="rounded-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white"
+            className="no54123-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white"
           >
             View All
           </Link>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 bg-red-600">
           {trendingShoes.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

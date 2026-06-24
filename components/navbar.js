@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag } from "lucide-react";
 import AuthNav from "@/components/auth-nav";
 import CategoriesDropdown from "@/components/categories-dropdown";
+import ShoesDropdown from "@/components/shoes-dropdown";
 import MobileMenuDrawer from "@/components/mobile-menu-drawer";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [shoesOpen, setShoesOpen] = useState(false);
   const { itemCount } = useCart();
   const { openSearch } = useSearchContext();
 
@@ -42,7 +44,7 @@ export default function Navbar() {
             SHOES HOUSE
           </Link>
 
-          <ul className="hidden items-center gap-8 text-sm md:flex">
+          <ul className="hidden items-center gap-8 text-sm md:flex font-bold  ">
             {NAV_LINKS.map((item) => (
               <li key={item.href}>
                 <Link
@@ -59,13 +61,19 @@ export default function Navbar() {
               onOpen={() => setCategoriesOpen(true)}
               onClose={() => setCategoriesOpen(false)}
             />
+            <ShoesDropdown
+              open={shoesOpen}
+              onOpen={() => setShoesOpen(true)}
+              onClose={() => setShoesOpen(false)}
+            />
+            
           </ul>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={openSearch}
-              className="rounded-full p-2 transition hover:bg-black/5"
+              className="no54123-full p-2 transition hover:bg-black/5"
               aria-label="Search"
             >
               <Search size={20} />
@@ -73,12 +81,12 @@ export default function Navbar() {
             <Link
               href="/cart"
               prefetch={true}
-              className="relative rounded-full p-2 transition hover:bg-black/5"
+              className="relative no54123-full p-2 transition hover:bg-black/5"
               aria-label="Cart"
             >
               <ShoppingBag size={20} />
               {itemCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1 text-[10px] text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center no54123-full bg-black px-1 text-[10px] text-white">
                   {itemCount}
                 </span>
               )}
@@ -86,7 +94,7 @@ export default function Navbar() {
             <AuthNav />
             <button
               type="button"
-              className="rounded-full p-2 md:hidden"
+              className="no54123-full p-2 md:hidden"
               aria-label="Toggle menu"
               onClick={() => setMenuOpen(true)}
             >

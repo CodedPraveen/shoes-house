@@ -3,7 +3,7 @@ import SectionReveal from "@/components/section-reveal";
 export default function BrandStory() {
   return (
     <SectionReveal id="story" className="px-5 py-8 sm:px-8 lg:py-10">
-      <div className="mx-auto grid w-full max-w-[1400px] gap-8 overflow-hidden rounded-[2rem] border border-black/10 bg-zinc-50 lg:grid-cols-2">
+      <div className="mx-auto grid w-full max-w-[1400px] gap-8 overflow-hidden no54123-[2rem] border border-black/10 bg-zinc-50 lg:grid-cols-2">
         <div className="overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1400&q=80"
@@ -26,7 +26,7 @@ export default function BrandStory() {
             </p>
             <button
               type="button"
-              className="rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
+              className="no54123-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
             >
               Read Journal
             </button>

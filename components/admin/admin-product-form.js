@@ -15,7 +15,7 @@ import { COLOR_FILTERS } from "@/lib/constants";
 import { slugify } from "@/lib/slugify-text";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
+  "h-11 w-full no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
 
 const defaultColors = COLOR_FILTERS.slice(0, 3).map((c) => ({
   colorKey: c.id,
@@ -244,7 +244,7 @@ export default function AdminProductForm({
           <LoadingButton
             type="submit"
             loading={loading}
-            className="rounded-full bg-black px-6 py-2.5 text-sm text-white"
+            className="no54123-full bg-black px-6 py-2.5 text-sm text-white"
           >
             {mode === "edit" ? "Save changes" : "Create product"}
           </LoadingButton>
@@ -253,7 +253,7 @@ export default function AdminProductForm({
               type="button"
               onClick={handleDelete}
               disabled={loading}
-              className="rounded-full border border-red-200 px-6 py-2.5 text-sm text-red-600"
+              className="no54123-full border border-red-200 px-6 py-2.5 text-sm text-red-600"
             >
               Delete
             </button>

@@ -18,7 +18,7 @@ export default function FeaturedCollection() {
           {featuredCollection.map((item) => (
             <article
               key={item.id}
-              className="group relative overflow-hidden rounded-[2rem]"
+              className="group relative overflow-hidden no54123-[2rem]"
             >
               <img
                 src={item.image}
@@ -29,7 +29,7 @@ export default function FeaturedCollection() {
               <div className="absolute bottom-0 w-full space-y-3 p-7 text-white">
                 <h3 className="text-2xl font-medium tracking-tight">{item.title}</h3>
                 <p className="max-w-sm text-sm text-white/85">{item.description}</p>
-                <button className="rounded-full border border-white/35 bg-white/10 px-5 py-2 text-xs uppercase tracking-[0.16em] backdrop-blur transition hover:bg-white hover:text-black">
+                <button className="no54123-full border border-white/35 bg-white/10 px-5 py-2 text-xs uppercase tracking-[0.16em] backdrop-blur transition hover:bg-white hover:text-black">
                   Discover
                 </button>
               </div>

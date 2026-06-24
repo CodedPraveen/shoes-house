@@ -25,7 +25,7 @@ function loadRazorpayScript() {
 }
 
 const inputClass =
-  "h-11 rounded-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
+  "h-11 no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
 
 const emptyForm = {
   fullName: "",
@@ -217,7 +217,7 @@ export default function CheckoutClient() {
       onSubmit={handlePay}
       className="mx-auto grid w-full max-w-[1400px] gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
     >
-      <div className="space-y-6 rounded-3xl border border-black/10 bg-zinc-50 p-6">
+      <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>
 
         {savedAddresses.length > 0 ? (
@@ -228,7 +228,7 @@ export default function CheckoutClient() {
             {savedAddresses.map((addr) => (
               <label
                 key={addr.id}
-                className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${
+                className={`flex cursor-pointer gap-3 no54123-2xl border p-4 transition ${
                   addressMode === "saved" && selectedAddressId === addr.id
                     ? "border-black bg-white"
                     : "border-black/10 bg-white/60"
@@ -282,7 +282,7 @@ export default function CheckoutClient() {
                 type="button"
                 loading={locating}
                 onClick={useMyLocation}
-                className="rounded-full border border-black/15 px-4 py-2 text-xs"
+                className="no54123-full border border-black/15 px-4 py-2 text-xs"
               >
                 Use my location
               </LoadingButton>
@@ -356,7 +356,7 @@ export default function CheckoutClient() {
         </p>
       </div>
 
-      <section className="space-y-6 rounded-3xl border border-black/10 p-6">
+      <section className="space-y-6 no54123-3xl border border-black/10 p-6">
         <h2 className="text-lg font-medium">Order Summary</h2>
         <ul className="space-y-3 text-sm">
           {items.map((item) => (
@@ -385,7 +385,7 @@ export default function CheckoutClient() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+          className="w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
         >
           {loading ? "Opening Razorpay…" : "Pay with Razorpay"}
         </button>

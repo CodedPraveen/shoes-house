@@ -74,7 +74,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           type="button"
           loading={uploading}
           onClick={() => fileRef.current?.click()}
-          className="rounded-full border border-black/15 px-4 py-2 text-xs"
+          className="no54123-full border border-black/15 px-4 py-2 text-xs"
         >
           Upload image
         </LoadingButton>
@@ -82,7 +82,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           <button
             type="button"
             onClick={openWidget}
-            className="rounded-full border border-black/15 px-4 py-2 text-xs"
+            className="no54123-full border border-black/15 px-4 py-2 text-xs"
           >
             Cloudinary widget
           </button>
@@ -103,12 +103,12 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
             <img
               src={url}
               alt=""
-              className="h-16 w-16 rounded-lg border border-black/10 object-cover"
+              className="h-16 w-16 no54123-lg border border-black/10 object-cover"
             />
             <button
               type="button"
               onClick={() => removeUrl(url)}
-              className="absolute -right-1 -top-1 rounded-full bg-black px-1.5 text-[10px] text-white"
+              className="absolute -right-1 -top-1 no54123-full bg-black px-1.5 text-[10px] text-white"
             >
               ×
             </button>

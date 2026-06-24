@@ -68,10 +68,10 @@ export default function AddressManager() {
   }
 
   const inputClass =
-    "h-10 rounded-xl border border-black/15 bg-white px-3 text-sm w-full";
+    "h-10 no54123-xl border border-black/15 bg-white px-3 text-sm w-full";
 
   return (
-    <section className="space-y-4 rounded-3xl border border-black/10 p-6">
+    <section className="space-y-4 no54123-3xl border border-black/10 p-6">
       <h2 className="text-xl font-semibold">Address book</h2>
       <p className="text-sm text-black/60">
         Save addresses for faster checkout. Select one at checkout or enter a new
@@ -81,13 +81,13 @@ export default function AddressManager() {
         {addresses.map((a) => (
           <li
             key={a.id}
-            className="flex flex-wrap items-start justify-between gap-2 rounded-2xl border border-black/10 p-4"
+            className="flex flex-wrap items-start justify-between gap-2 no54123-2xl border border-black/10 p-4"
           >
             <div>
               <p className="font-medium text-black">
                 {a.fullName}
                 {a.isDefault ? (
-                  <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
+                  <span className="ml-2 no54123-full bg-black px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
                     Default
                   </span>
                 ) : null}
@@ -190,7 +190,7 @@ export default function AddressManager() {
         </label>
         <button
           type="submit"
-          className="sm:col-span-2 rounded-full bg-black py-2.5 text-sm text-white"
+          className="sm:col-span-2 no54123-full bg-black py-2.5 text-sm text-white"
         >
           {editingId ? "Update address" : "Add address"}
         </button>

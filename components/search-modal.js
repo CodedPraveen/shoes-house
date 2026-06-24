@@ -70,7 +70,7 @@ export default function SearchModal() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="mx-auto mt-16 max-h-[85vh] w-full max-w-[1400px] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+            className="mx-auto mt-16 max-h-[85vh] w-full max-w-[1400px] overflow-y-auto no54123-3xl bg-white p-6 shadow-2xl sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
