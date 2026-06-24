@@ -15,11 +15,11 @@ export default function Home() {
       <Suspense fallback={<ProductGridSkeleton count={6} />}>
         <FeaturedProducts />
       </Suspense>
-      <FeaturedCollection />
+      {/* <FeaturedCollection /> */}
       <Suspense fallback={<ProductGridSkeleton count={6} />}>
         <TrendingGrid />
       </Suspense>
-      <BrandStory />
+      {/* <BrandStory /> */}
       <CategoriesSection />
       <NewsletterSection />
     </main>

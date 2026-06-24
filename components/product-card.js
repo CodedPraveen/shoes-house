@@ -100,7 +100,7 @@ function ProductCard({
           </button>
         </div>
 
-        <div className="space-y-1 px-1 pb-2 pt-4">
+        <div className="space-y-1 px-4 pb-2 pt-4">
           <p className="text-xs uppercase tracking-[0.22em] text-black/45">
             {product.categoryLabel || product.category}
           </p>
