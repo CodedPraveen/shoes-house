@@ -67,7 +67,7 @@ export default function CartPage() {
                       className="h-28 w-28 no54123-2xl object-cover"
                     />
                     <div className="flex flex-1 flex-col justify-between gap-4">
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <h3 className="font-medium">{item.name}</h3>
                         <p className="mt-1 text-sm text-black/60">
                           Color: {item.color} · Size: {item.size}
@@ -76,26 +76,9 @@ export default function CartPage() {
                           {formatPrice(item.price)}
                         </p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="inline-flex items-center no54123-full border border-black/15">
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item.id)}
-                            className="rounded-full p-2 text-black/50 transition hover:bg-black/5 hover:text-black"
-                            aria-label="Remove item"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleBuyNow(item)}
-                            className="ml-auto flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs font-medium text-white transition hover:scale-[1.01]"
-                            aria-label="Buy now"
-                          >
-                            <ShoppingBag size={14} />
-                            Buy Now
-                          </button>
-                        </div>
+                      {/* <div className="flex flex-wrap items-center justify-end gap-3">
+                        <div className="inline-flex items-center justify-end no54123-full border border-black/15">
+                       
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
@@ -113,15 +96,70 @@ export default function CartPage() {
                           <ShoppingBag size={14} />
                           Buy Now
                         </button>
+                        </div>
+                      </div> */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center border border-black/15 rounded-full">
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                            }
+                            className="p-2"
+                          >
+                            <Minus size={16} />
+                          </button>
+
+                          <span className="px-4 text-sm">{item.quantity}</span>
+
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            className="p-2"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="p-2 text-black/50 hover:text-black"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => handleBuyNow(item)}
+                            className="rounded-full bg-black px-4 py-2 text-white"
+                          >
+                            Buy Now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
-
               <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
                 <h3 className="text-lg font-medium">Order Summary</h3>
                 <div className="mt-6 space-y-3 text-sm">
+              <div className="space-y-2 border-b border-black/10 pb-4">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-sm"
+                  >
+                    <span className="truncate max-w-[180px]">
+                      {item.name} × {item.quantity}
+                    </span>
+
+                    <span>
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+              </div>
                   <div className="flex justify-between">
                     <span className="text-black/60">Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
@@ -141,12 +179,7 @@ export default function CartPage() {
                     </Link>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="mt-6 w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
-                >
-                  Checkout
-                </button>
+
               </aside>
             </div>
           )}
