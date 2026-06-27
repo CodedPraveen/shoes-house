@@ -8,15 +8,15 @@ export default function CategoriesSection() {
     <SectionReveal id="categories" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.25em] text-black/45">
+          {/* <p className="text-xs uppercase tracking-[0.25em] text-black/45">
             Categories
-          </p>
+          </p> */}
           <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             Shop by lifestyle.
           </h2>
         </div>
         {/* <div className="grid gap-5 grid-cols-2 lg:grid-cols-4 bg-blue-600"> */}
-        <div className="bg-blue-600">
+        <div className="bg-blue">
           <CategoryCarousel categories={categories} />
           {/* {categories.map((category) => (
               <Link

@@ -13,9 +13,9 @@ export default function BrandStory() {
         </div>
         <div className="flex items-center px-6 py-10 sm:px-5">
           <div className="space-y-6">
-            <p className="text-xs uppercase tracking-[0.25em] text-black/45">
+            {/* <p className="text-xs uppercase tracking-[0.25em] text-black/45">
               Brand Story
-            </p>
+            </p> */}
             <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">
               Designed to move with your identity.
             </h2>
