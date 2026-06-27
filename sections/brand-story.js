@@ -11,7 +11,7 @@ export default function BrandStory() {
             className="h-full min-h-[360px] w-full object-cover"
           />
         </div>
-        <div className="flex items-center px-6 py-10 sm:px-10">
+        <div className="flex items-center px-6 py-10 sm:px-5">
           <div className="space-y-6">
             <p className="text-xs uppercase tracking-[0.25em] text-black/45">
               Brand Story
