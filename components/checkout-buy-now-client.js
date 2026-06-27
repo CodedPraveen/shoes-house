@@ -24,7 +24,7 @@ function loadRazorpayScript() {
 }
 
 const inputClass =
-  "h-11 rounded-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
+  "h-11 no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
 
 const emptyForm = {
   fullName: "",
@@ -170,7 +170,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       onSubmit={handlePay}
       className="mx-auto grid w-full max-w-[1400px] gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
     >
-      <div className="space-y-6 rounded-3xl border border-black/10 bg-zinc-50 p-6">
+      <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>
         <p className="text-xs text-black/45">Buy Now — cart is not modified</p>
         {(addressMode === "new" || savedAddresses.length === 0) && (
@@ -200,7 +200,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
                 },
               );
             }}
-            className="rounded-full border border-black/15 px-4 py-2 text-xs"
+            className="no54123-full border border-black/15 px-4 py-2 text-xs"
           >
             Use my location
           </LoadingButton>
@@ -217,7 +217,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         )}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
-      <section className="space-y-6 rounded-3xl border border-black/10 p-6">
+      <section className="space-y-6 no54123-3xl border border-black/10 p-6">
         <h2 className="text-lg font-medium">Order Summary</h2>
         <div className="flex justify-between text-sm">
           <span>{lineItem.name} · {color} · {size} × {quantity}</span>
@@ -227,34 +227,8 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           <span>Total</span>
           <span>{formatPrice(total)}</span>
         </div>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <input
-              type="radio"
-              id="razorpay"
-              name="payment"
-              value="razorpay"
-              checked={paymentMethod === "razorpay"}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="cursor-pointer"
-            />
-            <label htmlFor="razorpay" className="cursor-pointer text-sm">Pay with Razorpay</label>
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="radio"
-              id="cod"
-              name="payment"
-              value="cod"
-              checked={paymentMethod === "cod"}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="cursor-pointer"
-            />
-            <label htmlFor="cod" className="cursor-pointer text-sm">Cash on Delivery</label>
-          </div>
-        </div>
-        <LoadingButton type="submit" loading={loading} className="w-full rounded-full bg-black py-3 text-sm font-medium text-white">
-          {paymentMethod === "cod" ? "Place Order" : "Pay with Razorpay"}
+        <LoadingButton type="submit" loading={loading} className="w-full no54123-full bg-black py-3 text-sm font-medium text-white">
+          Pay with Razorpay
         </LoadingButton>
       </section>
     </form>

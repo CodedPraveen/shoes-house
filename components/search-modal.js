@@ -70,7 +70,7 @@ export default function SearchModal() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="mx-auto mt-16 max-h-[85vh] w-full max-w-[1400px] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+            className="mx-auto mt-16 max-h-[85vh] w-full max-w-[1400px] overflow-y-auto no54123-3xl bg-white p-6 shadow-2xl sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
@@ -79,27 +79,46 @@ export default function SearchModal() {
                 <X size={20} />
               </button>
             </div>
-            <SearchFilters
-              filters={filters}
-              updateFilters={updateFilters}
-              toggleArrayFilter={toggleArrayFilter}
-              resetFilters={resetFilters}
-            />
-            <div className="mt-8">
-              {loading ? (
-                <ProductGridSkeleton count={8} />
-              ) : (
-                <>
-                  <ProductGrid products={results.slice(0, 12)} />
-                  <Link
-                    href="/search"
-                    onClick={closeSearch}
-                    className="mt-6 inline-block text-sm underline"
-                  >
-                    Full search page
-                  </Link>
-                </>
-              )}
+
+            <div className="mt-6 grid gap-8 lg:grid-cols-[300px_1fr]">
+              {/* Left Filters */}
+              <aside className="lg:sticky lg:top-4 h-fit">
+                {/* <SearchFilters
+                  filters={filters}
+                  updateFilters={updateFilters}
+                  toggleArrayFilter={toggleArrayFilter}
+                  resetFilters={resetFilters}
+                /> */}
+                <SearchFilters
+                  filters={filters}
+                  onQueryChange={(query) => updateFilters({ query })}
+                  onToggleFilter={toggleArrayFilter}
+                  onReset={resetFilters}
+                />
+              </aside>
+
+              {/* Right Products */}
+              <div>
+                <div className="mb-4 text-sm text-black/60">
+                  {results.length} products found
+                </div>
+
+                {loading ? (
+                  <ProductGridSkeleton count={8} />
+                ) : (
+                  <>
+                    <ProductGrid products={results.slice(0, 12)} />
+
+                    <Link
+                      href="/search"
+                      onClick={closeSearch}
+                      className="mt-6 inline-block text-sm underline"
+                    >
+                      View All Results
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </motion.div>
         </motion.div>

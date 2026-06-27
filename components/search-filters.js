@@ -24,7 +24,7 @@ export default function SearchFilters({
           value={filters.query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Search sneakers..."
-          className="h-11 w-full rounded-full border border-black/15 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-black/20"
+          className="h-11 w-full no54123-full border border-black/15 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-black/20"
         />
       </div>
 
@@ -36,7 +36,7 @@ export default function SearchFilters({
           {PRICE_FILTERS.map((range) => (
             <label
               key={range.id}
-              className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-black/5"
+              className="flex cursor-pointer items-center gap-3 no54123-xl px-2 py-1.5 transition hover:bg-black/5"
             >
               <input
                 type="checkbox"
@@ -62,7 +62,7 @@ export default function SearchFilters({
                 key={size}
                 type="button"
                 onClick={() => onToggleFilter("sizes", size)}
-                className={`h-10 min-w-10 rounded-full border px-3 text-sm transition ${
+                className={`h-10 min-w-10 no54123-full border px-3 text-sm transition ${
                   active
                     ? "border-black bg-black text-white"
                     : "border-black/15 hover:border-black/40"
@@ -88,7 +88,7 @@ export default function SearchFilters({
                 type="button"
                 title={color.label}
                 onClick={() => onToggleFilter("colors", color.id)}
-                className={`relative h-9 w-9 rounded-full border-2 transition ${
+                className={`relative h-9 w-9 no54123-full border-2 transition ${
                   active ? "border-black scale-110" : "border-transparent"
                 }`}
                 style={{ backgroundColor: color.hex }}

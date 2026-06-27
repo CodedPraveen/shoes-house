@@ -25,12 +25,12 @@ export default function NewsletterForm() {
           type="email"
           required
           placeholder="Enter your email"
-          className="h-12 flex-1 rounded-full border border-black/15 bg-white px-5 text-sm outline-none ring-black/20 transition focus:ring-2"
+          className="h-12 flex-1 no54123-full p-3 border border-black/15 bg-white px-5 text-sm outline-none ring-black/20 transition focus:ring-2"
         />
         <button
           type="submit"
           disabled={pending}
-          className="h-12 rounded-full bg-black px-6 text-sm font-medium text-white transition hover:scale-[1.02] disabled:opacity-60"
+          className="h-12 no54123-full bg-black px-6 text-sm font-medium text-white transition hover:scale-[1.02] disabled:opacity-60"
         >
           {pending ? "…" : "Subscribe"}
         </button>

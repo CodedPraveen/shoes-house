@@ -6,9 +6,9 @@ export default function FeaturedCollection() {
     <SectionReveal id="featured" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.25em] text-black/45">
+          {/* <p className="text-xs uppercase tracking-[0.25em] text-black/45">
             Featured Collection
-          </p>
+          </p> */}
           <h2 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
             Crafted silhouettes for every city pace.
           </h2>
@@ -18,7 +18,7 @@ export default function FeaturedCollection() {
           {featuredCollection.map((item) => (
             <article
               key={item.id}
-              className="group relative overflow-hidden rounded-[2rem]"
+              className="group relative overflow-hidden no54123-[2rem]"
             >
               <img
                 src={item.image}
@@ -29,7 +29,7 @@ export default function FeaturedCollection() {
               <div className="absolute bottom-0 w-full space-y-3 p-7 text-white">
                 <h3 className="text-2xl font-medium tracking-tight">{item.title}</h3>
                 <p className="max-w-sm text-sm text-white/85">{item.description}</p>
-                <button className="rounded-full border border-white/35 bg-white/10 px-5 py-2 text-xs uppercase tracking-[0.16em] backdrop-blur transition hover:bg-white hover:text-black">
+                <button className="no54123-full border border-white/35 bg-white/10 px-5 py-2 text-xs uppercase tracking-[0.16em] backdrop-blur transition hover:bg-white hover:text-black">
                   Discover
                 </button>
               </div>

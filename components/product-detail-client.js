@@ -58,7 +58,7 @@ export default function ProductDetailClient({ product }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] space-y-20 px-5 py-24 sm:px-8">
+    <div className="mx-auto w-full max-w-[1400] space-y-20 px-5 py-24 sm:px-8">
       <div className="grid gap-12 lg:grid-cols-2">
         <ProductGallery images={product.images} name={product.name} />
 
@@ -78,7 +78,7 @@ export default function ProductDetailClient({ product }) {
                 </p>
               )}
               {product.discount && (
-                <span className="rounded-full bg-black px-3 py-1 text-xs text-white">
+                <span className="no54123-full bg-black px-3 py-1 text-xs text-white">
                   -{product.discount}%
                 </span>
               )}
@@ -100,7 +100,7 @@ export default function ProductDetailClient({ product }) {
                   type="button"
                   onClick={() => setColor(item.id)}
                   title={item.label}
-                  className={`h-10 w-10 rounded-full border-2 transition ${
+                  className={`h-10 w-10 no54123-full border-2 transition ${
                     color === item.id ? "border-black scale-110" : "border-black/10"
                   }`}
                   style={{ backgroundColor: item.hex }}
@@ -119,7 +119,7 @@ export default function ProductDetailClient({ product }) {
                   key={item}
                   type="button"
                   onClick={() => setSize(item)}
-                  className={`h-11 min-w-11 rounded-full border px-4 text-sm transition ${
+                  className={`h-11 min-w-11 no54123-full border px-4 text-sm transition ${
                     size === item
                       ? "border-black bg-black text-white"
                       : "border-black/15 hover:border-black/40"
@@ -135,11 +135,11 @@ export default function ProductDetailClient({ product }) {
             <p className="text-xs uppercase tracking-[0.2em] text-black/45">
               Quantity
             </p>
-            <div className="inline-flex items-center rounded-full border border-black/15">
+            <div className="inline-flex items-center no54123-full border border-black/15">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="rounded-full p-3 transition hover:bg-black/5"
+                className="no54123-full p-3 transition hover:bg-black/5"
                 aria-label="Decrease quantity"
               >
                 <Minus size={16} />
@@ -150,7 +150,7 @@ export default function ProductDetailClient({ product }) {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="rounded-full p-3 transition hover:bg-black/5"
+                className="no54123-full p-3 transition hover:bg-black/5"
                 aria-label="Increase quantity"
               >
                 <Plus size={16} />
@@ -162,7 +162,7 @@ export default function ProductDetailClient({ product }) {
             <button
               type="button"
               onClick={handleAddToCart}
-              className="inline-flex items-center gap-2 rounded-full bg-black px-7 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 no54123-full bg-black px-7 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
             >
               <ShoppingBag size={16} />
               {added ? "Added to Cart" : "Add To Cart"}
@@ -170,14 +170,14 @@ export default function ProductDetailClient({ product }) {
             <button
               type="button"
               onClick={handleBuyNow}
-              className="rounded-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
+              className="no54123-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
             >
               Buy Now2
             </button>
             <button
               type="button"
               onClick={handleWishlist}
-              className={`rounded-full border border-black/15 p-3 transition hover:bg-black/5 ${
+              className={`no54123-full border border-black/15 p-3 transition hover:bg-black/5 ${
                 isInWishlist(product.id) ? "bg-black text-white" : ""
               }`}
               aria-label="Add to wishlist"

@@ -23,7 +23,7 @@ export default async function AdminInventoryPage() {
         </p>
       </div>
       {lowStock.length > 0 && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+        <section className="no54123-2xl border border-amber-200 bg-amber-50 p-6">
           <h2 className="font-medium text-amber-900">Low stock alert</h2>
           <ul className="mt-3 space-y-2 text-sm text-amber-900/80">
             {lowStock.map((p) => (
@@ -38,7 +38,7 @@ export default async function AdminInventoryPage() {
         {all.map((p) => (
           <div
             key={p.id}
-            className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/10 px-4 py-3"
+            className="flex flex-wrap items-center justify-between gap-4 no54123-2xl border border-black/10 px-4 py-3"
           >
             <div>
               <span className="font-medium">{p.name}</span>

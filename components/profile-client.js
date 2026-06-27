@@ -24,7 +24,7 @@ export default function ProfileClient({ user, allProducts = [] }) {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-12 px-5 pb-20 sm:px-8">
-      <div className="rounded-3xl border border-black/10 bg-zinc-50 p-8">
+      <div className="no54123-3xl border border-black/10 bg-zinc-50 p-8">
         <p className="text-xs uppercase tracking-[0.2em] text-black/45">Account</p>
         <p className="mt-2 text-2xl font-semibold">
           {user?.firstName} {user?.lastName}
@@ -37,7 +37,7 @@ export default function ProfileClient({ user, allProducts = [] }) {
       <section className="grid gap-6 sm:grid-cols-3">
         <Link
           href="/cart"
-          className="rounded-3xl border border-black/10 p-6 transition hover:border-black/30"
+          className="no54123-3xl border border-black/10 p-6 transition hover:border-black/30"
         >
           <p className="text-sm text-black/50">Cart</p>
           <p className="mt-2 text-xl font-medium">{itemCount} items</p>
@@ -45,14 +45,14 @@ export default function ProfileClient({ user, allProducts = [] }) {
         </Link>
         <Link
           href="/wishlist"
-          className="rounded-3xl border border-black/10 p-6 transition hover:border-black/30"
+          className="no54123-3xl border border-black/10 p-6 transition hover:border-black/30"
         >
           <p className="text-sm text-black/50">Wishlist</p>
           <p className="mt-2 text-xl font-medium">{wishlistIds.length} saved</p>
         </Link>
         <Link
           href="/orders"
-          className="rounded-3xl border border-black/10 p-6 transition hover:border-black/30"
+          className="no54123-3xl border border-black/10 p-6 transition hover:border-black/30"
         >
           <p className="text-sm text-black/50">Orders</p>
           <p className="mt-2 text-xl font-medium">View history</p>

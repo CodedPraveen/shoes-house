@@ -15,7 +15,7 @@ export default function AuthNav() {
     return (
       <Link
         href="/sign-in"
-        className="hidden rounded-full p-2 transition hover:bg-black/5 md:inline-flex"
+        className="hidden no54123-full p-2 transition hover:bg-black/5 md:inline-flex"
         aria-label="Sign in"
       >
         <User size={20} />

@@ -20,12 +20,12 @@ export default async function AdminProductsPage() {
         </div>
         <Link
           href="/admin/products/new"
-          className="rounded-full bg-black px-5 py-2.5 text-sm text-white"
+          className="no54123-full bg-black px-5 py-2.5 text-sm text-white"
         >
           Add Product
         </Link>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-black/10">
+      <div className="overflow-x-auto no54123-2xl border border-black/10">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-black/10 bg-zinc-50 text-xs uppercase tracking-wider text-black/45">
             <tr>

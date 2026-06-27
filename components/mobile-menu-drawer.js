@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_NAV, NAV_LINKS } from "@/lib/constants";
+import { SHOES_CATEGORY } from "@/lib/constants";
 
 export default function MobileMenuDrawer({ open, onClose }) {
   return (
@@ -33,7 +34,7 @@ export default function MobileMenuDrawer({ open, onClose }) {
                     <Link
                       href={item.href}
                       onClick={onClose}
-                      className="block rounded-xl px-4 py-3 text-sm transition hover:bg-black/5"
+                      className="block no54123-xl px-4 py-3 text-sm transition hover:bg-black/5"
                     >
                       {item.label}
                     </Link>
@@ -44,12 +45,25 @@ export default function MobileMenuDrawer({ open, onClose }) {
                 Categories
               </p>
               <ul className="space-y-1">
+                {SHOES_CATEGORY.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      className="block no54123-xl px-4 py-3 text-sm text-black/75 transition hover:bg-black/5"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <ul className="space-y-1">
                 {CATEGORY_NAV.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={onClose}
-                      className="block rounded-xl px-4 py-3 text-sm text-black/75 transition hover:bg-black/5"
+                      className="block no54123-xl px-4 py-3 text-sm text-black/75 transition hover:bg-black/5"
                     >
                       {item.label}
                     </Link>

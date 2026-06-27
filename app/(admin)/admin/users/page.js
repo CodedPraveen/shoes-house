@@ -31,10 +31,10 @@ export default async function AdminUsersPage() {
         <input
           type="search"
           placeholder="Search users..."
-          className="h-11 rounded-full border border-black/15 px-4 text-sm"
+          className="h-11 no54123-full border border-black/15 px-4 text-sm"
         />
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-black/10">
+      <div className="overflow-x-auto no54123-2xl border border-black/10">
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="border-b border-black/10 bg-zinc-50 text-xs uppercase tracking-wider text-black/45">
             <tr>

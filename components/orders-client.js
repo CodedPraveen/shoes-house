@@ -45,7 +45,7 @@ export default function OrdersClient() {
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-4 px-5 pb-20 sm:px-8">
       {processing ? (
-        <p className="rounded-2xl border border-black/10 bg-zinc-50 px-4 py-3 text-sm text-black/70">
+        <p className="no54123-2xl border border-black/10 bg-zinc-50 px-4 py-3 text-sm text-black/70">
           Payment received — your order will appear here once verified (webhook).
           Refresh in a moment.
         </p>
@@ -59,7 +59,7 @@ export default function OrdersClient() {
         orders.map((order) => (
           <article
             key={order.id}
-            className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-black/10 bg-white p-5"
+            className="flex flex-wrap items-center justify-between gap-4 no54123-3xl border border-black/10 bg-white p-5"
           >
             <div>
               <p className="font-medium">{order.orderNumber}</p>
@@ -75,7 +75,7 @@ export default function OrdersClient() {
               </p>
             </div>
             <span
-              className={`rounded-full px-3 py-1 text-xs capitalize ${statusStyles[order.status]}`}
+              className={`no54123-full px-3 py-1 text-xs capitalize ${statusStyles[order.status]}`}
             >
               {order.status}
             </span>
@@ -84,7 +84,7 @@ export default function OrdersClient() {
               href={`/api/orders/${order.id}/invoice`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-black/15 px-4 py-2 text-xs transition hover:bg-black hover:text-white"
+              className="no54123-full border border-black/15 px-4 py-2 text-xs transition hover:bg-black hover:text-white"
             >
               Invoice
             </a>
