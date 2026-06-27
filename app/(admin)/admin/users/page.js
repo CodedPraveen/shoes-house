@@ -1,8 +1,24 @@
+import { prisma } from "@/lib/db";
 import { adminUsers } from "@/data/admin-mock";
 
 export const metadata = { title: "Users | Admin | Shoes House" };
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage() {
+  const users = await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+    },
+    include: {
+      _count: {
+        select: {
+          orders: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -29,12 +45,31 @@ export default function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {adminUsers.map((u) => (
+            {/* {adminUsers.map((u) => (
               <tr key={u.id} className="border-b border-black/5">
                 <td className="px-4 py-3 font-medium">{u.name}</td>
                 <td className="px-4 py-3">{u.email}</td>
                 <td className="px-4 py-3">{u.orders}</td>
                 <td className="px-4 py-3">{u.joined}</td>
+              </tr>
+            ))} */}
+            {users.map((u) => (
+              <tr key={u.id} className="border-b border-black/5">
+                <td className="px-4 py-3 font-medium">
+                  {u.name || "No Name"}
+                </td>
+
+                <td className="px-4 py-3">
+                  {u.email}
+                </td>
+
+                <td className="px-4 py-3">
+                  {u._count.orders}
+                </td>
+
+                <td className="px-4 py-3">
+                  {new Date(u.createdAt).toLocaleDateString()}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -56,6 +56,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   useEffect(() => {
     (async () => {
@@ -113,11 +114,17 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         color,
         size,
         quantity,
+        paymentMethod,
       });
 
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
         setLoading(false);
+        return;
+      }
+
+      if (paymentMethod === "cod") {
+        router.push(`/orders/${result.orderId}?status=confirmed`);
         return;
       }
 
@@ -132,7 +139,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         key: result.keyId,
         amount: result.amount * 100,
         currency: result.currency,
-        name: "AERÉ",
+        name: "Shoes House",
         description: "Buy Now",
         order_id: result.razorpayOrderId,
         prefill: {

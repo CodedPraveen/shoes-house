@@ -37,10 +37,20 @@ export async function createBuyNowCheckoutSessionAction(input) {
   try {
     await assertRateLimit({ prefix: "checkout-buy-now", limit: 8, windowMs: 60_000 });
     const shipping = await resolveShippingAddress(user.id, input);
-    const { productId, color, size, quantity = 1 } = input;
+    const { productId, color, size, quantity = 1, paymentMethod = "razorpay" } = input;
 
     if (!productId || !color || !size) {
       return { ok: false, error: "Missing product selection" };
+    }
+
+    if (paymentMethod === "cod") {
+      const order = await checkoutService.createBuyNowOrder(
+        user.id,
+        { ...shipping, email: user.email },
+        { productId, color, size, quantity: Number(quantity) || 1 },
+        paymentMethod,
+      );
+      return { ok: true, orderId: order.id };
     }
 
     const session = await checkoutService.createBuyNowPaymentSession(
