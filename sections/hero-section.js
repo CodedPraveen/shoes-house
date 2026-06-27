@@ -76,9 +76,9 @@ export default function HeroSection() {
           />
 
           <h1 className="absolute inset-0 flex items-center justify-center text-[10vw] font-black uppercase text-white/20">
-            <p className="bg-black text-white">
+            {/* <p className="bg-black text-white"> */}
             SHOES HOUSE
-            </p>
+            {/* </p> */}
           </h1>
         </div>
       </div>
