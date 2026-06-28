@@ -7,6 +7,7 @@ Next.js storefront + admin with Supabase, Prisma, Clerk, Razorpay, and Cloudinar
 ```bash
 cp .env.local.example .env.local   # fill in keys
 npm install
+npx prisma generate
 npm run db:push
 npm run db:seed
 npm run dev
