@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_NAV, NAV_LINKS } from "@/lib/constants";
 import { SHOES_CATEGORY } from "@/lib/constants";
-import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 
 const MENU_DATA = {
   categories: [
     { label: "New Arrivals", href: "/new-arrivals" },
-    { label: "Best Sellers", href: "/best-sellers" },
-    { label: "All Sneakers", href: "/shoes" },
-    { label: "Limited Edition", href: "/limited-edition" },
+    { label: "Best Sellers", href: "/category/shoes" },
+    { label: "All Sneakers", href: "/category/shoes" },
+    { label: "Limited Edition", href: "/category/shoes" },
   ],
 
   men: [
@@ -86,8 +87,19 @@ export default function MobileMenuDrawer({ open, onClose }) {
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className="fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-2xl md:hidden"
           >
-            <div className="border-b border-black/10 px-5 py-6">
-              <p className="text-lg font-semibold tracking-[0.2em]">SHOES HOUSE</p>
+            <div className="flex items-center justify-between border-b border-black/10 px-5 py-6">
+              <p className="text-lg font-semibold tracking-[0.2em]">
+                SHOES HOUSE
+              </p>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full p-2 transition hover:bg-black/5"
+                aria-label="Close menu"
+              >
+                <X size={20} />
+              </button>
             </div>
             <nav className="flex-1 overflow-y-auto px-5 py-6">
               <div className="overflow-hidden">
@@ -114,35 +126,41 @@ export default function MobileMenuDrawer({ open, onClose }) {
                 </div>
 
                 <div className="grid grid-cols-3 border-b border-black/10 text-center">
-                  <button className="py-4 text-sm font-semibold uppercase">
-                    Men
-                  </button>
+                  <Link href="/category/men">
+                    <button className="py-4 text-sm font-semibold uppercase">
+                      Men
+                    </button>
+                  </Link>
 
-                  <button className="py-4 text-sm font-semibold uppercase">
-                    Women
-                  </button>
+                  <Link href="/category/women">
+                    <button className="py-4 text-sm font-semibold uppercase">
+                      Women
+                    </button>
+                  </Link>
 
-                  <button className="py-4 text-sm font-semibold uppercase">
-                    Shoes
-                  </button>
+                  <Link href="/category/shoes">
+                    <button className="py-4 text-sm font-semibold uppercase">
+                      Shoes
+                    </button>
+                  </Link>
                 </div>
               </div>
               <ul className="py-4">
-                {MENU_DATA.categories.map((item) => (
-                  <li key={item.href}>
+                {MENU_DATA.categories.map((item, index) => (
+                  <li key={`${item.href}-${index}`}>
                     <Link
                       href={item.href}
                       onClick={onClose}
                       className="
-          flex
-          items-center
-          justify-between
-          px-4
-          py-4
-          text-sm
-          uppercase
-          tracking-wider
-        "
+        flex
+        items-center
+        justify-between
+        px-4
+        py-4
+        text-sm
+        uppercase
+        tracking-wider
+      "
                     >
                       {item.label}
                       <ChevronRight size={16} />
@@ -150,9 +168,7 @@ export default function MobileMenuDrawer({ open, onClose }) {
                   </li>
                 ))}
               </ul>
-              <p className="mb-2 mt-8 px-4 text-xs uppercase tracking-[0.2em] text-black/45">
-                Categories
-              </p>
+
               <ul className="space-y-1">
                 <div className="mt-6 border-t border-black/10 pt-6">
                   <p className="px-4 text-xs uppercase tracking-[0.2em] text-black/40">
