@@ -165,6 +165,44 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     }
   }
 
+
+  const success = async (pos) => {
+    try {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      console.log({
+        lat,
+        lng,
+        accuracy: pos.coords.accuracy,
+      });
+
+      const addr = await reverseGeocodeAction(lat, lng);
+
+      console.log("Address:", addr);
+
+      setAddressMode("new");
+
+      setForm((prev) => ({
+        ...prev,
+        ...addr,
+        country: addr.country || "India",
+      }));
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to get address");
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const erro = (err) => {
+    console.error(err);
+    setError("Location unavailable");
+    setLocating(false);
+  };
+  
+  
   return (
     <form
       onSubmit={handlePay}
@@ -179,25 +217,35 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             loading={locating}
             onClick={async () => {
               setLocating(true);
-              navigator.geolocation?.getCurrentPosition(
-                async (pos) => {
-                  try {
-                    const addr = await reverseGeocodeAction(
-                      pos.coords.latitude,
-                      pos.coords.longitude,
-                    );
-                    setAddressMode("new");
-                    setForm((prev) => ({ ...prev, ...addr, country: addr.country || "India" }));
-                  } catch (err) {
-                    setError(err.message);
-                  } finally {
-                    setLocating(false);
-                  }
-                },
-                () => {
-                  setError("Location unavailable");
-                  setLocating(false);
-                },
+              // navigator.geolocation?.getCurrentPosition(
+              //   async (pos) => {
+              //     try {
+
+              //       const addr = await reverseGeocodeAction(
+              //         pos.coords.latitude,
+              //         pos.coords.longitude,
+              //       );
+              //       setAddressMode("new");
+              //       setForm((prev) => ({ ...prev, ...addr, country: addr.country || "India" }));
+              //     } catch (err) {
+              //       setError(err.message);
+              //     } finally {
+              //       setLocating(false);
+              //     }
+              //   },
+              //   () => {
+              //     setError("Location unavailable");
+              //     setLocating(false);
+              //   },
+              // );
+              navigator.geolocation.getCurrentPosition(
+                success,
+                erro,
+                {
+                  enableHighAccuracy: true,
+                  timeout: 15000,
+                  maximumAge: 0,
+                }
               );
             }}
             className="no54123-full border border-black/15 px-4 py-2 text-xs"
