@@ -58,15 +58,15 @@ Slug-based: `/product/aero-one`
 ## Commands
 
 ```bash
-npm run dev
-npm run db:push
+npx prisma generate                                                                                                                         
+npm run db:push       
 npm run db:seed
-PERF_LOG=1 npm run dev   # performance instrumentation
+npm run dev
 ```
 
 ## Env
 
-See `.env.local.example`
+See `.env`
 
 ## Related docs
 
