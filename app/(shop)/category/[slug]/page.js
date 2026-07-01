@@ -12,14 +12,6 @@ const labels = {
   footwear: "Footwear",
 };
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const label = labels[slug] ?? "Category";
-  return {
-    title: `${label} | Shoes House`,
-    description: `Shop ${label.toLowerCase()} from Shoes House premium collection.`,
-  };
-}
 
 export default async function CategoryPage({ params }) {
   const { slug } = await params;
