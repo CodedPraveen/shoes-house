@@ -16,7 +16,7 @@ export const invoiceService = {
     const payment = order.payments[0];
 
     return {
-      invoiceNumber: order.orderNumber,
+      invoiceNumber: `INV-${order.orderNumber}`,
       orderNumber: order.orderNumber,
       createdAt: order.createdAt,
       status: order.status,
@@ -63,6 +63,54 @@ export const invoiceService = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice ${data.orderNumber}</title>
   <style>
+  @page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+  
+  @media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .invoice-info {
+    text-align: left;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .address-section {
+    grid-template-columns: 1fr;
+  }
+
+  .totals {
+    justify-content: stretch;
+  }
+
+  .totals-box {
+    width: 100%;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #fff; }
     .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
@@ -114,7 +162,7 @@ export const invoiceService = {
       </div>
       <div class="invoice-info">
         <h2>Invoice</h2>
-        <p><strong>Invoice #:</strong> ${data.orderNumber}</p>
+        <p><strong>Invoice #:</strong> ${data.invoiceNumber}</p>
         <p><strong>Order #:</strong> ${data.orderNumber}</p>
         <p><strong>Date:</strong> ${new Date(data.createdAt).toLocaleDateString("en-IN")}</p>
       </div>
@@ -132,6 +180,7 @@ export const invoiceService = {
         <h3>Payment Details</h3>
         <p><span class="label">Payment Method:</span> <strong>${data.paymentMethod}</strong></p>
         <p><span class="label">Payment Status:</span> <strong>${data.paymentStatus}</strong></p>
+        <p><span class="label">Order Status:</span> <strong>${data.status}</strong></p>
         ${data.razorpayPaymentId ? `<p><span class="label">Payment ID:</span> <code style="font-size: 11px; word-break: break-all;">${data.razorpayPaymentId}</code></p>` : ""}
       </div>
 
@@ -139,14 +188,14 @@ export const invoiceService = {
       <div class="address-box">
         <div class="address-section">
           <div>
-            <h3>Shipping Address</h3>
+            <h3>From</h3>
             <p>Shoes House</p>
             <p>Sanchore Road, Dhorimanna</p>
             <p>Dhorimanna, Rajasthan</p>
             <p>India - 344704</p>
           </div>
           <div>
-            <h3>Delivery Address</h3>
+            <h3>Customer Address</h3>
             <p>${data.customer.name}</p>
             <p>${data.shipping.line1}</p>
             ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
@@ -169,20 +218,46 @@ export const invoiceService = {
       </thead>
       <tbody>
         ${data.items
-          .map(
-            (item) => `
+        .map(
+          (item) => `
           <tr>
             <td>
-              <div class="product-name">${item.name}</div>
-              <div class="product-details">SKU: ${item.sku} ${item.color ? `• ${item.color}` : ""} ${item.size ? `• Size ${item.size}` : ""}</div>
-            </td>
+  <div style="display:flex;gap:12px;align-items:center;">
+    ${item.image
+              ? `
+      <img
+        src="${item.image}"
+        width="60"
+        height="60"
+        style="
+          width:60px;
+          height:60px;
+          object-fit:cover;
+          border-radius:8px;
+          border:1px solid #eee;
+        "
+      />
+    `
+              : ""
+            }
+
+    <div>
+      <div class="product-name">${item.name}</div>
+      <div class="product-details">
+        SKU: ${item.sku}
+        ${item.color ? `• ${item.color}` : ""}
+        ${item.size ? `• Size ${item.size}` : ""}
+      </div>
+    </div>
+  </div>
+</td>
             <td class="qty">${item.quantity}</td>
             <td style="text-align: right;">${formatPrice(item.unitPrice)}</td>
             <td class="amount">${formatPrice(item.lineTotal)}</td>
           </tr>
         `,
-          )
-          .join("")}
+        )
+        .join("")}
       </tbody>
     </table>
 
@@ -206,6 +281,8 @@ export const invoiceService = {
 
     <!-- Footer -->
     <div class="footer">
+    <p>www.shoeshouse.com</p>
+<p>support@shoeshouse.com</p>
       <p>Thank you for shopping with Shoes House. For order status and support, visit our website.</p>
       <p style="margin-top: 8px; font-size: 11px;">This is not a GST invoice. For tax purposes, refer to your order confirmation email.</p>
     </div>
