@@ -11,7 +11,6 @@ import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
 
-// export default function Navbar() {
 export default function Navbar({ categories }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

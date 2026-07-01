@@ -128,18 +128,7 @@ export const productAdminService = {
       include: { ...productInclude, variants: true },
     });
 
-    // for (const variant of created.variants) {
-    //   if (variant.stock > 0) {
-    //     await prisma.inventoryMovement.create({
-    //       data: {
-    //         variantId: variant.id,
-    //         quantity: variant.stock,
-    //         type: "RESTOCK",
-    //         reason: "Initial product creation",
-    //       },
-    //     });
-    //   }
-    // }
+    
     await prisma.inventoryMovement.createMany({
       data: created.variants
         .filter((variant) => variant.stock > 0)

@@ -1,13 +1,16 @@
 import Link from "next/link";
-import ProductCard from "@/components/product-card";
 import SectionReveal from "@/components/section-reveal";
 import { productService } from "@/services/product-service";
 import TrendingTabs from "@/components/trending-tabs";
 
 export default async function TrendingGrid() {
-  const trendingShoes = (await productService.getTrending()).slice(0, 6);
-  // const trendingShoes = await productService.getTrending();
-
+  const trendingShoes = (await productService.getTrending())
+    .slice(0, 6)
+    .map((product, index) => ({
+      ...product,
+      rank: index + 1,
+    }));
+    
   return (
     <SectionReveal id="trending" className="sm:px-8 lg:pb-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">

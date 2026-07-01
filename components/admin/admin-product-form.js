@@ -54,7 +54,7 @@ export default function AdminProductForm({
         }))
       : defaultColors,
   });
-
+// this for cloudinary photo upload
   // useEffect(() => {
   //   getCloudinaryConfigAction().then(setCloudinaryConfig);
   // }, []);

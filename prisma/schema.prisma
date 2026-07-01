@@ -226,7 +226,6 @@ model Address {
   @@index([pincode])
 }
 
-/// Created when Razorpay order is created — NOT a fulfilled Order until webhook verifies payment.
 model CheckoutSession {
   id              String                @id @default(cuid())
   userId          String
@@ -360,7 +359,6 @@ model Payment {
   @@index([orderId, status])
 }
 
-/// Immutable audit log for every stock change (source of truth for inventory history).
 model InventoryMovement {
   id        String                @id @default(cuid())
   variantId String
@@ -379,7 +377,6 @@ model InventoryMovement {
   @@index([variantId, createdAt])
 }
 
-/// Audit log for Razorpay webhook deliveries (idempotency + debugging).
 model WebhookEvent {
   id                String           @id @default(cuid())
   eventId           String           @unique
