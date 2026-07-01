@@ -110,7 +110,7 @@ export const invoiceService = {
       <div class="brand">
         <h1>Shoes House</h1>
         <p>Premium Sneaker Ecommerce</p>
-        <p style="margin-top: 10px; font-size: 12px;">support@aere.com</p>
+        <p style="margin-top: 10px; font-size: 12px;">support@shoeshouse.com</p>
       </div>
       <div class="invoice-info">
         <h2>Invoice</h2>

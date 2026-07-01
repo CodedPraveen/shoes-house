@@ -6,11 +6,11 @@ export const staticPages = {
     sections: [
       {
         heading: "Customer Care",
-        body: "Email: care@aere.com · Hours: Mon–Sat, 10am–7pm IST",
+        body: "Email: care@shoeshouse.com · Hours: Mon–Sat, 10am–7pm IST",
       },
       {
         heading: "Flagship",
-        body: "Shoes House, Dhorimanna, Balotra, Rajasthan, India",
+        body: "Shoes House(for testing name), Dhorimanna, Balotra, Rajasthan, India",
       },
     ],
   },
@@ -33,25 +33,7 @@ export const staticPages = {
       },
     ],
   },
-  return: {
-    eyebrow: "Returns",
-    title: "Return policy",
-    description: "Hassle-free returns on unworn pairs within 30 days.",
-    sections: [
-      {
-        heading: "Eligibility",
-        body: "Products must be unworn, in original box, with tags attached.",
-      },
-      {
-        heading: "Process",
-        body: "Initiate a return from your Orders page. Pickup arranged within 48 hours in most cities.",
-      },
-      {
-        heading: "Refunds",
-        body: "Refunds processed to original payment method within 5–7 business days after inspection.",
-      },
-    ],
-  },
+  
   faq: {
     eyebrow: "FAQ",
     title: "Common questions",

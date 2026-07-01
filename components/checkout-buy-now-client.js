@@ -8,6 +8,8 @@ import { createBuyNowCheckoutSessionAction } from "@/actions/checkout-actions";
 import { getAddressesAction } from "@/actions/address-actions";
 import { reverseGeocodeAction } from "@/actions/geocode-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import { useUser } from "@clerk/nextjs";
+
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -26,6 +28,7 @@ function loadRazorpayScript() {
 const inputClass =
   "h-11 no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
 
+
 const emptyForm = {
   fullName: "",
   phone: "",
@@ -38,6 +41,7 @@ const emptyForm = {
 };
 
 export default function CheckoutBuyNowClient({ lineItem }) {
+  const { user } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
@@ -57,6 +61,17 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((prev) => ({
+      ...prev,
+      fullName:
+        user.fullName ||
+        `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+    }));
+  }, [user]);
 
   useEffect(() => {
     (async () => {
@@ -98,6 +113,11 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   }
 
   async function handlePay(e) {
+    if (!/^\d{10}$/.test(form.phone)) {
+      setError("Please enter a valid 10-digit phone number");
+      setLoading(false);
+      return;
+    }
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -165,21 +185,13 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     }
   }
 
-
   const success = async (pos) => {
     try {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      console.log({
-        lat,
-        lng,
-        accuracy: pos.coords.accuracy,
-      });
 
       const addr = await reverseGeocodeAction(lat, lng);
-
-      console.log("Address:", addr);
 
       setAddressMode("new");
 
@@ -198,11 +210,19 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
   const erro = (err) => {
     console.error(err);
-    setError("Location unavailable");
+
+    alert(
+      "Location unavailable or permission denied. Please fill the address manually."
+    );
+
+    setError(
+      "Location unavailable or permission denied. Please fill the address manually."
+    );
+
     setLocating(false);
   };
-  
-  
+
+
   return (
     <form
       onSubmit={handlePay}
@@ -217,27 +237,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             loading={locating}
             onClick={async () => {
               setLocating(true);
-              // navigator.geolocation?.getCurrentPosition(
-              //   async (pos) => {
-              //     try {
 
-              //       const addr = await reverseGeocodeAction(
-              //         pos.coords.latitude,
-              //         pos.coords.longitude,
-              //       );
-              //       setAddressMode("new");
-              //       setForm((prev) => ({ ...prev, ...addr, country: addr.country || "India" }));
-              //     } catch (err) {
-              //       setError(err.message);
-              //     } finally {
-              //       setLocating(false);
-              //     }
-              //   },
-              //   () => {
-              //     setError("Location unavailable");
-              //     setLocating(false);
-              //   },
-              // );
               navigator.geolocation.getCurrentPosition(
                 success,
                 erro,
@@ -256,10 +256,20 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="grid gap-3 sm:grid-cols-2">
             <input required placeholder="Full name" className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
-            <input required placeholder="Phone" className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <input required placeholder="Address line 1" className={`${inputClass} sm:col-span-2`} value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
-            <input placeholder="City" className={inputClass} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            <input placeholder="State" className={inputClass} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+            <input required type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="Phone" className={inputClass} value={form.phone}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+
+                setForm({
+                  ...form,
+                  phone: value,
+                });
+              }}
+            />
+            <input required placeholder="House No / Flat No / Landmark" className={`${inputClass} sm:col-span-2`} value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
+            <input required placeholder="Address line 1" className={`${inputClass} sm:col-span-2`} value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
+            <input required placeholder="City" className={inputClass} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <input required placeholder="State" className={inputClass} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
             <input required placeholder="PIN code" className={inputClass} value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
           </div>
         )}
