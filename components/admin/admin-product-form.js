@@ -55,9 +55,9 @@ export default function AdminProductForm({
       : defaultColors,
   });
 
-  useEffect(() => {
-    getCloudinaryConfigAction().then(setCloudinaryConfig);
-  }, []);
+  // useEffect(() => {
+  //   getCloudinaryConfigAction().then(setCloudinaryConfig);
+  // }, []);
 
   function update(key, value) {
     setForm((prev) => {
