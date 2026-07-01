@@ -6,9 +6,11 @@ import { assertRateLimit } from "@/lib/rate-limit";
 import { productAdminService } from "@/services/product-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
 
+console.time("create-product");
+
 function revalidateProductPaths(slug) {
-  revalidateTag("products");
-  revalidateTag("search-catalog");
+  revalidateTag("products", "max");
+  revalidateTag("search-catalog", "max");
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
   if (slug) revalidatePath(`/product/${slug}`);
@@ -75,3 +77,5 @@ export async function getCloudinaryConfigAction() {
     ...imageUploadService.getUploadWidgetConfig(),
   };
 }
+
+console.timeEnd("create-product");

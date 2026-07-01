@@ -3,13 +3,11 @@ import { notDeleted } from "@/lib/prisma-helpers";
 
 export const userService = {
   async upsertFromClerk({ clerkId, email, name, role = "customer" }) {
-    // Check if email already exists in database (prevent duplicates)
     const existingByEmail = await prisma.user.findFirst({
       where: { email, ...notDeleted },
     });
 
     if (existingByEmail) {
-      // Reuse existing user, link Clerk account
       return prisma.user.update({
         where: { id: existingByEmail.id },
         data: {
@@ -20,7 +18,6 @@ export const userService = {
       });
     }
 
-    // No existing user, upsert by clerkId
     return prisma.user.upsert({
       where: { clerkId },
       update: {

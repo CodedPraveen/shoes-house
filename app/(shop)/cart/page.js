@@ -8,11 +8,6 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
-// export const metadata = {
-//   title: "Cart | Shoes House",
-//   description: "Your shopping cart contains the items you have selected for purchase. Review your cart, update quantities, and proceed to checkout to complete your order.", 
-// }
-
 export default function CartPage() {
   const router = useRouter();
   const { items, subtotal, itemCount, updateQuantity, removeItem, hydrated } =

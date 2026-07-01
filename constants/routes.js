@@ -12,7 +12,7 @@ export const PUBLIC_ROUTES = [
   "/category/footwear",
   "/contact",
   "/shipping",
-  "/return",
+  "/Return-Policy",
   "/faq",
   "/about",
   "/journal",
@@ -42,7 +42,7 @@ export const FOOTER_LINKS = {
   support: [
     { label: "Contact", href: "/contact" },
     { label: "Shipping", href: "/shipping" },
-    { label: "Return Policy", href: "/return" },
+    { label: "Return Policy", href: "/Return-Policy" },
     { label: "FAQ", href: "/faq" },
   ],
   company: [

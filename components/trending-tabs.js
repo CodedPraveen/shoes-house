@@ -44,17 +44,24 @@ export default function TrendingTabs({ initialProducts }) {
             {/* Products */}
             <div className="mt-8 grid grid-cols-2 lg:grid-cols-3">
                 {filteredProducts.length > 0 ? (
-                    filteredProducts.map((product) => (
+                   
+                    filteredProducts.map((product, index) => (
                         <ProductCard
                             key={product.id}
-                            product={product}
+                            product={{
+                                ...product,
+                                rank: index + 1,
+                            }}
+                            showRank={index < 3}
                         />
                     ))
-                ) : (
-                    <div className="col-span-full py-20 text-center">
-                        No products found
-                    </div>
-                )}
+
+                )
+                    : (
+                        <div className="col-span-full py-20 text-center">
+                            No products found
+                        </div>
+                    )}
             </div>
         </>
     );

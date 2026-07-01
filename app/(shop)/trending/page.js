@@ -13,7 +13,7 @@ export default async function TrendingPage() {
   const bestSellers = (await productService.getBestSellers(6)).map(
     (product, index) => ({
       ...product,
-      rank: index < 3 ? index + 1 : product.rank,
+      rank: index < 3 ? index + 1 : null,
     }),
   );
   const trendingWeek = await productService.getTrendingThisWeek(6);

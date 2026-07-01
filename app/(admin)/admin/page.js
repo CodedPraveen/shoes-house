@@ -4,24 +4,30 @@ import { adminStats } from "@/data/admin-mock";
 import { formatPrice } from "@/lib/format-price";
 import { prisma } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = { title: "Admin | Shoes House" };
 
 export default async function AdminDashboardPage() {
-  const totalProducts = await prisma.product.count();
-  const totalUsers = await prisma.user.count();
-  const totalOrders = await prisma.order.count();
-  const totalRevenue = await prisma.order.aggregate({
-    _sum: {
-      total: true,
-    },
-  });
-  const totalSubscribers = await prisma.newsletterSubscriber.count({
-    where: {
-      deletedAt: null,
-    },
-  });
+  const [
+    totalProducts,
+    totalUsers,
+    totalOrders,
+    totalRevenue,
+    totalSubscribers,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.user.count(),
+    prisma.order.count(),
+    prisma.order.aggregate({
+      _sum: { total: true },
+    }),
+    prisma.newsletterSubscriber.count({
+      where: {
+        deletedAt: null,
+      },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">

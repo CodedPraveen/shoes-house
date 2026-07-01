@@ -61,6 +61,7 @@ function ProductCard({
             backgroundPosition: "center",
           }}
         >
+          
           {showRank && product.rank && <RankingBadge rank={product.rank} />}
           {showNewBadge && product.isNew && (
             <span className="absolute left-3 top-3 z-10 no54123-full bg-black px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-white">

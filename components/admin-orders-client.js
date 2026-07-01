@@ -14,45 +14,91 @@ export default function AdminOrdersClient({ initialOrders }) {
       prev.map((o) => (o.id === orderId ? { ...o, status } : o)),
     );
   }
+  function getStatusColor(status) {
+    switch (status) {
+      case "PENDING":
+        return "bg-zinc-100 text-zinc-700";
+
+      case "CONFIRMED":
+        return "bg-indigo-100 text-indigo-700";
+
+      case "PROCESSING":
+        return "bg-yellow-100 text-yellow-700";
+
+      case "SHIPPED":
+        return "bg-blue-100 text-blue-700";
+
+      case "DELIVERED":
+        return "bg-green-100 text-green-700";
+
+      case "CANCELLED":
+        return "bg-red-100 text-red-700";
+    }
+  }
 
   return (
-    <div className="space-y-3">
+    <div className="overflow-hidden rounded-xs border border-black/10 bg-white shadow-sm">
       {orders.map((order) => (
         <div
           key={order.id}
-          className="flex flex-wrap items-center gap-4 no54123-2xl border border-black/10 p-4"
+          className="rounded-xs flex flex-col gap-4 border-b border-black/10 p-6 lg:flex-row lg:items-center lg:justify-between"
         >
-          <div className="min-w-[140px]">
-            <p className="font-medium">{order.orderNumber}</p>
-            <p className="text-sm text-black/60">{order.customer}</p>
+          <div className="flex-1">
+            <p className="font-semibold tracking-wide">
+              {order.orderNumber}
+            </p>
+            <p className="mt-1 text-xs text-black/45">
+              ID: {order.id.slice(0, 8)}
+            </p>
+            <p className="text-sm text-black/60">
+              {order.customer}
+            </p>
+
             <p className="text-xs text-black/45">
               {new Date(order.createdAt).toLocaleDateString("en-IN")}
             </p>
           </div>
-          <p className="text-sm">{formatPrice(order.total)}</p>
-          <p className="text-xs text-black/60">
+          <p className="text-lg font-semibold">
+            {formatPrice(order.total)}
+          </p>
+          <div className="min-w-[170px] text-xs text-black/60">
             Payment:{" "}
-            <span className="font-medium">{order.paymentStatus}</span>
+            <span
+              className={`rounded-xs px-3 py-1 text-xs font-medium ${order.paymentStatus === "PAID"
+                ? "bg-green-100 text-green-700"
+                : "bg-orange-100 text-orange-700"
+                }`}
+            >
+              {order.paymentStatus}
+            </span>
             {order.razorpayPaymentId ? (
               <span className="block text-black/45">{order.razorpayPaymentId}</span>
             ) : null}
-          </p>
+          </div>
           <select
             value={order.status}
             onChange={(e) => onStatusChange(order.id, e.target.value)}
-            className="h-10 no54123-xl border border-black/15 px-3 text-sm capitalize"
+            className={`
+    h-10 rounded-xs border px-3 text-sm font-medium capitalize
+    focus:outline-none focus:ring-2 focus:ring-black/20
+    ${getStatusColor(order.status)}
+  `}
           >
             {ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
             ))}
-          </select>
-          <a
+          </select>         <a
             href={`/api/orders/${order.id}/invoice`}
             target="_blank"
             rel="noreferrer"
-            className="text-xs underline"
+            className="
+inline-flex h-10 items-center rounded-xs
+border border-black/10 px-4 text-sm
+hover:bg-black hover:text-white
+transition
+"
           >
             Invoice
           </a>

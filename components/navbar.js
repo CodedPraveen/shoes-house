@@ -11,7 +11,7 @@ import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
 
-export default function Navbar() {
+export default function Navbar({ categories }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -33,11 +33,10 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "border-b border-black/5 bg-white/75 backdrop-blur-xl"
-            : "bg-transparent"
-        }`}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled
+          ? "border-b border-black/5 bg-white/75 backdrop-blur-xl"
+          : "bg-transparent"
+          }`}
       >
         <nav className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-5 sm:px-8">
           <Link href="/" className="text-lg font-semibold tracking-[0.25em]">
@@ -62,11 +61,12 @@ export default function Navbar() {
               onClose={() => setCategoriesOpen(false)}
             />
             <ShoesDropdown
+              categories={categories}
               open={shoesOpen}
               onOpen={() => setShoesOpen(true)}
               onClose={() => setShoesOpen(false)}
             />
-            
+
           </ul>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -104,7 +104,11 @@ export default function Navbar() {
         </nav>
       </header>
 
-      <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MobileMenuDrawer
+        categories={categories}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+      />
     </>
   );
 }
