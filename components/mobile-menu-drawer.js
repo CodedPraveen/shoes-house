@@ -55,8 +55,11 @@ const MENU_DATA = {
     },
   ],
 };
-
-export default function MobileMenuDrawer({ open, onClose }) {
+export default function MobileMenuDrawer({
+  categories,
+  open,
+  onClose,
+}) {
 
   const [currentImage, setCurrentImage] = useState(0);
 
@@ -146,10 +149,10 @@ export default function MobileMenuDrawer({ open, onClose }) {
                 </div>
               </div>
               <ul className="py-4">
-                {MENU_DATA.categories.map((item, index) => (
-                  <li key={`${item.href}-${index}`}>
+                {categories.map((category) => (
+                  <li key={category.id}>
                     <Link
-                      href={item.href}
+                      href={`/category/${category.slug}`}
                       onClick={onClose}
                       className="
         flex
@@ -162,31 +165,14 @@ export default function MobileMenuDrawer({ open, onClose }) {
         tracking-wider
       "
                     >
-                      {item.label}
+                      {category.name}
                       <ChevronRight size={16} />
                     </Link>
                   </li>
                 ))}
               </ul>
 
-              <ul className="space-y-1">
-                <div className="mt-6 border-t border-black/10 pt-6">
-                  <p className="px-4 text-xs uppercase tracking-[0.2em] text-black/40">
-                    Explore
-                  </p>
-                </div>
-                {CATEGORY_NAV.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className="block no54123-xl px-4 py-3 text-sm text-black/75 transition hover:bg-black/5"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+           
             </nav>
           </motion.aside >
         </>

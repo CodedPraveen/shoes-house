@@ -52,6 +52,7 @@ const MENU_DATA = {
 };
 
 export default function ShoesDropdown({
+    categories,
     open,
     onOpen,
     onClose,
@@ -96,13 +97,13 @@ export default function ShoesDropdown({
                                     </h3>
 
                                     <ul className="space-y-3">
-                                        {MENU_DATA.categories.map((item) => (
-                                            <li key={item.href}>
+                                        {categories.map((category) => (
+                                            <li key={category.id}>
                                                 <Link
-                                                    href={item.href}
+                                                    href={`/category/${category.slug}`}
                                                     className="text-sm text-black/70 transition hover:text-black"
                                                 >
-                                                    {item.label}
+                                                    {category.name}
                                                 </Link>
                                             </li>
                                         ))}

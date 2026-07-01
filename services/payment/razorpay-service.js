@@ -1,9 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 function getClient() {
-  // console.log("KEY ID:", process.env.RAZORPAY_KEY_ID);
-  // console.log("HAS SECRET:", !!process.env.RAZORPAY_KEY_SECRET);
-
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
