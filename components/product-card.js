@@ -88,8 +88,8 @@ function ProductCard({
 
               window.open(
                 `https://wa.me/919166869035?text=${encodeURIComponent(
-                  `Hi, I'm interested in this product.
-                   Product: ${product.name}
+                  `Hi, I'm interested in this 
+                   Product: ${product.name},
                   Price: ₹${product.price}
 
 Link: ${productUrl}`

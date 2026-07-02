@@ -22,15 +22,6 @@ export default function ProductDetailClient({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/product/${product.slug}`;
-  const whatsappUrl =
-    `https://wa.me/919166869035?text=${encodeURIComponent(
-      `Hi, I'm interested in ${product.name}
-
-Price: ₹${product.price}
-
-Link: ${productUrl}`
-    )}`;
 
   const requireAuth = (action) => {
     if (hasClerk && !isSignedIn) {
@@ -183,7 +174,24 @@ Link: ${productUrl}`
             >
               Buy Now
             </button>
-            <button href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+
+            <button
+              type="button"
+              onClick={() => {
+                const productUrl = `${process.env.NEXT_PUBLIC_APP_URL}/product/${product.slug}`;
+
+                window.open(
+                  `https://wa.me/919166869035?text=${encodeURIComponent(
+                    `Hi, I'm interested in this 
+
+Product: ${product.name}
+Price: ₹${product.price}
+
+Link: ${productUrl}`
+                  )}`,
+                  "_blank"
+                );
+              }}
               className="text-emerald-500 hover:text-green-600 transition-colors border border-black/15 px-5 py-3 text-sm font-medium transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" width="131" height="30" viewBox="0 0 1487.13 346" fill="currentColor">
@@ -198,11 +206,11 @@ Link: ${productUrl}`
             <button
               type="button"
               onClick={handleWishlist}
-              className={`no54123-full border border-black/15 p-3 transition hover:bg-black/5 ${isInWishlist(product.id) ? "bg-black text-white" : ""
+              className={`no54123-full border border-black/15 p-4 transition hover:bg-black/5 ${isInWishlist(product.id) ? "bg-black text-white" : ""
                 }`}
               aria-label="Add to wishlist"
             >
-              <Heart size={18} />
+              <Heart size={20} />
             </button>
           </div>
         </div>
