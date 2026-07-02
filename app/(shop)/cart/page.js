@@ -139,22 +139,22 @@ export default function CartPage() {
               <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
                 <h3 className="text-lg font-medium">Order Summary</h3>
                 <div className="mt-6 space-y-3 text-sm">
-              <div className="space-y-2 border-b border-black/10 pb-4">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between text-sm"
-                  >
-                    <span className="truncate max-w-[180px]">
-                      {item.name} × {item.quantity}
-                    </span>
+                  <div className="space-y-2 border-b border-black/10 pb-4">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between text-sm"
+                      >
+                        <span className="truncate max-w-[180px]">
+                          {item.name} × {item.quantity}
+                        </span>
 
-                    <span>
-                      {formatPrice(item.price * item.quantity)}
-                    </span>
+                        <span>
+                          {formatPrice(item.price * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
                   <div className="flex justify-between">
                     <span className="text-black/60">Subtotal</span>
                     <span>{formatPrice(subtotal)}</span>
@@ -162,6 +162,7 @@ export default function CartPage() {
                   <div className="mt-6 space-y-3">
                     <button
                       type="button"
+                      onClick={() => router.push("/checkout")}
                       className="w-full rounded-full bg-black py-3 text-sm font-medium text-white transition hover:scale-[1.01]"
                     >
                       Checkout
