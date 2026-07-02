@@ -64,6 +64,7 @@ export default function CheckoutClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   useEffect(() => {
     (async () => {
@@ -141,6 +142,10 @@ export default function CheckoutClient() {
   }
 
   async function handlePay(e) {
+    if (!/^\d{10}$/.test(form.phone)) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -151,13 +156,20 @@ export default function CheckoutClient() {
         : { ...form };
 
     try {
-      const result = await createCheckoutSessionAction(payload);
+      // const result = await createCheckoutSessionAction(payload);
+      const result = await createCheckoutSessionAction({
+        ...payload,
+        paymentMethod,
+      });
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
         setLoading(false);
         return;
       }
-
+      if (paymentMethod === "cod") {
+        router.push(`/orders/${result.orderId}?status=confirmed`);
+        return;
+      }
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay) {
         setError("Could not load payment gateway");
@@ -228,11 +240,10 @@ export default function CheckoutClient() {
             {savedAddresses.map((addr) => (
               <label
                 key={addr.id}
-                className={`flex cursor-pointer gap-3 no54123-2xl border p-4 transition ${
-                  addressMode === "saved" && selectedAddressId === addr.id
-                    ? "border-black bg-white"
-                    : "border-black/10 bg-white/60"
-                }`}
+                className={`flex cursor-pointer gap-3 no54123-2xl border p-4 transition ${addressMode === "saved" && selectedAddressId === addr.id
+                  ? "border-black bg-white"
+                  : "border-black/10 bg-white/60"
+                  }`}
               >
                 <input
                   type="radio"
@@ -288,56 +299,65 @@ export default function CheckoutClient() {
               </LoadingButton>
               <span className="text-xs text-black/45">or enter address manually</span>
             </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              required
-              placeholder="Full name"
-              className={inputClass}
-              value={form.fullName}
-              onChange={(e) => updateField("fullName", e.target.value)}
-            />
-            <input
-              required
-              placeholder="Phone"
-              className={inputClass}
-              value={form.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-            />
-            <input
-              required
-              placeholder="Address line 1"
-              className={`${inputClass} sm:col-span-2`}
-              value={form.line1}
-              onChange={(e) => updateField("line1", e.target.value)}
-            />
-            <input
-              placeholder="Address line 2"
-              className={`${inputClass} sm:col-span-2`}
-              value={form.line2}
-              onChange={(e) => updateField("line2", e.target.value)}
-            />
-            <input
-              required
-              placeholder="City"
-              className={inputClass}
-              value={form.city}
-              onChange={(e) => updateField("city", e.target.value)}
-            />
-            <input
-              required
-              placeholder="State"
-              className={inputClass}
-              value={form.state}
-              onChange={(e) => updateField("state", e.target.value)}
-            />
-            <input
-              required
-              placeholder="PIN code"
-              className={inputClass}
-              value={form.pincode}
-              onChange={(e) => updateField("pincode", e.target.value)}
-            />
-          </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                required
+                placeholder="Full name"
+                className={inputClass}
+                value={form.fullName}
+                onChange={(e) => updateField("fullName", e.target.value)}
+              />
+              <input
+                required
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                placeholder="Phone"
+                className={inputClass}
+                value={form.phone}
+                onChange={(e) =>
+                  updateField(
+                    "phone",
+                    e.target.value.replace(/\D/g, "").slice(0, 10)
+                  )
+                }
+              />
+              <input
+                required
+                placeholder="Address line 1"
+                className={`${inputClass} sm:col-span-2`}
+                value={form.line1}
+                onChange={(e) => updateField("line1", e.target.value)}
+              />
+              <input
+                placeholder="Address line 2"
+                className={`${inputClass} sm:col-span-2`}
+                value={form.line2}
+                onChange={(e) => updateField("line2", e.target.value)}
+              />
+              <input
+                required
+                placeholder="City"
+                className={inputClass}
+                value={form.city}
+                onChange={(e) => updateField("city", e.target.value)}
+              />
+              <input
+                required
+                placeholder="State"
+                className={inputClass}
+                value={form.state}
+                onChange={(e) => updateField("state", e.target.value)}
+              />
+              <input
+                required
+                placeholder="PIN code"
+                className={inputClass}
+                value={form.pincode}
+                onChange={(e) => updateField("pincode", e.target.value)}
+              />
+            </div>
           </div>
         )}
 
@@ -382,12 +402,42 @@ export default function CheckoutClient() {
             <span>{formatPrice(total)}</span>
           </div>
         </div>
+        <div className="space-y-3 border-t border-black/10 pt-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="razorpay"
+              checked={paymentMethod === "razorpay"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>Pay Online (Razorpay)</span>
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cod"
+              checked={paymentMethod === "cod"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>Cash on Delivery</span>
+          </label>
+        </div>
         <button
           type="submit"
           disabled={loading}
           className="w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
         >
-          {loading ? "Opening Razorpay…" : "Pay with Razorpay"}
+          {/* {loading ? "Opening Razorpay…" : "Pay with Razorpay"} */}
+          {loading
+            ? paymentMethod === "cod"
+              ? "Placing Order..."
+              : "Opening Razorpay..."
+            : paymentMethod === "cod"
+              ? "Place Order"
+              : "Pay with Razorpay"}
         </button>
       </section>
     </form>

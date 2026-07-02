@@ -68,14 +68,42 @@ export async function createCheckoutSessionAction(input) {
   const user = await requireDbUser();
 
   try {
-    await assertRateLimit({ prefix: "checkout", limit: 8, windowMs: 60_000 });
+    await assertRateLimit({
+      prefix: "checkout",
+      limit: 8,
+      windowMs: 60_000,
+    });
+
     const shipping = await resolveShippingAddress(user.id, input);
+
+    const { paymentMethod = "razorpay" } = input;
+
+    if (paymentMethod === "cod") {
+      const order = await checkoutService.createOrder(
+        user.id,
+        {
+          ...shipping,
+          email: user.email,
+        },
+        paymentMethod
+      );
+
+      return {
+        ok: true,
+        orderId: order.id,
+      };
+    }
+
     const session = await checkoutService.createPaymentSession(user.id, {
       ...shipping,
       email: user.email,
     });
+
     return { ok: true, ...session };
   } catch (err) {
-    return { ok: false, error: err.message || "Checkout failed" };
+    return {
+      ok: false,
+      error: err.message || "Checkout failed",
+    };
   }
 }
