@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
@@ -277,16 +278,83 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       </div>
       <section className="space-y-6 no54123-3xl border border-black/10 p-6">
         <h2 className="text-lg font-medium">Order Summary</h2>
-        <div className="flex justify-between text-sm">
-          <span>{lineItem.name} · {color} · {size} × {quantity}</span>
-          <span>{formatPrice(subtotal)}</span>
+        <div className="flex gap-4">
+          <div className="relative h-24 w-24 overflow-hidden border">
+            <Image
+              src={lineItem.image}
+              alt={lineItem.name}
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          <div className="flex-1">
+            <h3 className="font-medium">{lineItem.name}</h3>
+
+            <p className="text-sm text-black/60">
+              Color: {color}
+            </p>
+
+            <p className="text-sm text-black/60">
+              Size: {size}
+            </p>
+
+            <p className="text-sm text-black/60">
+              Qty: {quantity}
+            </p>
+          </div>
         </div>
-        <div className="flex justify-between font-medium">
-          <span>Total</span>
-          <span>{formatPrice(total)}</span>
+        <div className="space-y-2 border-t border-black/10 pt-4">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Shipping</span>
+            <span>
+              {shippingCost === 0
+                ? "Free"
+                : formatPrice(shippingCost)}
+            </span>
+          </div>
+
+          <div className="flex justify-between font-medium">
+            <span>Total</span>
+            <span>{formatPrice(total)}</span>
+          </div>
         </div>
-        <LoadingButton type="submit" loading={loading} className="w-full no54123-full bg-black py-3 text-sm font-medium text-white">
-          Pay with Razorpay
+        <div className="space-y-3 border-t border-black/10 pt-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="razorpay"
+              checked={paymentMethod === "razorpay"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>Pay Online (Razorpay)</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cod"
+              checked={paymentMethod === "cod"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            />
+            <span>Cash on Delivery</span>
+          </label>
+        </div>
+        <LoadingButton
+          type="submit"
+          loading={loading}
+          className="w-full no54123-full bg-black py-3 text-sm font-medium text-white"
+        >
+          {paymentMethod === "cod"
+            ? "Place Order"
+            : "Pay with Razorpay"}
         </LoadingButton>
       </section>
     </form>
