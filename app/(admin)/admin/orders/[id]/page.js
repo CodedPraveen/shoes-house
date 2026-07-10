@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { orderService } from "@/services/order-service";
 import { formatPrice } from "@/lib/format-price";
 import AdminTrackingCard from "@/components/admin-tracking-card";
+import TrackingTimeline from "@/components/tracking-timeline";
 
 export default async function AdminOrderDetailsPage({ params }) {
     const order = await orderService.getById(params.id);
@@ -108,7 +109,7 @@ export default async function AdminOrderDetailsPage({ params }) {
             </div>
             */}
             <AdminTrackingCard order={order} />
-
+            <TrackingTimeline order={order} />
 
         </div>
     );
