@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { trackingService } from "@/services/tracking-service";
+import { normalizeTrackingStatus } from "@/lib/tracking-status";
 
 export const orderService = {
   async getOrdersByUserId(userId) {
@@ -67,32 +68,29 @@ export async function attachTrackingToOrder({
   orderId,
   trackingNumber,
 }) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      ...notDeleted,
+    },
   });
 
   if (!order) {
     throw new Error("Order not found.");
   }
 
-  if (order.deletedAt) {
-    throw new Error("Order has been deleted.");
-  }
-
   if (order.trackingNumber) {
-    throw new Error("Tracking is already attached.");
+    throw new Error("Tracking already attached.");
   }
 
-  // Create tracking in AfterShip
   const tracking = await trackingService.createTracking({
     trackingNumber,
     orderNumber: order.orderNumber,
   });
 
-  // AfterShip response structure may vary depending on API version.
   const aftershipTrackingId =
-    tracking?.data?.id ||
-    tracking?.data?.tracking?.id ||
+    tracking?.data?.id ??
+    tracking?.data?.tracking?.id ??
     null;
 
   return prisma.order.update({
@@ -103,9 +101,53 @@ export async function attachTrackingToOrder({
       trackingNumber,
       trackingStatus: "SHIPPED",
       shippedAt: new Date(),
-      aftershipTrackingId,
       lastTrackingSync: new Date(),
       trackingUrl: `https://www.aftership.com/track/india-post/${trackingNumber}`,
+      aftershipTrackingId,
+    },
+  });
+}
+export async function refreshTrackingStatus(orderId) {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      ...notDeleted,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  if (!order.trackingNumber) {
+    throw new Error("Tracking number not attached.");
+  }
+
+  const tracking = await trackingService.getTracking(
+    order.trackingNumber,
+  );
+
+  const data =
+    tracking?.data?.tracking ??
+    tracking?.data ??
+    {};
+
+  const tag = normalizeTrackingStatus(data.tag);
+
+  const checkpoint =
+    data.checkpoints?.[0] ?? null;
+
+  return prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      trackingStatus: tag,
+      deliveredAt:
+        tag === "DELIVERED"
+          ? new Date()
+          : null,
+      lastTrackingSync: new Date(),
     },
   });
 }

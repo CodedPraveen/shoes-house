@@ -7,6 +7,8 @@ import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
 import { Download } from "lucide-react";
+import TrackingTimeline from "@/components/tracking-timeline";
+import CustomerTrackingCard from "@/components/customer-tracking-card";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -15,7 +17,7 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -118,6 +120,31 @@ export default function OrderDetailPage() {
 
             <aside className="h-fit rounded-3xl border border-black/10 bg-zinc-50 p-6">
               <h2 className="text-lg font-medium">Order Summary</h2>
+              <TrackingTimeline order={order} />
+              <CustomerTrackingCard order={order} />
+
+              <div className="mt-6 rounded-xs border border-black/10 bg-white p-6">
+                <h2 className="mb-4 text-lg font-semibold">
+                  Tracking Details
+                </h2>
+
+                <p>
+                  <strong>Tracking Number:</strong>{" "}
+                  {order.trackingNumber || "-"}
+                </p>
+
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {order.trackingStatus || "-"}
+                </p>
+
+                <p>
+                  <strong>Last Updated:</strong>{" "}
+                  {order.lastTrackingSync
+                    ? new Date(order.lastTrackingSync).toLocaleString("en-IN")
+                    : "-"}
+                </p>
+              </div>
               <div className="mt-6 space-y-4">
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">

@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const AFTERSHIP_API_URL = "https://api.aftership.com";
-
 const aftershipClient = axios.create({
     baseURL: "https://api.aftership.com",
     headers: {
@@ -11,20 +9,34 @@ const aftershipClient = axios.create({
 });
 
 async function createTracking({ trackingNumber, orderNumber }) {
-    try {
-        const response = await aftershipClient.post("/tracking/2024-07/trackings", {
+    const response = await aftershipClient.post(
+        "/tracking/2024-07/trackings",
+        {
             tracking_number: trackingNumber,
             slug: "india-post",
             title: `Order #${orderNumber}`,
-        });
+        },
+    );
 
-        return response.data;
-    } catch (error) {
-        console.error("AfterShip Create Tracking Error:", error.response?.data || error.message);
-        throw new Error("Unable to create tracking.");
-    }
+    return response.data;
+}
+
+async function getTracking(trackingNumber) {
+    const response = await aftershipClient.get(
+        `/tracking/2024-07/trackings/india-post/${trackingNumber}`,
+    );
+
+    return response.data;
+}
+
+async function deleteTracking(trackingNumber) {
+    return aftershipClient.delete(
+        `/tracking/2024-07/trackings/india-post/${trackingNumber}`,
+    );
 }
 
 export const trackingService = {
     createTracking,
+    getTracking,
+    deleteTracking,
 };
