@@ -106,3 +106,47 @@ export async function attachTrackingToOrder({
     },
   });
 }
+export async function refreshTrackingStatus(orderId) {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      ...notDeleted,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  if (!order.trackingNumber) {
+    throw new Error("Tracking number not attached.");
+  }
+
+  const tracking = await trackingService.getTracking(
+    order.trackingNumber,
+  );
+
+  const data =
+    tracking?.data?.tracking ??
+    tracking?.data ??
+    {};
+
+  const tag = data.tag || "UNKNOWN";
+
+  const checkpoint =
+    data.checkpoints?.[0] ?? null;
+
+  return prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      trackingStatus: tag,
+      deliveredAt:
+        tag === "Delivered"
+          ? new Date()
+          : null,
+      lastTrackingSync: new Date(),
+    },
+  });
+}

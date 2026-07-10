@@ -24,7 +24,23 @@ async function createTracking({ trackingNumber, orderNumber }) {
         throw new Error("Unable to create tracking.");
     }
 }
+async function getTracking(trackingNumber) {
+    try {
+        const response = await aftershipClient.get(
+            `/tracking/2024-07/trackings/india-post/${trackingNumber}`,
+        );
 
+        return response.data;
+    } catch (error) {
+        console.error(
+            "AfterShip Get Tracking Error:",
+            error.response?.data || error.message,
+        );
+
+        throw new Error("Unable to fetch tracking.");
+    }
+}
 export const trackingService = {
-    createTracking,
+  createTracking,
+  getTracking,
 };

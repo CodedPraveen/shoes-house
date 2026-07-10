@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { attachTrackingAction } from "@/actions/tracking-actions";
+import { attachTrackingAction, refreshTrackingAction } from "@/actions/tracking-actions";
 
 const initialState = {
     success: false,
@@ -50,6 +50,42 @@ export default function AdminTrackingCard({ order }) {
                         <p>
                             {order.shippedAt
                                 ? new Date(order.shippedAt).toLocaleString("en-IN")
+                                : "-"}
+                        </p>
+                    </div>
+                    <form
+                        action={async () => {
+                            "use server";
+                            await refreshTrackingAction(order.id);
+                        }}
+                    >
+                        <button
+                            type="submit"
+                            className="mt-6 rounded-xs bg-black px-5 py-3 text-white hover:bg-zinc-800"
+                        >
+                            Refresh Status
+                        </button>
+                    </form>
+                    <div>
+                        <p className="text-xs text-black/45">
+                            Last Sync
+                        </p>
+
+                        <p>
+                            {order.lastTrackingSync
+                                ? new Date(order.lastTrackingSync).toLocaleString("en-IN")
+                                : "-"}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-xs text-black/45">
+                            Delivered At
+                        </p>
+
+                        <p>
+                            {order.deliveredAt
+                                ? new Date(order.deliveredAt).toLocaleString("en-IN")
                                 : "-"}
                         </p>
                     </div>
