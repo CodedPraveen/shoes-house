@@ -22,6 +22,11 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
+        checkpoints: {
+          orderBy: {
+            checkpointTime: "desc",
+          },
+        },
       },
     });
   },
@@ -131,6 +136,26 @@ export async function refreshTrackingStatus(orderId) {
     tracking?.data?.tracking ??
     tracking?.data ??
     {};
+
+  await prisma.trackingCheckpoint.deleteMany({
+    where: {
+      orderId,
+    },
+  });
+
+  if (Array.isArray(data.checkpoints)) {
+    await prisma.trackingCheckpoint.createMany({
+      data: data.checkpoints.map((cp) => ({
+        orderId,
+        checkpointTime: cp.checkpoint_time
+          ? new Date(cp.checkpoint_time)
+          : null,
+        location: cp.location || "",
+        message: cp.message || "",
+        tag: cp.tag || "",
+      })),
+    });
+  }
 
   const tag = normalizeTrackingStatus(data.tag);
 
