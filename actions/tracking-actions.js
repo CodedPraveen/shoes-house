@@ -31,12 +31,14 @@ export async function attachTrackingAction(formData) {
         };
     }
 }
-export async function refreshTrackingAction(orderId) {
+export async function refreshTrackingAction(formData) {
+    const orderId1 = formData.get("orderId");
+
     try {
-        await refreshTrackingStatus(orderId);
+        await refreshTrackingStatus(orderId1);
 
         revalidatePath("/admin/orders");
-        revalidatePath(`/admin/orders/${orderId}`);
+        revalidatePath(`/admin/orders/${orderId1}`);
 
         return {
             success: true,

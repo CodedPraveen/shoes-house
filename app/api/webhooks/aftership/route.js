@@ -1,10 +1,39 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizeTrackingStatus } from "@/lib/tracking-status";
 
+function verifySignature(rawBody, signature) {
+    const expected = crypto
+        .createHmac("sha256", process.env.AFTERSHIP_WEBHOOK_SECRET)
+        .update(rawBody)
+        .digest("base64");
+
+    return expected === signature;
+}
+
 export async function POST(req) {
     try {
-        const body = await req.json();
+        const rawBody = await req.text();
+
+        const signature = req.headers.get(
+            "as-signature-hmac-sha256",
+        );
+
+        if (
+            !verifySignature(rawBody, signature)
+        ) {
+            return NextResponse.json(
+                {
+                    error: "Invalid signature",
+                },
+                {
+                    status: 401,
+                },
+            );
+        }
+
+        const body = JSON.parse(rawBody);
 
         const tracking = body?.data?.tracking;
 
@@ -14,15 +43,20 @@ export async function POST(req) {
             });
         }
 
+        const status = normalizeTrackingStatus(
+            tracking.tag,
+        );
+
         await prisma.order.updateMany({
             where: {
-                trackingNumber: tracking.tracking_number,
+                trackingNumber:
+                    tracking.tracking_number,
             },
             data: {
-                trackingStatus: normalizeTrackingStatus(tracking.tag),
+                trackingStatus: status,
                 lastTrackingSync: new Date(),
                 deliveredAt:
-                    normalizeTrackingStatus(tracking.tag) === "DELIVERED"
+                    status === "DELIVERED"
                         ? new Date()
                         : null,
             },

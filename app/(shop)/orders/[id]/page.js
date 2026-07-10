@@ -8,6 +8,7 @@ import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
 import { Download } from "lucide-react";
 import TrackingTimeline from "@/components/tracking-timeline";
+import CustomerTrackingCard from "@/components/customer-tracking-card";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -120,6 +121,7 @@ export default function OrderDetailPage() {
             <aside className="h-fit rounded-3xl border border-black/10 bg-zinc-50 p-6">
               <h2 className="text-lg font-medium">Order Summary</h2>
               <TrackingTimeline order={order} />
+              <CustomerTrackingCard order={order} />
 
               <div className="mt-6 rounded-xs border border-black/10 bg-white p-6">
                 <h2 className="mb-4 text-lg font-semibold">
