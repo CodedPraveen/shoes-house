@@ -89,7 +89,8 @@ export default function AdminOrdersClient({ initialOrders }) {
                 {s}
               </option>
             ))}
-          </select>         <a
+          </select>
+          {/* <a
             href={`/api/orders/${order.id}/invoice`}
             target="_blank"
             rel="noreferrer"
@@ -102,6 +103,31 @@ transition
           >
             Invoice
           </a>
+          <a
+            href={`/admin/orders/${order.id}`}
+            className="inline-flex h-10 items-center rounded-xs border border-black/10 px-4 text-sm hover:bg-black hover:text-white transition"
+          >
+            Manage
+          </a> */}
+          <div className="flex gap-2">
+
+            <a
+              href={`/admin/orders/${order.id}`}
+              className="inline-flex h-10 items-center rounded-xs border border-black/10 px-4 text-sm hover:bg-black hover:text-white transition"
+            >
+              Manage
+            </a>
+
+            <a
+              href={`/api/orders/${order.id}/invoice`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-10 items-center rounded-xs border border-black/10 px-4 text-sm hover:bg-black hover:text-white transition"
+            >
+              Invoice
+            </a>
+
+          </div>
         </div>
       ))}
       {orders.length === 0 ? (
