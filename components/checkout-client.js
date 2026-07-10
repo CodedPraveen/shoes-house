@@ -9,6 +9,8 @@ import { createCheckoutSessionAction } from "@/actions/checkout-actions";
 import { getAddressesAction } from "@/actions/address-actions";
 import { reverseGeocodeAction } from "@/actions/geocode-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import { useUser } from "@clerk/nextjs";
+
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -52,6 +54,7 @@ function addressToForm(a) {
 }
 
 export default function CheckoutClient() {
+  const { user } = useUser();
   const router = useRouter();
   const { items, subtotal } = useCart();
   const shippingCost = calculateShipping(subtotal);
@@ -84,6 +87,18 @@ export default function CheckoutClient() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((prev) => ({
+      ...prev,
+      fullName:
+        user.fullName ||
+        `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+    }));
+  }, [user]);
+
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -300,13 +315,15 @@ export default function CheckoutClient() {
               <span className="text-xs text-black/45">or enter address manually</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <input
+              {/* <input
                 required
                 placeholder="Full name"
                 className={inputClass}
                 value={form.fullName}
                 onChange={(e) => updateField("fullName", e.target.value)}
-              />
+              /> */}
+              <input required placeholder="Full name" className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+
               <input
                 required
                 type="tel"

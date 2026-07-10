@@ -278,30 +278,38 @@ model CheckoutSessionItem {
 }
 
 model Order {
-  id                 String              @id @default(cuid())
-  orderNumber        String              @unique
-  userId             String
-  status             OrderStatus         @default(PENDING)
-  subtotal           Int
-  shippingCost       Int                 @default(0)
-  total              Int
-  shipFullName       String
-  shipPhone          String
-  shipLine1          String
-  shipLine2          String?
-  shipCity           String
-  shipState          String
-  shipCountry        String              @default("India")
-  shipPincode        String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  deletedAt          DateTime?
-  refundReason       String?
-  checkoutSession    CheckoutSession?
-  inventoryMovements InventoryMovement[]
-  user               User                @relation(fields: [userId], references: [id])
-  items              OrderItem[]
-  payments           Payment[]
+  id                  String              @id @default(cuid())
+  orderNumber         String              @unique
+  userId              String
+  status              OrderStatus         @default(PENDING)
+  subtotal            Int
+  shippingCost        Int                 @default(0)
+  total               Int
+  shipFullName        String
+  shipPhone           String
+  shipLine1           String
+  shipLine2           String?
+  shipCity            String
+  shipState           String
+  shipCountry         String              @default("India")
+  shipPincode         String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  deletedAt           DateTime?
+  refundReason        String?
+  checkoutSession     CheckoutSession?
+  inventoryMovements  InventoryMovement[]
+  user                User                @relation(fields: [userId], references: [id])
+  items               OrderItem[]
+  payments            Payment[]
+  trackingNumber      String?
+  trackingStatus      String?             @default("PENDING")
+  trackingUrl         String?
+  aftershipTrackingId String?
+
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  lastTrackingSync DateTime?
 
   @@index([userId])
   @@index([orderNumber])
