@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { normalizeTrackingStatus } from "@/lib/tracking-status";
 
 export async function POST(req) {
     try {
@@ -18,10 +19,10 @@ export async function POST(req) {
                 trackingNumber: tracking.tracking_number,
             },
             data: {
-                trackingStatus: tracking.tag,
+                trackingStatus: normalizeTrackingStatus(tracking.tag),
                 lastTrackingSync: new Date(),
                 deliveredAt:
-                    tracking.tag === "Delivered"
+                    normalizeTrackingStatus(tracking.tag) === "DELIVERED"
                         ? new Date()
                         : null,
             },

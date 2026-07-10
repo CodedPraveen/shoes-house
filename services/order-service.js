@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { trackingService } from "@/services/tracking-service";
+import { normalizeTrackingStatus } from "@/lib/tracking-status";
 
 export const orderService = {
   async getOrdersByUserId(userId) {
@@ -131,7 +132,7 @@ export async function refreshTrackingStatus(orderId) {
     tracking?.data ??
     {};
 
-  const tag = data.tag || "UNKNOWN";
+  const tag = normalizeTrackingStatus(data.tag);
 
   const checkpoint =
     data.checkpoints?.[0] ?? null;
@@ -143,7 +144,7 @@ export async function refreshTrackingStatus(orderId) {
     data: {
       trackingStatus: tag,
       deliveredAt:
-        tag === "Delivered"
+        tag === "DELIVERED"
           ? new Date()
           : null,
       lastTrackingSync: new Date(),
