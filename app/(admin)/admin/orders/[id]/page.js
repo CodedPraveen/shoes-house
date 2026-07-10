@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { orderService } from "@/services/order-service";
 import { formatPrice } from "@/lib/format-price";
+import AdminTrackingCard from "@/components/admin-tracking-card";
 
 export default async function AdminOrderDetailsPage({ params }) {
     const order = await orderService.getById(params.id);
@@ -100,20 +101,14 @@ export default async function AdminOrderDetailsPage({ params }) {
 
             </div>
 
-            <div
+            {/* <div
                 id="tracking-section"
                 className="rounded-xs border border-black/10 bg-white p-6"
-            >
-
-                <h2 className="mb-4 text-lg font-semibold">
-                    Shipment Tracking
-                </h2>
-
-                <p className="text-sm text-black/50">
-                    Tracking feature coming next.
-                </p>
-
+            > 
             </div>
+            */}
+            <AdminTrackingCard order={order} />
+
 
         </div>
     );

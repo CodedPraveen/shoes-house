@@ -4,32 +4,29 @@ import { revalidatePath } from "next/cache";
 import { attachTrackingToOrder } from "@/services/order-service";
 
 export async function attachTrackingAction(formData) {
-    const orderId = formData.get("orderId");
-    const trackingNumber = formData.get("trackingNumber")?.trim();
-
-    if (!trackingNumber) {
-        return {
-            success: false,
-            message: "Tracking number is required.",
-        };
-    }
-
     try {
+        const orderId = formData.get("orderId");
+        const trackingNumber = formData.get("trackingNumber")?.trim();
+
+        if (!trackingNumber) {
+            throw new Error("Tracking number is required.");
+        }
+
         await attachTrackingToOrder({
             orderId,
             trackingNumber,
         });
 
         revalidatePath("/admin/orders");
+        revalidatePath(`/admin/orders/${orderId}`);
 
         return {
             success: true,
-            message: "Tracking attached successfully.",
         };
     } catch (error) {
         return {
             success: false,
-            message: error.message,
+            error: error.message,
         };
     }
 }
