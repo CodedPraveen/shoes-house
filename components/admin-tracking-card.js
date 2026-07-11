@@ -107,7 +107,7 @@ export default function AdminTrackingCard({ previousState, order }) {
                     <input
                         name="trackingNumber"
                         placeholder="India Post Tracking Number"
-                        className="w-full rounded-xs border border-black/10 p-3 outline-none"
+                        className="w-full rounded-xs border border-black/10 p-3 outline-none uppercase"
                     />
 
                     <button
