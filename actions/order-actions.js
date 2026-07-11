@@ -9,11 +9,6 @@ export async function getMyOrdersAction() {
   const user = await requireDbUser();
   const orders = await orderService.getOrdersByUserId(user.id);
 
-  console.log(orders.map(o => ({
-    orderNumber: o.orderNumber,
-    createdAt: o.createdAt,
-  })));
-
   return orders.map((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
@@ -30,8 +25,6 @@ export async function generateOrderNumber() {
     .toString(36)
     .substring(2, 11)
     .toUpperCase()}`;
-
-  console.log("Generated Order Number:", orderNumber);
 
   return orderNumber;
 }
