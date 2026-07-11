@@ -81,14 +81,7 @@ export default function SearchModal() {
             </div>
 
             <div className="mt-6 grid gap-8 lg:grid-cols-[300px_1fr]">
-              {/* Left Filters */}
               <aside className="lg:sticky lg:top-4 h-fit">
-                {/* <SearchFilters
-                  filters={filters}
-                  updateFilters={updateFilters}
-                  toggleArrayFilter={toggleArrayFilter}
-                  resetFilters={resetFilters}
-                /> */}
                 <SearchFilters
                   filters={filters}
                   onQueryChange={(query) => updateFilters({ query })}
@@ -96,8 +89,6 @@ export default function SearchModal() {
                   onReset={resetFilters}
                 />
               </aside>
-
-              {/* Right Products */}
               <div>
                 <div className="mb-4 text-sm text-black/60">
                   {results.length} products found

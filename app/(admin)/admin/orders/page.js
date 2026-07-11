@@ -22,12 +22,7 @@ export default async function AdminOrdersPage() {
 
   return (
     <div className="space-y-8">
-      {/* <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
-        <p className="mt-2 text-sm text-black/60">
-          Order status: {ORDER_STATUSES.join(" · ")}
-        </p>
-      </div> */}
+     
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xs border p-5">
           <p className="text-sm text-black/60">Total Orders</p>

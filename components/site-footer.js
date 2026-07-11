@@ -13,7 +13,6 @@ export default function SiteFooter() {
       <div className="mx-auto w-full max-w-[1400px] px-5 py-12 sm:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">
 
-          {/* Brand */}
           <div className="space-y-4 text-center lg:text-left">
             <p className="text-lg font-semibold tracking-[0.2em]">
               Shoes House
@@ -25,7 +24,6 @@ export default function SiteFooter() {
             </p>
           </div>
 
-          {/* Links */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {columns.map((col) => (
               <div key={col.title}>

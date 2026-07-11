@@ -110,8 +110,6 @@ export default function ShoesDropdown({
                                     </ul>
                                 </div>
 
-
-                                {/* MEN */}
                                 <div className="col-span-2">
                                     <h3 className="mb-4 text-sm font-bold uppercase tracking-wider">
                                         Men
@@ -131,7 +129,6 @@ export default function ShoesDropdown({
                                     </ul>
                                 </div>
 
-                                {/* WOMEN */}
                                 <div className="col-span-2">
                                     <h3 className="mb-4 text-sm font-bold uppercase tracking-wider">
                                         Women
@@ -151,7 +148,6 @@ export default function ShoesDropdown({
                                     </ul>
                                 </div>
 
-                                {/* FEATURED PRODUCTS */}
                                 <div className="col-span-6">
                                     <h3 className="mb-4 text-sm font-bold uppercase tracking-wider">
                                         Featured Collection

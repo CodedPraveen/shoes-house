@@ -6,9 +6,6 @@ export default function FeaturedCollection() {
     <SectionReveal id="featured" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-[1400px] space-y-10">
         <div className="space-y-3">
-          {/* <p className="text-xs uppercase tracking-[0.25em] text-black/45">
-            Featured Collection
-          </p> */}
           <h2 className="max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
             Crafted silhouettes for every city pace.
           </h2>

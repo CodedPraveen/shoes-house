@@ -25,7 +25,6 @@ export default function TrendingTabs({ initialProducts }) {
 
     return (
         <>
-            {/* Tabs */}
             <div className="flex gap-3 overflow-x-auto px-5">
                 {tabs.map((tab) => (
                     <button
@@ -41,7 +40,6 @@ export default function TrendingTabs({ initialProducts }) {
                 ))}
             </div>
 
-            {/* Products */}
             <div className="mt-8 grid grid-cols-2 lg:grid-cols-3">
                 {filteredProducts.length > 0 ? (
                    

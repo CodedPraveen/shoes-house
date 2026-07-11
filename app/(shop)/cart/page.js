@@ -71,28 +71,7 @@ export default function CartPage() {
                           {formatPrice(item.price)}
                         </p>
                       </div>
-                      {/* <div className="flex flex-wrap items-center justify-end gap-3">
-                        <div className="inline-flex items-center justify-end no54123-full border border-black/15">
-                       
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="no54123-full p-2 text-black/50 transition hover:bg-black/5 hover:text-black"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBuyNow(item)}
-                          className="ml-auto flex items-center gap-2 no54123-full bg-black px-4 py-2 text-xs font-medium text-white transition hover:scale-[1.01]"
-                          aria-label="Buy now"
-                        >
-                          <ShoppingBag size={14} />
-                          Buy Now
-                        </button>
-                        </div>
-                      </div> */}
+                    
                       <div className="flex items-center justify-between">
                         <div className="flex items-center border border-black/15 rounded-full">
                           <button

@@ -176,3 +176,58 @@ export async function refreshTrackingStatus(orderId) {
     },
   });
 }
+
+export async function syncTracking(orderId) {
+  if (!orderId) {
+    throw new Error("syncTracking(): orderId is undefined");
+  }
+
+  const order = await orderService.getById(orderId);
+
+  if (!order) {
+    return null;
+  }
+
+  if (!order.trackingNumber) {
+    return order;
+  }
+
+  try {
+    const response = await trackingService.getTracking(
+      order.trackingNumber,
+    );
+
+    const tracking =
+      response?.data?.tracking ??
+      response?.data;
+
+    if (!tracking) {
+      return order;
+    }
+
+    const status = normalizeTrackingStatus(
+      tracking.tag,
+    );
+
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        trackingStatus: status,
+        lastTrackingSync: new Date(),
+        deliveredAt:
+          status === "DELIVERED"
+            ? new Date()
+            : order.deliveredAt,
+      },
+    });
+
+    return await orderService.getById(orderId);
+  } catch (error) {
+    console.error("Tracking sync failed:", error);
+
+    return order;
+  }
+}
+
