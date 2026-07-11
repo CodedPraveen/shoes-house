@@ -1,16 +1,18 @@
 {
-  "name": "com",
+  "name": "shoes-house",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "prisma generate && prisma db push && next dev",
+    "setup": "prisma generate && prisma db push && node prisma/seed.js",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint",
     "postinstall": "prisma generate",
+    "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio"
   },
