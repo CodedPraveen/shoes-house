@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { attachTrackingToOrder } from "@/services/order-service";
 import { refreshTrackingStatus } from "@/services/order-service";
 
-export async function attachTrackingAction(formData) {
+export async function attachTrackingAction(previousState, formData) {
     try {
         const orderId = formData.get("orderId");
         const trackingNumber = formData.get("trackingNumber")?.trim();
@@ -31,7 +31,7 @@ export async function attachTrackingAction(formData) {
         };
     }
 }
-export async function refreshTrackingAction(formData) {
+export async function refreshTrackingAction(previousState, formData) {
     const orderId1 = formData.get("orderId");
 
     try {

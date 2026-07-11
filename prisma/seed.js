@@ -53,7 +53,7 @@ function buildVariants(item, baseStock) {
   let idx = 0;
   for (const color of item.colors || []) {
     for (const size of item.sizes || []) {
-      const sku = `AERE-${item.slug}-${color.id}-${size}`.toUpperCase();
+      const sku = `Shoes-House-${item.slug}-${color.id}-${size}`.toUpperCase();
       const stock =
         baseStock === 0 ? 0 : idx % 4 === 0 ? Math.min(3, baseStock) : 15;
       variants.push({

@@ -28,7 +28,7 @@ export default function TrackingTimeline({ order }) {
 
     return (
         <div className="rounded-xs border border-black/10 bg-white p-6">
-            <h2 className="mb-6 text-lg font-semibold">
+            <h2 className="text-lg font-semibold">
                 Shipment Timeline
             </h2>
 

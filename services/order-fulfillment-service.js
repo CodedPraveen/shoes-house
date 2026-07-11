@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db";
-import { generateOrderNumber } from "@/lib/order-number";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { cartService } from "@/services/cart-service";
 import { notDeleted } from "@/lib/prisma-helpers";
@@ -14,7 +13,7 @@ import {
   InsufficientStockError,
   PaymentAmountMismatchError,
 } from "@/lib/inventory-errors";
-
+console.log("🔥 LOADED: services/order-fulfillment.js");
 /**
  * Webhook-only fulfillment: create Order, Payment PAID, decrement stock, clear cart.
  * Idempotent on razorpayPaymentId + checkout session status lock.
@@ -28,6 +27,7 @@ export async function fulfillPaidCheckout({
   rawPayload = null,
   webhookEventId = null,
 }) {
+  console.log("🔥 fulfillPaidCheckout called");
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
   if (existingPayment) {
     logDuplicatePayment({
@@ -102,7 +102,9 @@ export async function fulfillPaidCheckout({
     throw new Error("User not found");
   }
 
-  const orderNumber = await generateOrderNumber();
+  const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+  console.log("Generated Order:", orderNumber);
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -128,7 +130,7 @@ export async function fulfillPaidCheckout({
       if (paidAgain) {
         return { duplicate: true, orderId: paidAgain.orderId };
       }
-
+      console.log("Saving Order:", orderNumber);
       const order = await tx.order.create({
         data: {
           orderNumber,

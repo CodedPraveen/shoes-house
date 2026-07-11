@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/format-price";
@@ -80,14 +81,24 @@ export default function OrdersClient() {
               {order.status}
             </span>
             <p className="text-sm font-medium">{formatPrice(order.total)}</p>
+            <div className="flex gap-2">
+
+              <Link
+                href={`/orders/${order.id}`}
+                className="rounded-xs border border-black/10 px-4 py-2 text-sm hover:bg-black hover:text-white"
+              >
+                Track Package
+              </Link>
+
             <a
               href={`/api/orders/${order.id}/invoice`}
               target="_blank"
               rel="noreferrer"
               className="no54123-full border border-black/15 px-4 py-2 text-xs transition hover:bg-black hover:text-white"
-            >
+              >
               Invoice
             </a>
+              </div>
           </article>
         ))
       )}

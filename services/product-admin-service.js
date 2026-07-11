@@ -7,7 +7,7 @@ function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   const rows = [];
   for (const color of colors) {
     for (const size of sizes) {
-      const sku = `AERE-${slug}-${color.colorKey}-${size}`.toUpperCase();
+      const sku = `Shoes-House-${slug}-${color.colorKey}-${size}`.toUpperCase();
       rows.push({
         sku,
         colorKey: color.colorKey,

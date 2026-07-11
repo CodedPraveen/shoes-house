@@ -4,10 +4,12 @@ import { orderService } from "@/services/order-service";
 import { userService } from "@/services/user-service";
 import { isAdminUser } from "@/lib/auth";
 import { currentUser } from "@clerk/nextjs/server";
+import { syncTracking } from "@/services/order-service";
 
 export async function GET(_request, { params }) {
   const { orderId } = await params;
-  const order = await orderService.getById(orderId);
+  // const order = await orderService.getById(orderId);
+  const order = await syncTracking(orderId);
 
   if (!order) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

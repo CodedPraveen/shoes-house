@@ -58,7 +58,8 @@ export default function AdminTrackingCard({ previousState, order }) {
                                 : "-"}
                         </p>
                     </div>
-                    <form action={refreshAction}>
+                    {/* <form action={refreshAction}> */}
+                    <form action={refreshFormAction}>
                         <input
                             type="hidden"
                             name="orderId"
