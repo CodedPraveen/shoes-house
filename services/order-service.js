@@ -10,6 +10,10 @@ export const orderService = {
       include: {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
+        user: true,
+        items: true,
+        payments: true,
+        checkpoints: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -17,11 +21,25 @@ export const orderService = {
 
   async getById(id) {
     return prisma.order.findFirst({
-      where: { id, ...notDeleted },
+      where: {
+        id,
+        ...notDeleted,
+      },
       include: {
-        items: { where: { deletedAt: null } },
-        payments: { where: { deletedAt: null } },
         user: true,
+
+        items: {
+          where: {
+            deletedAt: null,
+          },
+        },
+
+        payments: {
+          where: {
+            deletedAt: null,
+          },
+        },
+
         checkpoints: {
           orderBy: {
             checkpointTime: "desc",
@@ -38,6 +56,9 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
+        items: true,
+        payments: true,
+        checkpoints: true,
       },
     });
   },
@@ -46,9 +67,12 @@ export const orderService = {
     return prisma.order.findMany({
       where: notDeleted,
       include: {
-        user: true,
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
+        user: true,
+        items: true,
+        payments: true,
+        checkpoints: true,
       },
       orderBy: { createdAt: "desc" },
     });

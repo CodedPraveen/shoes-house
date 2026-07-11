@@ -79,7 +79,7 @@ export default function OrderDetailPage() {
         <div className="mx-auto w-full max-w-[1400px] px-5 pb-20 sm:px-8">
           <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
             <div className="space-y-6">
-              <div className="rounded-3xl border border-black/10 bg-zinc-50 p-6">
+              <div className="no54123-3xl border border-black/10 bg-zinc-50 p-6">
                 <h2 className="text-lg font-medium">Shipping Address</h2>
                 <div className="mt-4 space-y-2 text-sm">
                   <p className="font-medium">{order.shipFullName}</p>
@@ -93,7 +93,7 @@ export default function OrderDetailPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-black/10 bg-white p-6">
+              <div className="no54123-3xl border border-black/10 bg-white p-6">
                 <h2 className="text-lg font-medium">Products</h2>
                 <ul className="mt-6 space-y-4">
                   {order.items?.map((item) => (
@@ -101,7 +101,7 @@ export default function OrderDetailPage() {
                       <img
                         src={item.productImage}
                         alt={item.productName}
-                        className="h-20 w-20 rounded-lg object-cover"
+                        className="h-20 w-20 no54123-lg object-cover"
                       />
                       <div className="flex-1">
                         <h3 className="font-medium">{item.productName}</h3>
@@ -118,12 +118,12 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            <aside className="h-fit rounded-3xl border border-black/10 bg-zinc-50 p-6">
-              <h2 className="text-lg font-medium">Order Summary</h2>
+            <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
+              <h2 className="text-lg font-medium pb-4 pl-2 flex justify-start">Order Summary</h2>
               <TrackingTimeline order={order} />
               <CustomerTrackingCard order={order} />
 
-              <div className="mt-6 rounded-xs border border-black/10 bg-white p-6">
+              <div className="mt-6 no54123-xs border border-black/10 bg-white p-6">
                 <h2 className="mb-4 text-lg font-semibold">
                   Tracking Details
                 </h2>
@@ -178,7 +178,7 @@ export default function OrderDetailPage() {
 
                 <a
                   href={`/api/orders/${order.id}/invoice`}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-full border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
+                  className="mt-6 flex w-full items-center justify-center gap-2 no54123-full border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
                 >
                   <Download size={16} />
                   Download Invoice
