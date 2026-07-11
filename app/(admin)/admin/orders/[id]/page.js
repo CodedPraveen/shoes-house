@@ -5,7 +5,8 @@ import AdminTrackingCard from "@/components/admin-tracking-card";
 import TrackingTimeline from "@/components/tracking-timeline";
 
 export default async function AdminOrderDetailsPage({ params }) {
-    const order = await orderService.getById(params.id);
+    const {id} = await params;
+    const order = await orderService.getById(id);
 
     if (!order) {
         notFound();
@@ -91,7 +92,7 @@ export default async function AdminOrderDetailsPage({ params }) {
 
                             <div>
 
-                                {formatPrice(item.total)}
+                                {formatPrice(order.total)}
 
                             </div>
 
