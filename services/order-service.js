@@ -22,6 +22,11 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
+        checkpoints: {
+          orderBy: {
+            checkpointTime: "desc",
+          },
+        },
       },
     });
   },
@@ -132,6 +137,26 @@ export async function refreshTrackingStatus(orderId) {
     tracking?.data ??
     {};
 
+  await prisma.trackingCheckpoint.deleteMany({
+    where: {
+      orderId,
+    },
+  });
+
+  if (Array.isArray(data.checkpoints)) {
+    await prisma.trackingCheckpoint.createMany({
+      data: data.checkpoints.map((cp) => ({
+        orderId,
+        checkpointTime: cp.checkpoint_time
+          ? new Date(cp.checkpoint_time)
+          : null,
+        location: cp.location || "",
+        message: cp.message || "",
+        tag: cp.tag || "",
+      })),
+    });
+  }
+
   const tag = normalizeTrackingStatus(data.tag);
 
   const checkpoint =
@@ -151,3 +176,58 @@ export async function refreshTrackingStatus(orderId) {
     },
   });
 }
+
+export async function syncTracking(orderId) {
+  if (!orderId) {
+    throw new Error("syncTracking(): orderId is undefined");
+  }
+
+  const order = await orderService.getById(orderId);
+
+  if (!order) {
+    return null;
+  }
+
+  if (!order.trackingNumber) {
+    return order;
+  }
+
+  try {
+    const response = await trackingService.getTracking(
+      order.trackingNumber,
+    );
+
+    const tracking =
+      response?.data?.tracking ??
+      response?.data;
+
+    if (!tracking) {
+      return order;
+    }
+
+    const status = normalizeTrackingStatus(
+      tracking.tag,
+    );
+
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        trackingStatus: status,
+        lastTrackingSync: new Date(),
+        deliveredAt:
+          status === "DELIVERED"
+            ? new Date()
+            : order.deliveredAt,
+      },
+    });
+
+    return await orderService.getById(orderId);
+  } catch (error) {
+    console.error("Tracking sync failed:", error);
+
+    return order;
+  }
+}
+

@@ -47,7 +47,7 @@ export async function POST(req) {
             tracking.tag,
         );
 
-        await prisma.order.updateMany({
+       const order = await prisma.order.findFirst({
             where: {
                 trackingNumber:
                     tracking.tracking_number,

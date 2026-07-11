@@ -171,7 +171,6 @@ export default function CheckoutClient() {
         : { ...form };
 
     try {
-      // const result = await createCheckoutSessionAction(payload);
       const result = await createCheckoutSessionAction({
         ...payload,
         paymentMethod,
@@ -315,13 +314,7 @@ export default function CheckoutClient() {
               <span className="text-xs text-black/45">or enter address manually</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {/* <input
-                required
-                placeholder="Full name"
-                className={inputClass}
-                value={form.fullName}
-                onChange={(e) => updateField("fullName", e.target.value)}
-              /> */}
+           
               <input required placeholder="Full name" className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
 
               <input
@@ -447,7 +440,6 @@ export default function CheckoutClient() {
           disabled={loading}
           className="w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
         >
-          {/* {loading ? "Opening Razorpay…" : "Pay with Razorpay"} */}
           {loading
             ? paymentMethod === "cod"
               ? "Placing Order..."

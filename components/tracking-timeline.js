@@ -33,33 +33,26 @@ export default function TrackingTimeline({ order }) {
             </h2>
 
             <div className="space-y-6">
-                {steps.map((step, index) => {
-                    const active = index <= current;
+                {order.checkpoints?.map((cp) => (
+                    <div
+                        key={cp.id}
+                        className="border-l-2 border-green-500 pl-4 pb-6"
+                    >
+                        <p className="font-medium">
+                            {cp.message}
+                        </p>
 
-                    return (
-                        <div
-                            key={step.key}
-                            className="flex items-center gap-4"
-                        >
-                            <div
-                                className={`h-4 w-4 rounded-full ${active
-                                        ? "bg-green-600"
-                                        : "bg-zinc-300"
-                                    }`}
-                            />
+                        <p className="text-sm text-black/50">
+                            {cp.location}
+                        </p>
 
-                            <span
-                                className={
-                                    active
-                                        ? "font-medium"
-                                        : "text-black/45"
-                                }
-                            >
-                                {step.label}
-                            </span>
-                        </div>
-                    );
-                })}
+                        <p className="text-xs text-black/40">
+                            {cp.checkpointTime
+                                ? new Date(cp.checkpointTime).toLocaleString("en-IN")
+                                : "-"}
+                        </p>
+                    </div>
+                ))}
             </div>
         </div>
     );

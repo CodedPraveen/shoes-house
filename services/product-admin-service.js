@@ -177,10 +177,7 @@ export const productAdminService = {
       await tx.productColor.deleteMany({ where: { productId: id } });
       await tx.productSize.deleteMany({ where: { productId: id } });
       await tx.productVariant.deleteMany({where: { productId: id }});
-      // await tx.productVariant.updateMany({
-      //   where: { productId: id },
-      //   data: { deletedAt: new Date(), isActive: false },
-      // });
+  
 
       await tx.productVariant.updateMany({
         where: { productId: id },

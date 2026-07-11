@@ -45,14 +45,7 @@ export default async function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {/* {adminUsers.map((u) => (
-              <tr key={u.id} className="border-b border-black/5">
-                <td className="px-4 py-3 font-medium">{u.name}</td>
-                <td className="px-4 py-3">{u.email}</td>
-                <td className="px-4 py-3">{u.orders}</td>
-                <td className="px-4 py-3">{u.joined}</td>
-              </tr>
-            ))} */}
+           
             {users.map((u) => (
               <tr key={u.id} className="border-b border-black/5">
                 <td className="px-4 py-3 font-medium">

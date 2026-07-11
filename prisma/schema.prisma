@@ -318,6 +318,22 @@ model Order {
   @@index([createdAt])
   @@index([userId, status])
   @@index([userId, createdAt])
+  checkpoints TrackingCheckpoint[]
+}
+
+model TrackingCheckpoint {
+  id             String   @id @default(cuid())
+  orderId        String
+  checkpointTime DateTime?
+  location       String?
+  message        String
+  tag            String?
+  createdAt      DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([checkpointTime])
 }
 
 model OrderItem {
@@ -471,3 +487,4 @@ enum WebhookLogStatus {
   PAYMENT_FAILED
   IGNORED
 }
+

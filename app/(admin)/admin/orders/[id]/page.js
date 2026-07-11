@@ -102,12 +102,6 @@ export default async function AdminOrderDetailsPage({ params }) {
 
             </div>
 
-            {/* <div
-                id="tracking-section"
-                className="rounded-xs border border-black/10 bg-white p-6"
-            > 
-            </div>
-            */}
             <AdminTrackingCard order={order} />
             <TrackingTimeline order={order} />
 

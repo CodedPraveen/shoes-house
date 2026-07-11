@@ -99,7 +99,6 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       <ul className="flex flex-wrap gap-2">
         {imageUrls.map((url) => (
           <li key={url} className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={url}
               alt=""
