@@ -1,20 +1,26 @@
+import {
+    CheckCircle2,
+    Circle,
+} from "lucide-react";
+
 export default function TrackingTimeline({ order }) {
+
     const steps = [
         {
             key: "PENDING",
-            label: "Order Created",
+            label: "Order Confirmed",
         },
         {
             key: "SHIPPED",
-            label: "Shipped",
+            label: "Packed",
         },
         {
             key: "IN_TRANSIT",
-            label: "In Transit",
+            label: "Shipped",
         },
         {
             key: "OUT_FOR_DELIVERY",
-            label: "Out For Delivery",
+            label: "Out for Delivery",
         },
         {
             key: "DELIVERED",
@@ -27,33 +33,65 @@ export default function TrackingTimeline({ order }) {
     );
 
     return (
-        <div className="rounded-xs border border-black/10 bg-white p-6">
-            <h2 className="text-lg font-semibold">
+        <div className="rounded-xs bg-zinc-50 p-6">
+
+            <h2 className="mb-6 text-lg font-semibold">
                 Shipment Timeline
             </h2>
 
-            <div className="space-y-6">
-                {order.checkpoints?.map((cp) => (
-                    <div
-                        key={cp.id}
-                        className="border-l-2 border-green-500 pl-4 pb-6"
-                    >
-                        <p className="font-medium">
-                            {cp.message}
-                        </p>
+            <div className="space-y-0">
 
-                        <p className="text-sm text-black/50">
-                            {cp.location}
-                        </p>
+                {steps.map((step, index) => {
 
-                        <p className="text-xs text-black/40">
-                            {cp.checkpointTime
-                                ? new Date(cp.checkpointTime).toLocaleString("en-IN")
-                                : "-"}
-                        </p>
-                    </div>
-                ))}
+                    const completed = index <= current;
+
+                    return (
+                        <div
+                            key={step.key}
+                            className="flex items-start gap-4"
+                        >
+
+                            <div className="flex flex-col items-center">
+
+                                {completed ? (
+                                    <CheckCircle2
+                                        size={20}
+                                        className="text-green-600"
+                                    />
+                                ) : (
+                                    <Circle
+                                        size={20}
+                                        className="text-black/30"
+                                    />
+                                )}
+
+                                {index !== steps.length - 1 && (
+                                    <div className="mt-1 h-8 w-px bg-black/10" />
+                                )}
+
+                            </div>
+
+                            <div>
+
+                                <p
+                                    className={
+                                        completed
+                                            ? "font-medium"
+                                            : "text-black/45"
+                                    }
+                                >
+                                    {step.label}
+                                </p>
+
+                            </div>
+
+                        </div>
+                    );
+
+                })}
+
             </div>
+
         </div>
     );
 }

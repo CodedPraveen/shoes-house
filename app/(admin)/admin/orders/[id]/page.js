@@ -5,7 +5,7 @@ import AdminTrackingCard from "@/components/admin-tracking-card";
 import TrackingTimeline from "@/components/tracking-timeline";
 
 export default async function AdminOrderDetailsPage({ params }) {
-    const {id} = await params;
+    const { id } = await params;
     const order = await orderService.getById(id);
 
     if (!order) {
@@ -103,9 +103,11 @@ export default async function AdminOrderDetailsPage({ params }) {
 
             </div>
 
-            <AdminTrackingCard order={order} />
-            <TrackingTimeline order={order} />
 
+            <div className="grid gap-6 lg:grid-cols-2">
+                <AdminTrackingCard order={order} />
+                <TrackingTimeline order={order} />
+            </div>
         </div>
     );
 }

@@ -15,10 +15,8 @@ const links = [
 export default function AdminSidebar() {
   const pathname = usePathname();
 
-
-
   return (
-    <aside className="w-56 shrink-0 border-r border-black/10 bg-zinc-50 p-6">
+      <aside className="sticky top-0 h-screen w-56 shrink-0 border-r border-black/10 bg-zinc-50 p-6 overflow-y-auto">
       <div className="text-sm font-semibold tracking-[0.2em]">
 
         <Link href="/admin">

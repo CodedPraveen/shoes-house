@@ -6,14 +6,13 @@ import Link from "next/link";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
-import { Download } from "lucide-react";
-import TrackingTimeline from "@/components/tracking-timeline";
+import { Download, Truck, Hash, PackageCheck, FileText } from "lucide-react";
 import CustomerTrackingCard from "@/components/customer-tracking-card";
 
 export default function OrderDetailPage() {
   const params = useParams();
   const orderId = params?.id;
- 
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,9 +78,10 @@ export default function OrderDetailPage() {
         <div className="mx-auto w-full max-w-[1400px] px-5 pb-20 sm:px-8">
           <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
             <div className="space-y-6">
-              <div className="no54123-3xl border border-black/10 bg-zinc-50 p-6">
-                <h2 className="text-lg font-medium">Shipping Address</h2>
-                <div className="mt-4 space-y-2 text-sm">
+
+              <div className="flex justify-between gap-4  no54123-3xl border border-black/10 bg-zinc-50 p-6">
+                <div className="mt-2 space-y-2 text-sm">
+                  <h2 className="text-lg  font-medium">Shipping Address</h2>
                   <p className="font-medium">{order.shipFullName}</p>
                   <p className="text-black/60">{order.shipLine1}</p>
                   {order.shipLine2 && <p className="text-black/60">{order.shipLine2}</p>}
@@ -90,6 +90,60 @@ export default function OrderDetailPage() {
                   </p>
                   <p className="text-black/60">{order.shipCountry}</p>
                   <p className="text-black/60">Phone: {order.shipPhone}</p>
+
+                </div>
+                <div className="rounded-xs bg-zinc-50 p-6">
+                  <h2 className="mb-6 text-lg font-semibold">
+                    Package Tracking
+                  </h2>
+
+                  <div className="space-y-5">
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-black/60">
+                        <Truck size={16} />
+                        <span>Courier</span>
+                      </div>
+
+                      <span className="font-medium">
+                        India Post
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-black/60">
+                        <Hash size={16} />
+                        <span>Tracking No.</span>
+                      </div>
+
+                      <span className="font-medium uppercase">
+                        {order.trackingNumber || "-"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-black/60">
+                        <FileText size={16} />
+                        <span>Order No.</span>
+                      </div>
+
+                      <span className="font-medium">
+                        {order.orderNumber}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-black/60">
+                        <PackageCheck size={16} />
+                        <span>Status</span>
+                      </div>
+
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold uppercase text-green-700">
+                        {order.trackingStatus || "-"}
+                      </span>
+                    </div>
+
+                  </div>
                 </div>
               </div>
 
@@ -120,31 +174,8 @@ export default function OrderDetailPage() {
 
             <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
               <h2 className="text-lg font-medium pb-4 pl-2 flex justify-start">Order Summary</h2>
-              <TrackingTimeline order={order} />
               <CustomerTrackingCard order={order} />
 
-              <div className="mt-6 no54123-xs border border-black/10 bg-white p-6">
-                <h2 className="mb-4 text-lg font-semibold">
-                  Tracking Details
-                </h2>
-
-                <p>
-                  <strong>Tracking Number:</strong>{" "}
-                  {order.trackingNumber || "-"}
-                </p>
-
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {order.trackingStatus || "-"}
-                </p>
-
-                <p>
-                  <strong>Last Updated:</strong>{" "}
-                  {order.lastTrackingSync
-                    ? new Date(order.lastTrackingSync).toLocaleString("en-IN")
-                    : "-"}
-                </p>
-              </div>
               <div className="mt-6 space-y-4">
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
