@@ -25,6 +25,8 @@ export async function attachTrackingAction(previousState, formData) {
             success: true,
         };
     } catch (error) {
+        console.error(error);
+
         return {
             success: false,
             error: error.message,

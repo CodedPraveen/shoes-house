@@ -112,15 +112,31 @@ export async function attachTrackingToOrder({
     throw new Error("Tracking already attached.");
   }
 
-  const tracking = await trackingService.createTracking({
-    trackingNumber,
-    orderNumber: order.orderNumber,
-  });
+  let aftershipTrackingId = null;
 
-  const aftershipTrackingId =
-    tracking?.data?.id ??
-    tracking?.data?.tracking?.id ??
-    null;
+  try {
+    const tracking = await trackingService.createTracking({
+      trackingNumber,
+      orderNumber: order.orderNumber,
+    });
+
+    aftershipTrackingId =
+      tracking?.data?.id ??
+      tracking?.data?.tracking?.id ??
+      null;
+
+  } catch (error) {
+    const meta = error.response?.data?.meta;
+
+    if (meta?.code !== 4003) {
+      throw error;
+    }
+
+    // Tracking already exists in AfterShip.
+    // Reuse its ID.
+    aftershipTrackingId =
+      error.response?.data?.data?.id ?? null;
+  }
 
   return prisma.order.update({
     where: {
@@ -136,6 +152,7 @@ export async function attachTrackingToOrder({
     },
   });
 }
+
 export async function refreshTrackingStatus(orderId) {
   const order = await prisma.order.findFirst({
     where: {

@@ -9,16 +9,28 @@ const aftershipClient = axios.create({
 });
 
 async function createTracking({ trackingNumber, orderNumber }) {
-    const response = await aftershipClient.post(
-        "/tracking/2024-07/trackings",
-        {
-            tracking_number: trackingNumber,
-            slug: "india-post",
-            title: `Order #${orderNumber}`,
-        },
-    );
+    try {
+        const response = await aftershipClient.post(
+            "/tracking/2024-07/trackings",
+            {
+                tracking_number: trackingNumber,
+                slug: "india-post",
+                title: `Order #${orderNumber}`,
+            },
+        );
 
-    return response.data;
+        return response.data;
+    } catch (error) {
+        console.error("Status:", error.response?.status);
+        console.error(
+            "Data:",
+            JSON.stringify(error.response?.data, null, 2)
+        );
+
+        throw new Error(
+            JSON.stringify(error.response?.data ?? error.message)
+        );
+    }
 }
 
 async function getTracking(trackingNumber) {
