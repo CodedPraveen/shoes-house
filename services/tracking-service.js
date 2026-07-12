@@ -21,11 +21,6 @@ async function createTracking({ trackingNumber, orderNumber }) {
 
         return response.data;
     } catch (error) {
-        console.error("Status:", error.response?.status);
-        console.error(
-            "Data:",
-            JSON.stringify(error.response?.data, null, 2)
-        );
 
         throw new Error(
             JSON.stringify(error.response?.data ?? error.message)
