@@ -4,6 +4,7 @@
 import { useActionState } from "react";
 import { attachTrackingAction, refreshTrackingAction } from "@/actions/tracking-actions";
 import TrackingStatusBadge from "@/components/tracking-status-badge";
+import TrackingTimeline from "@/components/tracking-timeline";
 
 const initialState = {
     success: false,
@@ -20,19 +21,19 @@ export default function AdminTrackingCard({ previousState, order }) {
     return (
         <div className="rounded-xs border border-black/10 bg-white p-6">
 
-            <h2 className="mb-6 text-lg font-semibold">
-                Shipment
-            </h2>
 
             {order.trackingNumber ? (
-                <div className="space-y-3">
+                <div className="space-y-3 w-full">
+                    <h2 className="mb-6 text-lg font-semibold">
+                        Shipment
+                    </h2>
 
                     <div>
                         <p className="text-xs text-black/45">
                             Tracking Number
                         </p>
 
-                        <p className="font-medium">
+                        <p className="font-medium uppercase">
                             {order.trackingNumber}
                         </p>
                     </div>
@@ -66,7 +67,8 @@ export default function AdminTrackingCard({ previousState, order }) {
                             value={order.id}
                         />
 
-                        <button disabled={refreshPending}>
+                        <button disabled={refreshPending}
+                            className="rounded-xs bg-black px-5 py-3 text-white">
                             {refreshPending ? "Refreshing..." : "Refresh Status"}
                         </button>
                     </form>
@@ -126,6 +128,7 @@ export default function AdminTrackingCard({ previousState, order }) {
                 </p>
             )}
 
+            {/* <TrackingTimeline order={order} /> */}
         </div>
     );
 }   
