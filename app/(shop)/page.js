@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import BrandStory from "@/sections/brand-story";
 import CategoriesSection from "@/sections/categories-section";
 import FeaturedCollection from "@/sections/featured-collection";
 import FeaturedProducts from "@/sections/featured-products";
