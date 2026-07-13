@@ -22,8 +22,8 @@ export default function JewelleryPage() {
 
       <Suspense
         fallback={
-          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16">
-            <ProductGridSkeleton count={4} />
+          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16 " >
+            <ProductGridSkeleton count={6} />
           </div>
         }
       >
