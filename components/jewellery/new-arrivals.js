@@ -5,7 +5,7 @@ import SectionHeader from "@/components/jewellery/section-header";
 import { productService } from "@/services/product-service";
 
 export default async function NewArrivals() {
-  const products = (await productService.getNewArrivals()).slice(0, 4);
+  const products = (await productService.getNewArrivals()).slice(0, 6);
 
   if (!products.length) return null;
 
