@@ -39,14 +39,6 @@ export default function CategoryCarousel({ categories }) {
                 lg:min-w-[20%]
                 px-3
               "
-//                             className="
-//   flex-[0_0_80%]
-//   sm:flex-[0_0_50%]
-//   md:flex-[0_0_33.333%]
-//   lg:flex-[0_0_25%]
-//   xl:flex-[0_0_20%]
-//   px-3
-// "
                         >
                             <Link
                                 href={`/products?category=${slug}`}

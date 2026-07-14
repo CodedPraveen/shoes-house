@@ -17,7 +17,7 @@ export default function CollectionSection({
   reverse = false,
 }) {
   return (
-    <SectionReveal className="overflow-hidden bg-[#f6f3f4] py-16 sm:py-20">
+    <SectionReveal className="overflow-hidden bg-[#f6f3f4] py-16 sm:py-12">
       <JewelleryContainer>
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div

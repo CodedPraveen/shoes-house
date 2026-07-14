@@ -10,7 +10,7 @@ export default async function TrendingProducts() {
   if (!products.length) return null;
 
   return (
-    <SectionReveal className="py-16 sm:py-20">
+    <SectionReveal className="py-16 sm:py-10">
       <JewelleryContainer>
         <SectionHeader
           title="Trending Collection"
