@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
+import CategoryCarousel from "./category-carousel";
 import { JEWELLERY_CATEGORIES } from "@/data/jewellery-content";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +15,7 @@ export default function CategorySection() {
         >
           Shop by Category
         </h2>
-        <ul className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-5">
+       {/*  <ul className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-5">
           {JEWELLERY_CATEGORIES.map(({ slug, label, tone }) => (
             <li key={slug}>
               <Link
@@ -26,15 +28,19 @@ export default function CategorySection() {
                     tone,
                   )}
                   aria-hidden="true"
-                />
+                >
+                  <Image src={`/jewellery/${slug}.jpeg`} alt="" width={200} height={200} className="h-full w-full object-cover" />
+                    
+                </div>
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#1b1b1c] sm:text-sm">
                   {label}
                 </span>
               </Link>
             </li>
-          ))}
-        </ul>
+          ))} 
+        </ul> */}
+          <CategoryCarousel categories={JEWELLERY_CATEGORIES} />
       </JewelleryContainer>
-    </section>
+    </section >
   );
 }

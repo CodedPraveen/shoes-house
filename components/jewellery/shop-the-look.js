@@ -42,7 +42,7 @@ function Hotspot({ top, left, title, price, align = "left", delay = "0s" }) {
           className="pointer-events-auto text-[10px] uppercase tracking-tight text-[#D4AF37]"
         >
           View Item
-        </Link>
+        </Link> 
       </div>
     </div>
   );

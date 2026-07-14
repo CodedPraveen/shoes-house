@@ -56,7 +56,7 @@ export default function JewelleryPage() {
         <BestSellers />
       </Suspense>
 
-      <InstagramFeed />
+      {/* <InstagramFeed /> */}
       <ReviewSection />
       <JewelleryNewsletter />
     </main>

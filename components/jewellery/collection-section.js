@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import SectionReveal from "@/components/section-reveal";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
-import { JEWELLERY_PLACEHOLDER } from "@/data/jewellery-content";
 import { cn } from "@/lib/utils";
 
 export default function CollectionSection({
@@ -12,6 +11,7 @@ export default function CollectionSection({
   description,
   ctaLabel,
   href,
+  image,
   imageAlt,
   tone = "from-[#f7e7ce]/80 to-[#fdfcfb]",
   reverse = false,
@@ -29,7 +29,7 @@ export default function CollectionSection({
             )}
           >
             <Image
-              src={JEWELLERY_PLACEHOLDER}
+              src={image}
               alt={imageAlt}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"

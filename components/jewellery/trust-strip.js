@@ -13,10 +13,10 @@ export default function TrustStrip() {
   return (
     <section
       aria-label="Product quality guarantees"
-      className="border-y border-[#c5c7c1]/30 bg-[#FDFCFB] py-10 sm:py-12"
+      className="border-y border-[#c5c7c1]/30 bg-[#FDFCFB] sm:py-10"
     >
       <JewelleryContainer>
-        <ul className="grid grid-cols-2 gap-6 text-center md:grid-cols-4 md:gap-8">
+        <ul className="hidden gap-6 text-center md:grid md:grid-cols-4 md:gap-8">
           {JEWELLERY_TRUST_ITEMS.map(({ icon, label }) => {
             const Icon = ICONS[icon];
             return (
