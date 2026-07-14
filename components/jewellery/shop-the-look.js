@@ -42,7 +42,7 @@ function Hotspot({ top, left, title, price, align = "left", delay = "0s" }) {
           className="pointer-events-auto text-[10px] uppercase tracking-tight text-[#D4AF37]"
         >
           View Item
-        </Link>
+        </Link> 
       </div>
     </div>
   );
@@ -50,7 +50,7 @@ function Hotspot({ top, left, title, price, align = "left", delay = "0s" }) {
 
 export default function ShopTheLook() {
   return (
-    <SectionReveal className="py-16 sm:py-20">
+    <SectionReveal className="py-16 sm:py-10">
       <JewelleryContainer>
         <h2 className="mb-8 text-center font-[family-name:var(--font-jewellery-display)] text-2xl font-medium italic text-[#1b1b1c] sm:mb-10 sm:text-[32px]">
           Shop The Look

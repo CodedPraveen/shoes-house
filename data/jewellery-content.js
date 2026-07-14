@@ -15,18 +15,22 @@ export const JEWELLERY_CATEGORIES = [
 
 export const JEWELLERY_COLLECTIONS = {
   wedding: {
+    id: "wedding",
     eyebrow: "Special Edition",
     title: "The Wedding Collection",
+    image: "/jewellery/wedding_collection.jpeg",
     description:
       "For the moments that last a lifetime. Our bridal collection blends ancestral craftsmanship with a modern aesthetic, ensuring every piece tells a story of love and heritage.",
     ctaLabel: "Shop Wedding",
-    href: "/products",  
+    href: "/products",
     imageAlt: "Editorial bridal jewellery collection",
     tone: "from-[#f7e7ce]/80 to-[#fdfcfb]",
   },
   office: {
+    id: "office",
     eyebrow: "Everyday Edit",
     title: "The Office Collection",
+    image: "/jewellery/office_collection.jpeg",
     description:
       "Understated elegance for the modern professional. Minimal silhouettes, refined finishes, and pieces that transition effortlessly from boardroom to evening.",
     ctaLabel: "Shop Office",
@@ -35,8 +39,10 @@ export const JEWELLERY_COLLECTIONS = {
     tone: "from-[#f0edee] to-[#eae7e8]",
   },
   gift: {
+    id: "gift",
     eyebrow: "Gift Guide",
     title: "The Gift Collection",
+    image: "/jewellery/gift.jpeg",
     description:
       "Curated treasures for every celebration. Thoughtfully packaged pieces designed to make gifting as memorable as the moment itself.",
     ctaLabel: "Shop Gifts",
@@ -104,5 +110,4 @@ export const JEWELLERY_INSTAGRAM = [
   { id: 5, alt: "Delicate bracelet on wrist", tone: "from-[#f6f3f4] to-[#fdfcfb]" },
   { id: 6, alt: "Mangalsutra modern minimalist styling", tone: "from-[#f7e7ce]/70 to-[#f0edee]" },
 ];
-
-export const JEWELLERY_PLACEHOLDER = "/jewellery/placeholder.svg";
+export const JEWELLERY_PLACEHOLDER = "/jewellery/model.jpeg";

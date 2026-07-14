@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import SectionReveal from "@/components/section-reveal";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
-import { JEWELLERY_PLACEHOLDER } from "@/data/jewellery-content";
 import { cn } from "@/lib/utils";
 
 export default function CollectionSection({
@@ -12,12 +11,13 @@ export default function CollectionSection({
   description,
   ctaLabel,
   href,
+  image,
   imageAlt,
   tone = "from-[#f7e7ce]/80 to-[#fdfcfb]",
   reverse = false,
 }) {
   return (
-    <SectionReveal className="overflow-hidden bg-[#f6f3f4] py-16 sm:py-20">
+    <SectionReveal className="overflow-hidden bg-[#f6f3f4] py-16 sm:py-12">
       <JewelleryContainer>
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div
@@ -29,7 +29,7 @@ export default function CollectionSection({
             )}
           >
             <Image
-              src={JEWELLERY_PLACEHOLDER}
+              src={image}
               alt={imageAlt}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
