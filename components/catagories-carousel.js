@@ -2,15 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react"; "use client"
-import {
-    Award,
-    Droplets,
-    Gem,
-    ShieldCheck,
-    ChevronLeft,
-    ChevronRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function CategoryCarousel({ categories }) {
     const [emblaRef, emblaApi] = useEmblaCarousel({
