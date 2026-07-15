@@ -3,6 +3,7 @@ import ProductGrid from "@/components/product-grid";
 import { productService } from "@/services/product-service";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = {
   title: "Trending | Shoes House",

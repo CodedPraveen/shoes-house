@@ -5,6 +5,8 @@ import SectionHeader from "@/components/jewellery/section-header";
 import { productService } from "@/services/product-service";
 import ResponsiveProductGrid from "@/components/jewellery/responsive-product-grid";
 
+export const revalidate = 300;
+
 export default async function NewArrivals() {
   // const products = (await productService.getNewArrivals()).slice(0, 6);
 

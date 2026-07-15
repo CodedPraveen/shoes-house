@@ -40,9 +40,17 @@ export default function CategoryCarousel({ categories }) {
                 px-3
               "
                         >
-                            <Link
+                            {/* <Link
                                 href={`/products?category=${slug}`}
                                 className="group flex flex-col items-center gap-4"
+                            > */}
+                            <Link
+                                href={{
+                                    pathname: "/jewellery",
+                                    query: {
+                                        category: category.slug,
+                                    },
+                                }}
                             >
                                 <div
                                     className={cn(
