@@ -2,11 +2,12 @@ import ProductCarousel from "@/components/product-carousel";
 import SectionReveal from "@/components/section-reveal";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
 import SectionHeader from "@/components/jewellery/section-header";
-import { productService } from "@/services/product-service";
+// import { productService } from "@/services/product-service";
 
-export default async function TrendingProducts() {
-  const products = (await productService.getTrending()).slice(0, 8);
+// export default async function TrendingProducts() {
+//   const products = (await productService.getTrending()).slice(0, 8);
 
+export default function TrendingProducts({ products }) {
   if (!products.length) return null;
 
   return (

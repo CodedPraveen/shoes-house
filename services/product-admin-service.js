@@ -3,6 +3,7 @@ import { productInclude } from "@/lib/product-include";
 import { mapProduct } from "@/lib/mappers/product-mapper";
 import { ensureUniqueProductSlug, slugify } from "@/lib/slugify";
 import { notDeleted } from "@/lib/prisma-helpers";
+
 function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   const rows = [];
   for (const color of colors) {
@@ -32,13 +33,14 @@ function normalizeImages(imageUrls = []) {
 }
 
 export const productAdminService = {
-  async listCategories() {
-    return prisma.category.findMany({
-      where: { ...notDeleted },
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, slug: true },
-    });
-  },
+  // Legacy - remove after admin fully switches to Collection + Sub Category
+  // async listCategories() {
+  //   return prisma.category.findMany({
+  //     where: { ...notDeleted },
+  //     orderBy: { sortOrder: "asc" },
+  //     select: { id: true, name: true, slug: true },
+  //   });
+  // },
 
   async getForEdit(id) {
     const row = await prisma.product.findFirst({
@@ -70,9 +72,12 @@ export const productAdminService = {
   },
 
   async create(input) {
-    const category = await prisma.category.findFirst({
-      where: { slug: input.categorySlug, ...notDeleted },
-    });
+    console.log(input);
+    const category = await this.getCategoryBySlug(input.categorySlug);
+
+    if (!category || category.deletedAt) {
+      throw new Error("Category not found");
+    }
     if (!category) throw new Error("Category not found");
 
     const slug = await ensureUniqueProductSlug(
@@ -113,7 +118,10 @@ export const productAdminService = {
         shippingInfo: input.shippingInfo || null,
         returnPolicy: input.returnPolicy || null,
         tags: input.tags || [],
+
         categoryId: category.id,
+        collection: category.collection,   // ✅ Add this
+
         images: { create: images },
         colors: {
           create: colors.map((c) => ({
@@ -122,13 +130,17 @@ export const productAdminService = {
             hex: c.hex,
           })),
         },
-        sizes: { create: sizes.map((size) => ({ size })) },
-        variants: { create: variantRows },
+        sizes: {
+          create: sizes.map((size) => ({ size }))
+        },
+        variants: {
+          create: variantRows
+        },
       },
       include: { ...productInclude, variants: true },
     });
 
-    
+
     await prisma.inventoryMovement.createMany({
       data: created.variants
         .filter((variant) => variant.stock > 0)
@@ -150,9 +162,11 @@ export const productAdminService = {
     });
     if (!existing) throw new Error("Product not found");
 
-    const category = await prisma.category.findFirst({
-      where: { slug: input.categorySlug, ...notDeleted },
-    });
+    const category = await this.getCategoryBySlug(input.categorySlug);
+
+    if (!category || category.deletedAt) {
+      throw new Error("Category not found");
+    }
     if (!category) throw new Error("Category not found");
 
     const slug = await ensureUniqueProductSlug(
@@ -176,8 +190,8 @@ export const productAdminService = {
       await tx.productImage.deleteMany({ where: { productId: id } });
       await tx.productColor.deleteMany({ where: { productId: id } });
       await tx.productSize.deleteMany({ where: { productId: id } });
-      await tx.productVariant.deleteMany({where: { productId: id }});
-  
+      await tx.productVariant.deleteMany({ where: { productId: id } });
+
 
       await tx.productVariant.updateMany({
         where: { productId: id },
@@ -186,7 +200,7 @@ export const productAdminService = {
           isActive: false,
         },
       });
-      
+
 
       await tx.product.update({
         where: { id },
@@ -247,4 +261,60 @@ export const productAdminService = {
     ]);
     return { ok: true };
   },
+
+  async listParentCategories() {
+    return prisma.category.findMany({
+      where: {
+        parentId: null,
+        deletedAt: null,
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        collection: true,
+      },
+    });
+  },
+
+  async listSubCategories(collection) {
+    return prisma.category.findMany({
+      where: {
+        collection,
+        parentId: {
+          not: null,
+        },
+        deletedAt: null,
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        parentId: true,
+      },
+    });
+  },
+
+  async getCategoryBySlug(slug) {
+    return prisma.category.findFirst({
+      where: {
+        slug,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        collection: true,
+        parentId: true,
+      },
+    });
+  },
+
 };

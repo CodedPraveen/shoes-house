@@ -2,16 +2,16 @@ import ProductGrid from "@/components/product-grid";
 import SectionReveal from "@/components/section-reveal";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
 import SectionHeader from "@/components/jewellery/section-header";
-import { productService } from "@/services/product-service";
+// import { productService } from "@/services/product-service";
 import ResponsiveProductGrid from "@/components/jewellery/responsive-product-grid";
 
 export const revalidate = 300;
 
-export default async function NewArrivals() {
+// export default async function NewArrivals() {
   // const products = (await productService.getNewArrivals()).slice(0, 6);
 
-  const products = await productService.getNewArrivals(8);
-
+  // const products = await productService.getNewArrivals(8);
+export default function NewArrivals({ products }) {
   if (!products.length) return null;
 
   return (

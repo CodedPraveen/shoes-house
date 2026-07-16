@@ -54,6 +54,12 @@ export async function deleteProductAction(id) {
   return { ok: true };
 }
 
+export async function getSubCategoriesAction(collection) {
+  await requireAdmin();
+
+  return productAdminService.listSubCategories(collection);
+}
+
 export async function uploadProductImageAction(formData) {
   await requireAdmin();
   await assertRateLimit({ prefix: "admin-upload", limit: 40, windowMs: 60_000 });

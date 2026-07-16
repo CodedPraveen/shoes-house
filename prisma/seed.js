@@ -3,36 +3,97 @@ import { products as catalogProducts } from "../data/catalog.js";
 
 const prisma = new PrismaClient();
 
-const categoryDefs = [
-  {
-    slug: "shoes",
-    name: "Shoes",
-    imageUrl:
-      "https://images.unsplash.com/photo-1597045566677-8cf032ed6634?auto=format&fit=crop&w=1200&q=80",
-    sortOrder: 1,
-  },
-  {
-    slug: "boys",
-    name: "Boys",
-    imageUrl:
-      "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=1200&q=80",
-    sortOrder: 2,
-  },
-  {
-    slug: "men",
-    name: "Men",
-    imageUrl:
-      "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=1200&q=80",
-    sortOrder: 3,
-  },
-  {
-    slug: "footwear",
-    name: "Footwear",
-    imageUrl:
-      "https://images.unsplash.com/photo-1519744346366-d1796261c3b1?auto=format&fit=crop&w=1200&q=80",
-    sortOrder: 4,
-  },
-];
+async function seedCategories() {
+  const shoes = await prisma.category.upsert({
+    where: { slug: "shoes" },
+    update: {
+      parentId: null,
+      collection: "SHOES",
+      deletedAt: null,
+    },
+    create: {
+      name: "Shoes",
+      slug: "shoes",
+      collection: "SHOES",
+      sortOrder: 1,
+    },
+  });
+
+  const jewellery = await prisma.category.upsert({
+    where: { slug: "jewellery" },
+    update: {
+      parentId: null,
+      collection: "JEWELLERY",
+      deletedAt: null,
+    },
+    create: {
+      name: "Jewellery",
+      slug: "jewellery",
+      collection: "JEWELLERY",
+      sortOrder: 2,
+    },
+  });
+
+  const shoeSubs = [
+    { name: "Footwear", slug: "footwear" },
+    { name: "Men", slug: "men" },
+    { name: "Women", slug: "women" },
+    { name: "Boys", slug: "boys" },
+    { name: "Sports", slug: "sports" },
+    { name: "Casual", slug: "casual" },
+  ];
+
+  const jewellerySubs = [
+    { name: "Necklaces", slug: "necklaces" },
+    { name: "Earrings", slug: "earrings" },
+    { name: "Rings", slug: "rings" },
+    { name: "Bracelets", slug: "bracelets" },
+    { name: "Mangalsutra", slug: "mangalsutra" },
+    { name: "Bangles", slug: "bangles" },
+    { name: "Anklets", slug: "anklets" },
+    { name: "Pendants", slug: "pendants" },
+  ];
+
+  for (const [i, item] of shoeSubs.entries()) {
+    await prisma.category.upsert({
+      where: {
+        slug: item.slug,
+      },
+      update: {
+        parentId: shoes.id,
+        collection: "SHOES",
+        deletedAt: null,
+      },
+      create: {
+        name: item.name,
+        slug: item.slug,
+        parentId: shoes.id,
+        collection: "SHOES",
+        sortOrder: i + 10,
+      },
+    });
+  }
+
+  for (const [i, item] of jewellerySubs.entries()) {
+    await prisma.category.upsert({
+      where: {
+        slug: item.slug,
+      },
+      update: {
+        parentId: jewellery.id,
+        collection: "JEWELLERY",
+        deletedAt: null,
+      },
+      create: {
+        name: item.name,
+        slug: item.slug,
+        parentId: jewellery.id,
+        collection: "JEWELLERY",
+        sortOrder: i + 20,
+      },
+    });
+  }
+}
 
 function buildImages(item) {
   const urls = item.images?.length ? [...item.images] : [];
@@ -70,20 +131,18 @@ function buildVariants(item, baseStock) {
 
 async function main() {
 
+  await seedCategories();
+
+  const categories = await prisma.category.findMany({
+    where: {
+      deletedAt: null,
+    },
+  });
+
   const categoryMap = {};
 
-  for (const cat of categoryDefs) {
-    const row = await prisma.category.upsert({
-      where: { slug: cat.slug },
-      update: {
-        name: cat.name,
-        imageUrl: cat.imageUrl,
-        sortOrder: cat.sortOrder,
-        deletedAt: null,
-      },
-      create: cat,
-    });
-    categoryMap[cat.slug] = row.id;
+  for (const category of categories) {
+    categoryMap[category.slug] = category.id;
   }
 
   for (const item of catalogProducts) {
@@ -119,6 +178,7 @@ async function main() {
         returnPolicy: item.returnPolicy ?? null,
         tags: item.tags ?? [],
         categoryId,
+        collection: "SHOES",
         deletedAt: null,
         images: { deleteMany: {}, create: buildImages(item) },
         colors: {
@@ -156,6 +216,7 @@ async function main() {
         returnPolicy: item.returnPolicy ?? null,
         tags: item.tags ?? [],
         categoryId,
+        collection: "SHOES",
         images: { create: buildImages(item) },
         colors: {
           create: (item.colors || []).map((c) => ({

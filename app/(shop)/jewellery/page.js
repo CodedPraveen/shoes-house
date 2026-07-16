@@ -4,7 +4,6 @@ import BestSellers from "@/components/jewellery/best-sellers";
 import CategorySection from "@/components/jewellery/category-section";
 import CollectionSection from "@/components/jewellery/collection-section";
 import JewelleryHero from "@/components/jewellery/hero";
-import InstagramFeed from "@/components/jewellery/instagram-feed";
 import JewelleryNewsletter from "@/components/jewellery/newsletter-section";
 import NewArrivals from "@/components/jewellery/new-arrivals";
 import ReviewSection from "@/components/jewellery/review-section";
@@ -12,13 +11,47 @@ import ShopTheLook from "@/components/jewellery/shop-the-look";
 import TrendingProducts from "@/components/jewellery/trending-products";
 import TrustStrip from "@/components/jewellery/trust-strip";
 import { JEWELLERY_COLLECTIONS } from "@/data/jewellery-content";
+import { productService } from "@/services/product-service";
 
-export default function JewelleryPage() {
+export default async function JewelleryPage({
+  searchParams,
+}) {
+  const params = await searchParams;
+
+  const category = params.category;
+  // const products =
+  //   await productService.getProducts({
+
+  //     // collection: "JEWELLERY",
+  //     parentSlug: "jewellery",
+
+  //     category
+
+  //   });
+  const [
+    products,
+    trendingProducts,
+    newArrivals,
+    bestSellers,
+  ] = await Promise.all([
+    productService.getProducts({
+      collection: "JEWELLERY",
+      category,
+    }),
+    productService.getTrending(),
+    productService.getNewArrivals(8),
+    productService.getBestSellers(8),
+  ]);
+
   return (
     <main>
       <JewelleryHero />
       <TrustStrip />
       <CategorySection />
+
+      {/* <CategorySection
+        categories={jewelleryCategories}
+      /> */}
 
       <Suspense
         fallback={
@@ -27,7 +60,11 @@ export default function JewelleryPage() {
           </div>
         }
       >
-        <TrendingProducts />
+        {/* <TrendingProducts /> */}
+        {/* <TrendingProducts
+          products={products.filter(p => p.isTrending)}
+        /> */}
+        <TrendingProducts products={trendingProducts.slice(0, 8)} />
       </Suspense>
 
       <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
@@ -43,7 +80,12 @@ export default function JewelleryPage() {
           </div>
         }
       >
-        <NewArrivals />
+        {/* <NewArrivals
+          products={products.filter(p => p.isTrending)}
+        /> */}
+
+        <NewArrivals products={newArrivals} />
+
       </Suspense>
 
       <Suspense
@@ -53,7 +95,10 @@ export default function JewelleryPage() {
           </div>
         }
       >
-        <BestSellers />
+        <BestSellers products={bestSellers} />
+        {/* <BestSellers
+          products={products.filter(p => p.isTrending)}
+        /> */}
       </Suspense>
 
       {/* <InstagramFeed /> */}

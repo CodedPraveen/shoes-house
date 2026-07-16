@@ -7,9 +7,9 @@ import ResponsiveProductGrid from "@/components/jewellery/responsive-product-gri
 
 export const revalidate = 300;
 
-export default async function BestSellers() {
-  const products = await productService.getBestSellers(8);
-
+// export default async function BestSellers() {
+//   const products = await productService.getBestSellers(8);
+export default function BestSellers({ products }) {
   if (!products.length) return null;
 
   return (

@@ -237,4 +237,74 @@ export const productService = {
       (a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99),
     );
   },
+  /** another  */
+  async getProducts({
+    collection,
+    category,
+  }) {
+    const where = {
+      ...notDeleted,
+      category: {
+        deletedAt: null,
+      },
+    };
+
+    if (collection) {
+      where.collection = collection;
+    }
+
+    if (category) {
+      where.category = {
+        slug: category,
+        deletedAt: null,
+      };
+    }
+
+    const rows = await prisma.product.findMany({
+      where,
+      include: productInclude,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return mapProducts(rows);
+  },
+  // async getSubCategories(collection) {
+  //   return prisma.category.findMany({
+  //     where: {
+  //       collection,
+  //       parentId: {
+  //         not: null,
+  //       },
+  //       deletedAt: null,
+  //     },
+  //     orderBy: {
+  //       sortOrder: "asc",
+  //     },
+  //     select: {
+  //       id: true,
+  //       name: true,
+  //       slug: true,
+  //     },
+  //   });
+  // },
+  // async getParentCategories(collection) {
+  //   return prisma.category.findMany({
+  //     where: {
+  //       collection,
+  //       parentId: null,
+  //       deletedAt: null,
+  //     },
+  //     orderBy: {
+  //       sortOrder: "asc",
+  //     },
+  //     select: {
+  //       id: true,
+  //       name: true,
+  //       slug: true,
+  //     },
+  //   });
+  // },
 };
+

@@ -30,9 +30,9 @@ export default function CategoryCarousel({ categories }) {
 
             <div ref={emblaRef} className="overflow-hidden">
                 <div className="flex">
-                    {categories.map(({ slug, label, tone }) => (
+                    {categories.map(({ category }) => (
                         <div
-                            key={slug}
+                            key={category.id}
                             className="
                 min-w-[60%]
                 md:min-w-[33.333%]
@@ -51,6 +51,7 @@ export default function CategoryCarousel({ categories }) {
                                         category: category.slug,
                                     },
                                 }}
+                                className="group flex flex-col items-center gap-4"
                             >
                                 <div
                                     className={cn(
@@ -60,7 +61,9 @@ export default function CategoryCarousel({ categories }) {
                                 >
                                     <Image
                                         src={`/jewellery/${slug}.jpeg`}
-                                        alt={label}
+                                        // src={category.imageUrl}
+                                        // src={category.image}
+                                        alt={category.name}
                                         width={250}
                                         height={250}
                                         className="h-full w-full object-cover"
@@ -68,7 +71,7 @@ export default function CategoryCarousel({ categories }) {
                                 </div>
 
                                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#1b1b1c] sm:text-sm">
-                                    {label}
+                                    {category.name}
                                 </span>
                             </Link>
                         </div>
