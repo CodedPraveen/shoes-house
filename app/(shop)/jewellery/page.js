@@ -31,9 +31,11 @@ export default async function JewelleryPage({
       collection: "JEWELLERY",
       category,
     }),
-    productService.getTrending(),
-    productService.getNewArrivals(8),
-    productService.getBestSellers(8),
+    productService.getTrending(8, "JEWELLERY"),
+
+    productService.getNewArrivals(8, "JEWELLERY"),
+
+    productService.getBestSellers(8, "JEWELLERY"),
   ]);
 
   return (

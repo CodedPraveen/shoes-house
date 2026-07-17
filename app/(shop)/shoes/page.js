@@ -30,9 +30,13 @@ export default async function ShoesPage({
       collection: "SHOES",
       category,
     }),
-    productService.getBestSellers(6),
-    productService.getTrending(),
+
+    productService.getBestSellers(6, "SHOES"),
+
+    productService.getTrending(8, "SHOES"),
+
     categoryService.getSubCategoriesBySlug("shoes"),
+    productService.getNewArrivals(8, "SHOES")
   ]);
 
   // const shoeCategories =

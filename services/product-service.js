@@ -47,35 +47,62 @@ export const productService = {
     return mapProducts(rows);
   },
 
-  async getNewArrivals() {
+  async getNewArrivals(limit = 8, collection) {
     const rows = await prisma.product.findMany({
-      where: { ...notDeleted, isNew: true, category: { deletedAt: null } },
+      where: {
+        ...notDeleted,
+        isNew: true,
+        ...(collection && { collection }),
+        category: {
+          deletedAt: null,
+        },
+      },
       include: productInclude,
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
     });
+
     return mapProducts(rows);
   },
 
-  async getTrending() {
+  async getTrending(limit = 8, collection) {
     const rows = await prisma.product.findMany({
       where: {
         ...notDeleted,
         isTrending: true,
-        category: { deletedAt: null },
+        ...(collection && { collection }),
+        category: {
+          deletedAt: null,
+        },
       },
       include: productInclude,
-      orderBy: { purchaseCount: "desc" },
+      orderBy: {
+        purchaseCount: "desc",
+      },
+      take: limit,
     });
+
     return mapProducts(rows);
   },
 
-  async getBestSellers(limit = 6) {
+  async getBestSellers(limit = 8, collection) {
     const rows = await prisma.product.findMany({
-      where: productWhere,
+      where: {
+        ...notDeleted,
+        ...(collection && { collection }),
+        category: {
+          deletedAt: null,
+        },
+      },
       include: productInclude,
-      orderBy: { purchaseCount: "desc" },
+      orderBy: {
+        purchaseCount: "desc",
+      },
       take: limit,
     });
+
     return mapProducts(rows);
   },
 
@@ -271,37 +298,37 @@ export const productService = {
   //   return mapProducts(rows);
   // },
   async getProducts({ collection, category }) {
-    const where = {
-      ...notDeleted,
-    };
+  const where = {
+    ...notDeleted,
+  };
 
-    if (collection) {
-      where.collection = collection;
-    }
-
-    if (category) {
-      where.category = {
-        slug: category,
-        deletedAt: null,
-        ...(collection && { collection }),
-      };
-    } else {
-      where.category = {
-        deletedAt: null,
-        ...(collection && { collection }),
-      };
-    }
-
-    const rows = await prisma.product.findMany({
-      where,
-      include: productInclude,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return mapProducts(rows);
+  if (collection) {
+    where.collection = collection;
   }
+
+  if (category) {
+    where.category = {
+      slug: category,
+      deletedAt: null,
+      ...(collection && { collection }),
+    };
+  } else {
+    where.category = {
+      deletedAt: null,
+      ...(collection && { collection }),
+    };
+  }
+
+  const rows = await prisma.product.findMany({
+    where,
+    include: productInclude,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return mapProducts(rows);
+}
   // async getSubCategories(collection) {
   //   return prisma.category.findMany({
   //     where: {

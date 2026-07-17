@@ -198,13 +198,14 @@ export default function AdminProductForm({
             </select>
           </label> */}
           <label>
-            <span>Collection</span>
+            <span className="text-xs text-black/50">
+              Category
+            </span>
 
             <select
+              className={inputClass}
               value={form.collection}
-              onChange={(e) =>
-                update("collection", e.target.value)
-              }
+              onChange={(e) => update("collection", e.target.value)}
             >
               {collections.map((c) => (
                 <option
@@ -220,10 +221,9 @@ export default function AdminProductForm({
             <span>Sub Category</span>
 
             <select
+              className={inputClass}
               value={form.categorySlug}
-              onChange={(e) =>
-                update("categorySlug", e.target.value)
-              }
+              onChange={(e) => update("categorySlug", e.target.value)}
             >
               {/* {subCategories.map((c) => (
                 <option

@@ -30,7 +30,7 @@ export default function TrendingGrid({ products }) {
           </Link>
         </div>
         <div className="bg-red-">
-          <TrendingTabs initialProducts={trendingShoes} />
+          <TrendingTabs initialProducts={products} />
         </div>
       </div>
     </SectionReveal>
