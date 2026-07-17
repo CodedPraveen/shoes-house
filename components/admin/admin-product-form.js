@@ -304,7 +304,7 @@ export default function AdminProductForm({
         </div>
 
         <div>
-          <p className="mb-2 text-xs text-black/50">Images (Cloudinary)</p>
+          <p className="mb-2 text-xs text-black/50">Images</p>
           <AdminCloudinaryUpload
             imageUrls={form.imageUrls}
             onChange={(urls) => update("imageUrls", urls)}

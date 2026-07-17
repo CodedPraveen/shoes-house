@@ -35,7 +35,6 @@ export default async function JewelleryPage({
     productService.getNewArrivals(8),
     productService.getBestSellers(8),
   ]);
-  console.log(products.length)
 
   return (
     <main>
@@ -43,35 +42,25 @@ export default async function JewelleryPage({
       <TrustStrip />
       <CategorySection />
 
-      {category ? (
+      {category && (
         <ProductGrid products={products} />
-      ) : (
-        <>
-          <TrendingProducts products={trendingProducts.slice(0, 8)} />
-
-          <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
-          <CollectionSection {...JEWELLERY_COLLECTIONS.office} reverse />
-          <CollectionSection {...JEWELLERY_COLLECTIONS.gift} />
-
-          <ShopTheLook />
-
-          <NewArrivals products={newArrivals} />
-
-          <BestSellers products={bestSellers} />
-        </>
       )}
-      {/* 
+
       <Suspense
         fallback={
-          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16 " >
+          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16">
             <ProductGridSkeleton count={6} />
           </div>
         }
       >
-       
         <TrendingProducts products={trendingProducts.slice(0, 8)} />
       </Suspense>
 
+      <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
+      <CollectionSection {...JEWELLERY_COLLECTIONS.office} reverse />
+      <CollectionSection {...JEWELLERY_COLLECTIONS.gift} />
+
+      <ShopTheLook />
 
       <Suspense
         fallback={
@@ -80,9 +69,7 @@ export default async function JewelleryPage({
           </div>
         }
       >
-
         <NewArrivals products={newArrivals} />
-
       </Suspense>
 
       <Suspense
@@ -93,10 +80,7 @@ export default async function JewelleryPage({
         }
       >
         <BestSellers products={bestSellers} />
-     
-      </Suspense> */}
-
-      {/* <InstagramFeed /> */}
+      </Suspense>
       <ReviewSection />
       <JewelleryNewsletter />
     </main>
