@@ -9,12 +9,12 @@ export default async function AdminNewProductPage() {
   const collections =
     await productAdminService.listParentCategories();
 
-  console.log("collections", collections);
+  // console.log("collections", collections);
 
   const subCategories =
     await productAdminService.listSubCategories("SHOES");
 
-  console.log("subCategories", subCategories);
+  // console.log("subCategories", subCategories);
 
   return (
     <div className="space-y-8">

@@ -4,6 +4,7 @@ import { categoryService } from "@/services/category-service";
 
 export default async function CategorySection() {
   const categories = await categoryService.getSubCategoriesBySlug("jewellery");
+  // console.log(categories);
 
   return (
     <section

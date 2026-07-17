@@ -238,15 +238,41 @@ export const productService = {
     );
   },
   /** another  */
-  async getProducts({
-    collection,
-    category,
-  }) {
+  // async getProducts({
+  //   collection,
+  //   category,
+  // }) {
+  //   const where = {
+  //     ...notDeleted,
+  //     category: {
+  //       deletedAt: null,
+  //     },
+  //   };
+
+  //   if (collection) {
+  //     where.collection = collection;
+  //   }
+
+  //   if (category) {
+  //     where.category = {
+  //       slug: category,
+  //       deletedAt: null,
+  //     };
+  //   }
+
+  //   const rows = await prisma.product.findMany({
+  //     where,
+  //     include: productInclude,
+  //     orderBy: {
+  //       createdAt: "desc",
+  //     },
+  //   });
+
+  //   return mapProducts(rows);
+  // },
+  async getProducts({ collection, category }) {
     const where = {
       ...notDeleted,
-      category: {
-        deletedAt: null,
-      },
     };
 
     if (collection) {
@@ -257,6 +283,12 @@ export const productService = {
       where.category = {
         slug: category,
         deletedAt: null,
+        ...(collection && { collection }),
+      };
+    } else {
+      where.category = {
+        deletedAt: null,
+        ...(collection && { collection }),
       };
     }
 
@@ -269,7 +301,7 @@ export const productService = {
     });
 
     return mapProducts(rows);
-  },
+  }
   // async getSubCategories(collection) {
   //   return prisma.category.findMany({
   //     where: {

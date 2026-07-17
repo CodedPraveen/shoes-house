@@ -12,6 +12,7 @@ import TrendingProducts from "@/components/jewellery/trending-products";
 import TrustStrip from "@/components/jewellery/trust-strip";
 import { JEWELLERY_COLLECTIONS } from "@/data/jewellery-content";
 import { productService } from "@/services/product-service";
+import ProductGrid from "@/components/product-grid";
 
 export default async function JewelleryPage({
   searchParams,
@@ -19,15 +20,7 @@ export default async function JewelleryPage({
   const params = await searchParams;
 
   const category = params.category;
-  // const products =
-  //   await productService.getProducts({
 
-  //     // collection: "JEWELLERY",
-  //     parentSlug: "jewellery",
-
-  //     category
-
-  //   });
   const [
     products,
     trendingProducts,
@@ -42,6 +35,7 @@ export default async function JewelleryPage({
     productService.getNewArrivals(8),
     productService.getBestSellers(8),
   ]);
+  console.log(products.length)
 
   return (
     <main>
@@ -49,10 +43,24 @@ export default async function JewelleryPage({
       <TrustStrip />
       <CategorySection />
 
-      {/* <CategorySection
-        categories={jewelleryCategories}
-      /> */}
+      {category ? (
+        <ProductGrid products={products} />
+      ) : (
+        <>
+          <TrendingProducts products={trendingProducts.slice(0, 8)} />
 
+          <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
+          <CollectionSection {...JEWELLERY_COLLECTIONS.office} reverse />
+          <CollectionSection {...JEWELLERY_COLLECTIONS.gift} />
+
+          <ShopTheLook />
+
+          <NewArrivals products={newArrivals} />
+
+          <BestSellers products={bestSellers} />
+        </>
+      )}
+      {/* 
       <Suspense
         fallback={
           <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16 " >
@@ -60,18 +68,10 @@ export default async function JewelleryPage({
           </div>
         }
       >
-        {/* <TrendingProducts /> */}
-        {/* <TrendingProducts
-          products={products.filter(p => p.isTrending)}
-        /> */}
+       
         <TrendingProducts products={trendingProducts.slice(0, 8)} />
       </Suspense>
 
-      <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
-      <CollectionSection {...JEWELLERY_COLLECTIONS.office} reverse />
-      <CollectionSection {...JEWELLERY_COLLECTIONS.gift} />
-
-      <ShopTheLook />
 
       <Suspense
         fallback={
@@ -80,9 +80,6 @@ export default async function JewelleryPage({
           </div>
         }
       >
-        {/* <NewArrivals
-          products={products.filter(p => p.isTrending)}
-        /> */}
 
         <NewArrivals products={newArrivals} />
 
@@ -96,10 +93,8 @@ export default async function JewelleryPage({
         }
       >
         <BestSellers products={bestSellers} />
-        {/* <BestSellers
-          products={products.filter(p => p.isTrending)}
-        /> */}
-      </Suspense>
+     
+      </Suspense> */}
 
       {/* <InstagramFeed /> */}
       <ReviewSection />
