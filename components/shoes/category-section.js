@@ -3,14 +3,9 @@ import CategoryCarousel from "./category-carousel";
 import { categoryService } from "@/services/category-service";
 
 export default async function CategorySection() {
-  const categories = await categoryService.getSubCategoriesBySlug("jewellery");
-  // console.log(categories);
-
+  const categories = await categoryService.getSubCategoriesBySlug("shoes");
   return (
-    <section
-      aria-labelledby="jewellery-categories-heading"
-      className="py-16 sm:py-10"
-    >
+    <section aria-labelledby="jewellery-categories-heading" className="py-16 sm:py-10">
       <JewelleryContainer>
         <h2
           id="jewellery-categories-heading"
@@ -18,9 +13,8 @@ export default async function CategorySection() {
         >
           Shop by Category
         </h2>
-
         <CategoryCarousel categories={categories} />
       </JewelleryContainer>
-    </section>
+    </section >
   );
 }

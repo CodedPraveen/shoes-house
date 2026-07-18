@@ -31,46 +31,52 @@ model User {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String
-  slug      String    @unique
-  imageUrl  String?
-  sortOrder Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  products  Product[]
+  id         String            @id @default(cuid())
+  name       String
+  slug       String            @unique
+  imageUrl   String?
+  sortOrder  Int               @default(0)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+  collection ProductCollection
+  parentId   String?
+  parent     Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children   Category[]        @relation("CategoryTree")
+  products   Product[]
 
+  @@index([collection])
   @@index([slug])
   @@index([deletedAt])
   @@index([sortOrder])
 }
 
 model Product {
-  id             String           @id @default(cuid())
+  id             String            @id @default(cuid())
   name           String
-  brand          String           @default("Shoes House")
-  slug           String           @unique
+  brand          String            @default("Shoes House")
+  slug           String            @unique
   description    String
   price          Int
   compareAtPrice Int?
   discount       Int?
-  stock          Int              @default(0)
-  isNew          Boolean          @default(false)
-  isTrending     Boolean          @default(false)
-  purchaseCount  Int              @default(0)
+  stock          Int               @default(0)
+  isNew          Boolean           @default(false)
+  isTrending     Boolean           @default(false)
+  purchaseCount  Int               @default(0)
   rank           Int?
   materials      String?
   shippingInfo   String?
   returnPolicy   String?
-  tags           String[]         @default([])
+  tags           String[]          @default([])
   categoryId     String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   deletedAt      DateTime?
+  collection     ProductCollection
   cartItems      CartItem[]
   orderItems     OrderItem[]
-  category       Category         @relation(fields: [categoryId], references: [id])
+  category       Category          @relation(fields: [categoryId], references: [id])
   colors         ProductColor[]
   images         ProductImage[]
   sizes          ProductSize[]
@@ -278,12 +284,12 @@ model CheckoutSessionItem {
 }
 
 model Order {
-  id                  String              @id @default(cuid())
-  orderNumber         String              @unique
+  id                  String               @id @default(cuid())
+  orderNumber         String               @unique
   userId              String
-  status              OrderStatus         @default(PENDING)
+  status              OrderStatus          @default(PENDING)
   subtotal            Int
-  shippingCost        Int                 @default(0)
+  shippingCost        Int                  @default(0)
   total               Int
   shipFullName        String
   shipPhone           String
@@ -291,25 +297,25 @@ model Order {
   shipLine2           String?
   shipCity            String
   shipState           String
-  shipCountry         String              @default("India")
+  shipCountry         String               @default("India")
   shipPincode         String
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   deletedAt           DateTime?
   refundReason        String?
+  aftershipTrackingId String?
+  deliveredAt         DateTime?
+  lastTrackingSync    DateTime?
+  shippedAt           DateTime?
+  trackingNumber      String?
+  trackingStatus      String?              @default("PENDING")
+  trackingUrl         String?
   checkoutSession     CheckoutSession?
   inventoryMovements  InventoryMovement[]
-  user                User                @relation(fields: [userId], references: [id])
+  user                User                 @relation(fields: [userId], references: [id])
   items               OrderItem[]
   payments            Payment[]
-  trackingNumber      String?
-  trackingStatus      String?             @default("PENDING")
-  trackingUrl         String?
-  aftershipTrackingId String?
-
-  shippedAt        DateTime?
-  deliveredAt      DateTime?
-  lastTrackingSync DateTime?
+  checkpoints         TrackingCheckpoint[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -318,19 +324,17 @@ model Order {
   @@index([createdAt])
   @@index([userId, status])
   @@index([userId, createdAt])
-  checkpoints TrackingCheckpoint[]
 }
 
 model TrackingCheckpoint {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   orderId        String
   checkpointTime DateTime?
   location       String?
   message        String
   tag            String?
-  createdAt      DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([checkpointTime])
@@ -444,6 +448,11 @@ model NewsletterSubscriber {
   @@index([createdAt])
 }
 
+enum ProductCollection {
+  SHOES
+  JEWELLERY
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
@@ -487,4 +496,3 @@ enum WebhookLogStatus {
   PAYMENT_FAILED
   IGNORED
 }
-

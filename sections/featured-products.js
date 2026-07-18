@@ -4,8 +4,9 @@ import ProductCarousel from "@/components/product-carousel";
 import SectionReveal from "@/components/section-reveal";
 import { productService } from "@/services/product-service";
 
-export default async function FeaturedProducts() {
-  const products = await productService.getBestSellers(6);
+// export default async function FeaturedProducts() {
+//   const products = await productService.getBestSellers(6);
+export default function FeaturedProducts({ products }) {
 
   return (
     <SectionReveal className="px-0 py-1 sm:px-8 lg:py-10">

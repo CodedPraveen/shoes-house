@@ -23,11 +23,11 @@ export default function TrustStrip() {
   return (
     <section
       aria-label="Product quality guarantees"
-      className="border-y border-[#c5c7c1]/30 bg-[#FDFCFB] sm:py-10"
+      className="sm:py-10"
     >
       <JewelleryContainer>
         <div className="relative">
-          <div ref={emblaRef} className="overflow-hidden lg:hidden">
+          <div ref={emblaRef} className="overflow-hidden block lg:hidden">
             <div className="flex">
               {JEWELLERY_TRUST_ITEMS.map(({ icon, label }) => {
                 const Icon = ICONS[icon];
@@ -42,7 +42,7 @@ export default function TrustStrip() {
               px-3
             "
                   >
-                    <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="flex flex-col items-center gap-3 text-center pt-5 sm:pt-0">
                       <Icon
                         className="h-8 w-8 text-[#D4AF37]"
                         strokeWidth={1.5}

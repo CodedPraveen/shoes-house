@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getSubCategoriesAction } from "@/actions/admin-product-actions";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import {
@@ -27,18 +28,20 @@ export default function AdminProductForm({
   mode = "create",
   productId = null,
   initial = null,
-  categories = [],
+  collections = [],
+  subCategories = [],
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
+  const [availableSubCategories, setAvailableSubCategories] =
+    useState(subCategories);
 
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     slug: initial?.slug ?? "",
     description: initial?.description ?? "",
-    categorySlug: initial?.category ?? categories[0]?.slug ?? "shoes",
     brand: initial?.brand ?? "Shoes House",
     price: initial?.price ?? "",
     stockPerVariant: initial?.variantRecords?.[0]?.stock ?? 10,
@@ -48,16 +51,40 @@ export default function AdminProductForm({
     imageUrls: initial?.images ?? [],
     colors: initial?.colorRecords?.length
       ? initial.colorRecords.map((c) => ({
-          colorKey: c.colorKey,
-          label: c.label,
-          hex: c.hex,
-        }))
+        colorKey: c.colorKey,
+        label: c.label,
+        hex: c.hex,
+      }))
       : defaultColors,
+
+    collection:
+      initial?.collection ?? "SHOES",
+
+    categorySlug:
+      initial?.category ?? subCategories[0]?.slug ?? "",
+
   });
-// this for cloudinary photo upload
+  // this for cloudinary photo upload - for now its disable
   // useEffect(() => {
   //   getCloudinaryConfigAction().then(setCloudinaryConfig);
-  // }, []);
+  // }, []);  
+
+  useEffect(() => {
+    async function loadSubCategories() {
+      const items = await getSubCategoriesAction(form.collection);
+
+      setAvailableSubCategories(items);
+
+      setForm((prev) => ({
+        ...prev,
+        categorySlug: items.some((i) => i.slug === prev.categorySlug)
+          ? prev.categorySlug
+          : items[0]?.slug || "",
+      }));
+    }
+
+    loadSubCategories();
+  }, [form.collection]);
 
   function update(key, value) {
     setForm((prev) => {
@@ -79,6 +106,7 @@ export default function AdminProductForm({
       name: form.name,
       slug: form.slug,
       description: form.description,
+      collection: form.collection,
       categorySlug: form.categorySlug,
       brand: form.brand,
       price: Number(form.price),
@@ -155,7 +183,7 @@ export default function AdminProductForm({
               onChange={(e) => update("slug", e.target.value)}
             />
           </label>
-          <label className="block">
+          {/* <label className="block">
             <span className="text-xs text-black/50">Category</span>
             <select
               className={inputClass}
@@ -164,6 +192,52 @@ export default function AdminProductForm({
             >
               {categories.map((c) => (
                 <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label> */}
+          <label>
+            <span className="text-xs text-black/50">
+              Category
+            </span>
+
+            <select
+              className={inputClass}
+              value={form.collection}
+              onChange={(e) => update("collection", e.target.value)}
+            >
+              {collections.map((c) => (
+                <option
+                  key={c.slug}
+                  value={c.collection}
+                >
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Sub Category</span>
+
+            <select
+              className={inputClass}
+              value={form.categorySlug}
+              onChange={(e) => update("categorySlug", e.target.value)}
+            >
+              {/* {subCategories.map((c) => (
+                <option
+                  key={c.slug}
+                  value={c.slug}
+                >
+                  {c.name}
+                </option>
+              ))} */}
+              {availableSubCategories.map((c) => (
+                <option
+                  key={c.slug}
+                  value={c.slug}
+                >
                   {c.name}
                 </option>
               ))}
@@ -230,7 +304,7 @@ export default function AdminProductForm({
         </div>
 
         <div>
-          <p className="mb-2 text-xs text-black/50">Images (Cloudinary)</p>
+          <p className="mb-2 text-xs text-black/50">Images</p>
           <AdminCloudinaryUpload
             imageUrls={form.imageUrls}
             onChange={(urls) => update("imageUrls", urls)}

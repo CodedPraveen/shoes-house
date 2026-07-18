@@ -1,38 +1,69 @@
 import Image from "next/image";
 import HeroBanner from "@/public/jewellery/Main_banner_Desktop_1400x.webp";
+import HeroMobile from "@/public/jewellery/necklaces.jpeg";
 
 export default function JewelleryHero() {
   return (
-    <section className="relative min-h-[70vh] w-full overflow-hidden sm:min-h-[80vh] lg:min-h-[870px] pt-[1]">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#f7e7ce]/40 via-[#fdfcfb] to-[#f0edee]" />
-      <Image
-        src={HeroBanner}
-        alt="Everyday luxury jewellery editorial hero"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover opacity-90 transition duration-[10000ms] ease-out hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+    <section className="relative isolate overflow-hidden">
+      {/* Responsive Height */}
+      <div className="relative h-[45vh] min-h-[320px] sm:h-[60vh] md:h-[70vh] lg:h-[85vh] xl:h-screen max-h-[900px]">
+
+        <Image
+          src={HeroBanner}
+          alt="Luxury Jewellery Collection"
+          fill
+          priority
+          sizes="100vw"
+          className="hidden md:block object-cover object-top"
+        />
+
+        <Image
+          src={HeroMobile}
+          alt="Jewellery"
+          fill
+          priority
+          className="block md:hidden object-cover object-bottom"
+        />
+
+        {/* Soft luxury overlay */}
+        {/* <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" /> */}
+
+        {/* Bottom fade */}
+        <div className="absolute inset-x-0 bottom-[-2px] h-40 bg-gradient-to-t from-white via-white/40 to-transparent" />
+
+        {/* Hero Content */}
+        <div className="relative z-10 flex h-full items-center">
+          <div className="mx-auto w-full max-w-7xl px-6 sm:px-10 mt-5">
+            <div className="max-w-xl text-white">
+              <p className="mb-2 text-sm uppercase tracking-[0.35em] text-white/80">
+                New Collection
+              </p>
+
+              <h1 className="text-4xl font-light leading-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                Timeless
+                <br />
+                Elegance
+              </h1>
+
+              <p className="mt-6 max-w-md text-base leading-7 text-white/90 sm:text-lg">
+                Discover handcrafted jewellery designed for everyday luxury and
+                unforgettable occasions.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-4">
+                <button className="rounded-full bg-white px-8 py-3 text-sm font-medium text-black transition hover:bg-neutral-200">
+                  Shop Collection
+                </button>
+  
+                  <button className="hidden sm:block rounded-full border border-white/70 px-8 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white hover:text-black">
+                    Explore
+                  </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </section>
   );
 }
-
-// {/* 
-//       <div className="relative flex h-full min-h-[70vh] flex-col justify-center px-4 py-20 sm:min-h-[80vh] md:px-16 lg:min-h-[870px]">
-//         <div className="mx-auto w-full max-w-[1280px]">
-//           <h1 className="font-[family-name:var(--font-jewellery-display)] text-4xl font-semibold tracking-tight text-[#1b1b1c] sm:text-5xl sm:leading-[1.1] lg:text-[48px]">
-//             Everyday Luxury
-//           </h1>
-//           <p className="mt-4 max-w-md text-base leading-relaxed text-[#1b1b1c]/90 sm:text-lg">
-//             Crafted to Shine. Discover timeless pieces designed to elevate your
-//             everyday silhouette.
-//           </p>
-//           <Link
-//             href="/products"
-//             className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-[#735c00] px-10 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#735c00]/90 hover:shadow-xl active:scale-95"
-//           >
-//             Explore the Collection
-//           </Link>
-//         </div>
-//       </div> */}

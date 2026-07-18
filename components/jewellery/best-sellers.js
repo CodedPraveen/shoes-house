@@ -5,9 +5,11 @@ import SectionHeader from "@/components/jewellery/section-header";
 import { productService } from "@/services/product-service";
 import ResponsiveProductGrid from "@/components/jewellery/responsive-product-grid";
 
-export default async function BestSellers() {
-  const products = await productService.getBestSellers(8);
+export const revalidate = 300;
 
+// export default async function BestSellers() {
+//   const products = await productService.getBestSellers(8);
+export default function BestSellers({ products }) {
   if (!products.length) return null;
 
   return (

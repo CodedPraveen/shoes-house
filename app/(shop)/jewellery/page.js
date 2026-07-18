@@ -4,7 +4,6 @@ import BestSellers from "@/components/jewellery/best-sellers";
 import CategorySection from "@/components/jewellery/category-section";
 import CollectionSection from "@/components/jewellery/collection-section";
 import JewelleryHero from "@/components/jewellery/hero";
-import InstagramFeed from "@/components/jewellery/instagram-feed";
 import JewelleryNewsletter from "@/components/jewellery/newsletter-section";
 import NewArrivals from "@/components/jewellery/new-arrivals";
 import ReviewSection from "@/components/jewellery/review-section";
@@ -12,22 +11,51 @@ import ShopTheLook from "@/components/jewellery/shop-the-look";
 import TrendingProducts from "@/components/jewellery/trending-products";
 import TrustStrip from "@/components/jewellery/trust-strip";
 import { JEWELLERY_COLLECTIONS } from "@/data/jewellery-content";
+import { productService } from "@/services/product-service";
+import ProductGrid from "@/components/product-grid";
 
-export default function JewelleryPage() {
+export default async function JewelleryPage({
+  searchParams,
+}) {
+  const params = await searchParams;
+
+  const category = params.category;
+
+  const [
+    products,
+    trendingProducts,
+    newArrivals,
+    bestSellers,
+  ] = await Promise.all([
+    productService.getProducts({
+      collection: "JEWELLERY",
+      category,
+    }),
+    productService.getTrending(8, "JEWELLERY"),
+
+    productService.getNewArrivals(8, "JEWELLERY"),
+
+    productService.getBestSellers(8, "JEWELLERY"),
+  ]);
+
   return (
     <main>
       <JewelleryHero />
       <TrustStrip />
       <CategorySection />
 
+      {category && (
+        <ProductGrid products={products} />
+      )}
+
       <Suspense
         fallback={
-          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16 " >
+          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16">
             <ProductGridSkeleton count={6} />
           </div>
         }
       >
-        <TrendingProducts />
+        <TrendingProducts products={trendingProducts.slice(0, 8)} />
       </Suspense>
 
       <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
@@ -43,7 +71,7 @@ export default function JewelleryPage() {
           </div>
         }
       >
-        <NewArrivals />
+        <NewArrivals products={newArrivals} />
       </Suspense>
 
       <Suspense
@@ -53,10 +81,8 @@ export default function JewelleryPage() {
           </div>
         }
       >
-        <BestSellers />
+        <BestSellers products={bestSellers} />
       </Suspense>
-
-      {/* <InstagramFeed /> */}
       <ReviewSection />
       <JewelleryNewsletter />
     </main>

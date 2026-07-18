@@ -8,11 +8,15 @@ export const metadata = {
   description: "Browse the complete Shoes House premium sneaker collection.",
 };
 
-export default async function ProductsPage() {
- const products = await productService.getProducts({
-    collection: "SHOES",
-    // category,
-});
+export default async function ProductsPage({ searchParams }) {
+  const params = await searchParams;
+
+  const category = params.category;
+
+  const products = await productService.getProducts({
+    collection: "JEWELLERY",
+    category,
+  });
 
   return <ProductsPageClient initialProducts={products} />;
 }

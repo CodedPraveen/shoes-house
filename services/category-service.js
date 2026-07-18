@@ -20,4 +20,51 @@ export const categoryService = {
             },
         });
     },
+
+    // async getSubCategoriesBySlug(slug) {
+    //     const category = await prisma.category.findFirst({
+    //         where: {
+    //             slug,
+    //             deletedAt: null,
+    //         },
+    //         include: {
+    //             subCategories: {
+    //                 where: {
+    //                     deletedAt: null,
+    //                 },
+    //                 orderBy: {
+    //                     sortOrder: "asc",
+    //                 },
+    //             },
+    //         },
+    //     });
+
+    //     return category?.subCategories ?? [];
+    // },
+    async getSubCategoriesBySlug(slug) {
+        const category = await prisma.category.findFirst({
+            where: {
+                slug,
+                deletedAt: null,
+            },
+            include: {
+                children: {
+                    where: {
+                        deletedAt: null,
+                    },
+                    orderBy: {
+                        sortOrder: "asc",
+                    },
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        parentId: true,
+                    },
+                },
+            },
+        });
+
+        return category?.children ?? [];
+    }
 };
