@@ -31,12 +31,8 @@ export default async function ShoesPage({
     productService.getTrending(8, "SHOES"),
 
     categoryService.getSubCategoriesBySlug("shoes"),
-    productService.getNewArrivals(8, "SHOES")
   ]);
-
-  // const shoeCategories =
-  //   await categoryService.getSubCategoriesBySlug("shoes")
-
+  
   return (
     <main>
       <HeroSection />
