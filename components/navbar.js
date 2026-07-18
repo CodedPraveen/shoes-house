@@ -4,14 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag } from "lucide-react";
 import AuthNav from "@/components/auth-nav";
-import CategoriesDropdown from "@/components/categories-dropdown";
-import ShoesDropdown from "@/components/shoes-dropdown";
 import ShoesMobileMenuDrawer from "@/components/shoes/mobile-menu-drawer";
 import JewelleryMobileMenuDrawer from "@/components/jewellery/mobile-menu-drawer";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
 import { SHOES_NAV_LINKS, JEWELLERY_NAV_LINKS, } from "@/lib/constants";
+import ShoesCategoriesDropdown from "@/components/shoes/categories-dropdown";
+import ShoesDropdown from "@/components/shoes/collection-dropdown";
+import JewelleryCategoriesDropdown from "@/components/jewellery/categories-dropdown";
+import JewelleryDropdown from "@/components/jewellery/collection-dropdown";
 
 export default function Navbar({ categories, collection = "SHOES", }) {
   const [scrolled, setScrolled] = useState(false);
@@ -64,17 +66,38 @@ export default function Navbar({ categories, collection = "SHOES", }) {
                 </Link>
               </li>
             ))}
-            <CategoriesDropdown
-              open={categoriesOpen}
-              onOpen={() => setCategoriesOpen(true)}
-              onClose={() => setCategoriesOpen(false)}
-            />
-            <ShoesDropdown
-              categories={categories}
-              open={shoesOpen}
-              onOpen={() => setShoesOpen(true)}
-              onClose={() => setShoesOpen(false)}
-            />
+          
+            {collection === "JEWELLERY" ? (
+              <>
+                <JewelleryCategoriesDropdown
+                  open={categoriesOpen}
+                  onOpen={() => setCategoriesOpen(true)}
+                  onClose={() => setCategoriesOpen(false)}
+                />
+
+                <JewelleryDropdown
+                  categories={categories}
+                  open={shoesOpen}
+                  onOpen={() => setShoesOpen(true)}
+                  onClose={() => setShoesOpen(false)}
+                />
+              </>
+            ) : (
+              <>
+                <ShoesCategoriesDropdown
+                  open={categoriesOpen}
+                  onOpen={() => setCategoriesOpen(true)}
+                  onClose={() => setCategoriesOpen(false)}
+                />
+
+                <ShoesDropdown
+                  categories={categories}
+                  open={shoesOpen}
+                  onOpen={() => setShoesOpen(true)}
+                  onClose={() => setShoesOpen(false)}
+                />
+              </>
+            )}
 
           </ul>
 

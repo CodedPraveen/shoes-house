@@ -8,7 +8,14 @@ import { withPerf } from "@/lib/perf";
 
 async function requireDbUser() {
   const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("Unauthorized");
+  // if (!clerkId) throw new Error("Unauthorized");
+  if (!clerkId) {
+    return {
+      items: [],
+      itemCount: 0,
+      subtotal: 0,
+    };
+  }
   const user = await userService.getByClerkId(clerkId);
   if (!user) throw new Error("User not synced. Sign in again.");
   return user;
