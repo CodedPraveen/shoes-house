@@ -10,8 +10,9 @@ import MobileMenuDrawer from "@/components/mobile-menu-drawer";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
+import { SHOES_NAV_LINKS, JEWELLERY_NAV_LINKS, } from "@/lib/constants";
 
-export default function Navbar({ categories }) {
+export default function Navbar({ categories, collection = "SHOES", }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -25,6 +26,11 @@ export default function Navbar({ categories }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const navLinks =
+    collection === "JEWELLERY"
+      ? JEWELLERY_NAV_LINKS
+      : SHOES_NAV_LINKS;
 
   const shouldPrefetch = (href) => {
     return href === "/new-arrivals" || href === "/trending";
@@ -42,9 +48,11 @@ export default function Navbar({ categories }) {
           <Link href="/" className="text-lg font-semibold tracking-[0.25em]">
             SHOES HOUSE
           </Link>
+         
 
           <ul className="hidden items-center gap-8 text-sm md:flex font-bold  ">
-            {NAV_LINKS.map((item) => (
+            {/* {NAV_LINKS.map((item) => ( */}
+            {navLinks.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

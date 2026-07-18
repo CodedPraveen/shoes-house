@@ -1,4 +1,5 @@
 import { Inter, Playfair_Display } from "next/font/google";
+import ShopShell from "@/components/shop-shell";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],

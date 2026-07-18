@@ -13,13 +13,6 @@ export default async function ShoesPage({
 }) {
   const category = searchParams.category;
 
-  // const products =
-  //   await productService.getProducts({
-
-  //     collection: "SHOES",
-  //     category
-  //   });
-
   const [
     products,
     featuredProducts,
