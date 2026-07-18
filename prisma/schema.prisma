@@ -30,29 +30,26 @@ model User {
   @@index([createdAt])
 }
 
-  model Category {
-    id        String    @id @default(cuid())
-    name      String
-    slug      String    @unique
-    imageUrl  String?
-    sortOrder Int       @default(0)
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    deletedAt DateTime?
-    parentId  String?
+model Category {
+  id         String            @id @default(cuid())
+  name       String
+  slug       String            @unique
+  imageUrl   String?
+  sortOrder  Int               @default(0)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+  collection ProductCollection
+  parentId   String?
+  parent     Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children   Category[]        @relation("CategoryTree")
+  products   Product[]
 
-    parent Category? @relation("CategoryTree", fields: [parentId], references: [id])
-
-    children   Category[]        @relation("CategoryTree")
-    
-    collection ProductCollection
-    products   Product[]
-
-    @@index([collection])
-    @@index([slug])
-    @@index([deletedAt])
-    @@index([sortOrder])
-  }
+  @@index([collection])
+  @@index([slug])
+  @@index([deletedAt])
+  @@index([sortOrder])
+}
 
 model Product {
   id             String            @id @default(cuid())
