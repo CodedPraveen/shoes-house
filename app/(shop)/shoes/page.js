@@ -11,7 +11,9 @@ import { categoryService } from "@/services/category-service";
 export default async function ShoesPage({
   searchParams,
 }) {
-  const category = searchParams.category;
+  const params = await searchParams;
+
+  const category = params.category;
 
   const [
     products,

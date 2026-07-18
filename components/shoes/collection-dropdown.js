@@ -68,7 +68,7 @@ export default function ShoesDropdown({
                 aria-expanded={open}
                 className="text-black/75 transition hover:text-black"
             >
-                Shoes
+                Jewellery
             </button>
 
             <AnimatePresence>

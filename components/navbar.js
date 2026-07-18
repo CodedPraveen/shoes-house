@@ -6,7 +6,8 @@ import { Menu, Search, ShoppingBag } from "lucide-react";
 import AuthNav from "@/components/auth-nav";
 import CategoriesDropdown from "@/components/categories-dropdown";
 import ShoesDropdown from "@/components/shoes-dropdown";
-import MobileMenuDrawer from "@/components/mobile-menu-drawer";
+import ShoesMobileMenuDrawer from "@/components/shoes/mobile-menu-drawer";
+import JewelleryMobileMenuDrawer from "@/components/jewellery/mobile-menu-drawer";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
@@ -112,11 +113,24 @@ export default function Navbar({ categories, collection = "SHOES", }) {
         </nav>
       </header>
 
-      <MobileMenuDrawer
+      {/* <MobileMenuDrawer
         categories={categories}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-      />
+      /> */}
+      {collection === "JEWELLERY" ? (
+        <JewelleryMobileMenuDrawer
+          categories={categories}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+        />
+      ) : (
+        <ShoesMobileMenuDrawer
+          categories={categories}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
     </>
   );
 }
