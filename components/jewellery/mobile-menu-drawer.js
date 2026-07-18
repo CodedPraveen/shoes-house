@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_NAV, NAV_LINKS } from "@/lib/constants";
 import { SHOES_CATEGORY } from "@/lib/constants";
 import { ChevronRight } from "lucide-react";
+import SafeImage from "../ui/safe-image";
 
 const MENU_DATA = {
     featured: [
@@ -80,7 +81,7 @@ export default function MobileMenuDrawer({
                         <nav className="flex-1 overflow-y-auto px-5 py-6">
                             <div className="overflow-hidden">
                                 <div className="relative h-44 w-full overflow-hidden">
-                                    <Image
+                                    <SafeImage
                                         src={MENU_DATA.featured[currentImage].image}
                                         alt={MENU_DATA.featured[currentImage].title}
                                         fill

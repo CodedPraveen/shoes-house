@@ -18,10 +18,12 @@ export const getAllCategories = unstable_cache(
     },
 );
 export const categoryService = {
-    async getAll() {
+    async getAll(collection) {
         return prisma.category.findMany({
             where: {
                 deletedAt: null,
+                collection,
+                parentId: null,
             },
             orderBy: {
                 sortOrder: "asc",

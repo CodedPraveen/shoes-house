@@ -10,6 +10,7 @@ import RankingBadge from "@/components/ranking-badge";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
+import SafeImage from "./ui/safe-image";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -70,7 +71,7 @@ function ProductCard({
               New
             </span>
           )}
-          <Image
+          <SafeImage
             src={product.image}
             alt={product.name}
             width={400}

@@ -10,6 +10,7 @@ import { getAddressesAction } from "@/actions/address-actions";
 import { reverseGeocodeAction } from "@/actions/geocode-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import { useUser } from "@clerk/nextjs";
+import SafeImage from "./ui/safe-image";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -279,7 +280,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         <h2 className="text-lg font-medium">Order Summary</h2>
         <div className="flex gap-4">
           <div className="relative h-24 w-24 overflow-hidden border">
-            <Image
+            <SafeImage
               src={lineItem.image}
               alt={lineItem.name}
               fill

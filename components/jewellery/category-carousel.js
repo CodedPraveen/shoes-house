@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SafeImage from "../ui/safe-image";
 
 export default function CategoryCarousel({ categories }) {
     const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -54,7 +55,7 @@ export default function CategoryCarousel({ categories }) {
                                         "aspect-square w-full overflow-hidden rounded-full border border-[#c5c7c1]/20 bg-gradient-to-br transition duration-500 group-hover:border-[#D4AF37]"
                                     )}
                                 >
-                                    <Image
+                                    <SafeImage
                                         src={`/jewellery/${category.slug}.jpeg`}
                                         // src={category.imageUrl || "/placeholder-category.jpg"}
                                         alt={category.name}

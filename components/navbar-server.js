@@ -4,7 +4,10 @@ import { categoryService } from "@/services/category-service";
 export default async function NavbarServer({
     collection = "SHOES",
 }) {
-    const categories = await categoryService.getAll();
+    const categories =
+        collection === "JEWELLERY"
+            ? await categoryService.getSubCategoriesBySlug("jewellery")
+            : await categoryService.getSubCategoriesBySlug("shoes");
 
     return (
         <Navbar

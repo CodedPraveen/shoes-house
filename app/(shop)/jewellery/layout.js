@@ -29,7 +29,9 @@ export default function JewelleryLayout({ children }) {
     <div
       className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-[family-name:var(--font-jewellery-body)] text-[#1b1b1c] antialiased`}
     >
-      {children}
+      <ShopShell collection="JEWELLERY">
+        {children}
+      </ShopShell>
     </div>
   );
-}
+} 

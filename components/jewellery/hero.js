@@ -1,6 +1,8 @@
 import Image from "next/image";
 import HeroBanner from "@/public/jewellery/Main_banner_Desktop_1400x.webp";
 import HeroMobile from "@/public/jewellery/necklaces.jpeg";
+import SafeImage from "../ui/safe-image";
+import { ScanFaceIcon } from "lucide-react";
 
 export default function JewelleryHero() {
   return (
@@ -8,7 +10,7 @@ export default function JewelleryHero() {
       {/* Responsive Height */}
       <div className="relative h-[45vh] min-h-[320px] sm:h-[60vh] md:h-[70vh] lg:h-[85vh] xl:h-screen max-h-[900px]">
 
-        <Image
+        <SafeImage
           src={HeroBanner}
           alt="Luxury Jewellery Collection"
           fill
@@ -17,7 +19,7 @@ export default function JewelleryHero() {
           className="hidden md:block object-cover object-top"
         />
 
-        <Image
+        <ScanFaceIcon
           src={HeroMobile}
           alt="Jewellery"
           fill

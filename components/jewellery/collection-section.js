@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import SectionReveal from "@/components/section-reveal";
 import JewelleryContainer from "@/components/jewellery/jewellery-container";
 import { cn } from "@/lib/utils";
+import SafeImage from "../ui/safe-image";
 
 export default function CollectionSection({
   eyebrow,
@@ -28,7 +29,7 @@ export default function CollectionSection({
               reverse && "lg:order-2",
             )}
           >
-            <Image
+            <SafeImage
               src={image}
               alt={imageAlt}
               fill
