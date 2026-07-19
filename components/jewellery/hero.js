@@ -2,7 +2,6 @@ import Image from "next/image";
 import HeroBanner from "@/public/jewellery/Main_banner_Desktop_1400x.webp";
 import HeroMobile from "@/public/jewellery/necklaces.jpeg";
 import SafeImage from "../ui/safe-image";
-import { ScanFaceIcon } from "lucide-react";
 
 export default function JewelleryHero() {
   return (
@@ -19,12 +18,12 @@ export default function JewelleryHero() {
           className="hidden md:block object-cover object-top"
         />
 
-        <ScanFaceIcon
+        <Image
+          className="block md:hidden object-cover object-bottom h-6 w-6"
           src={HeroMobile}
           alt="Jewellery"
           fill
           priority
-          className="block md:hidden object-cover object-bottom h-6 w-6"
         />
 
         {/* Soft luxury overlay */}
