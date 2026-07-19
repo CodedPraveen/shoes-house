@@ -5,19 +5,21 @@ import { useState } from "react";
 
 export default function SafeImage({
     src,
-    fallback = "/placeholder.webp",
     alt,
+    fallback = "/placeholder.webp",
     ...props
 }) {
-    const [imageSrc, setImageSrc] = useState(src);
+    const [imageSrc, setImageSrc] = useState(src || fallback);
 
     return (
-        <SafeImage
+        <Image
             {...props}
             src={imageSrc}
             alt={alt}
             onError={() => {
-                setImageSrc(fallback);
+                if (imageSrc !== fallback) {
+                    setImageSrc(fallback);
+                }
             }}
         />
     );
