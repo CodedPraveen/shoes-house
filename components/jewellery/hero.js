@@ -24,7 +24,7 @@ export default function JewelleryHero() {
           alt="Jewellery"
           fill
           priority
-          className="block md:hidden object-cover object-bottom"
+          className="block md:hidden object-cover object-bottom h-6 w-6"
         />
 
         {/* Soft luxury overlay */}
