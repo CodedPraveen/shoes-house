@@ -11,14 +11,9 @@ import { categoryService } from "@/services/category-service";
 export default async function ShoesPage({
   searchParams,
 }) {
-  const category = searchParams.category;
+  const params = await searchParams;
 
-  // const products =
-  //   await productService.getProducts({
-
-  //     collection: "SHOES",
-  //     category
-  //   });
+  const category = params.category;
 
   const [
     products,
@@ -36,12 +31,8 @@ export default async function ShoesPage({
     productService.getTrending(8, "SHOES"),
 
     categoryService.getSubCategoriesBySlug("shoes"),
-    productService.getNewArrivals(8, "SHOES")
   ]);
-
-  // const shoeCategories =
-  //   await categoryService.getSubCategoriesBySlug("shoes")
-
+  
   return (
     <main>
       <HeroSection />

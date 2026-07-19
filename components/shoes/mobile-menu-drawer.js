@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_NAV, NAV_LINKS } from "@/lib/constants";
 import { SHOES_CATEGORY } from "@/lib/constants";
 import { ChevronRight } from "lucide-react";
-import SafeImage from "./ui/safe-image";
+import SafeImage from "../ui/safe-image";
 
 const MENU_DATA = {
   categories: [

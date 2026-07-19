@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag } from "lucide-react";
 import AuthNav from "@/components/auth-nav";
-import CategoriesDropdown from "@/components/categories-dropdown";
-import ShoesDropdown from "@/components/shoes-dropdown";
-import MobileMenuDrawer from "@/components/mobile-menu-drawer";
+import ShoesMobileMenuDrawer from "@/components/shoes/mobile-menu-drawer";
+import JewelleryMobileMenuDrawer from "@/components/jewellery/mobile-menu-drawer";
 import { NAV_LINKS } from "@/lib/constants";
 import { useCart } from "@/hooks/use-cart";
 import { useSearchContext } from "@/context/search-context";
+import { SHOES_NAV_LINKS, JEWELLERY_NAV_LINKS, } from "@/lib/constants";
+import ShoesCategoriesDropdown from "@/components/shoes/categories-dropdown";
+import ShoesDropdown from "@/components/shoes/collection-dropdown";
+import JewelleryCategoriesDropdown from "@/components/jewellery/categories-dropdown";
+import JewelleryDropdown from "@/components/jewellery/collection-dropdown";
 
-export default function Navbar({ categories }) {
+export default function Navbar({ categories, collection = "SHOES", }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -25,6 +29,11 @@ export default function Navbar({ categories }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const navLinks =
+    collection === "JEWELLERY"
+      ? JEWELLERY_NAV_LINKS
+      : SHOES_NAV_LINKS;
 
   const shouldPrefetch = (href) => {
     return href === "/new-arrivals" || href === "/trending";
@@ -42,9 +51,11 @@ export default function Navbar({ categories }) {
           <Link href="/" className="text-lg font-semibold tracking-[0.25em]">
             SHOES HOUSE
           </Link>
+         
 
           <ul className="hidden items-center gap-8 text-sm md:flex font-bold  ">
-            {NAV_LINKS.map((item) => (
+            {/* {NAV_LINKS.map((item) => ( */}
+            {navLinks.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -55,17 +66,38 @@ export default function Navbar({ categories }) {
                 </Link>
               </li>
             ))}
-            <CategoriesDropdown
-              open={categoriesOpen}
-              onOpen={() => setCategoriesOpen(true)}
-              onClose={() => setCategoriesOpen(false)}
-            />
-            <ShoesDropdown
-              categories={categories}
-              open={shoesOpen}
-              onOpen={() => setShoesOpen(true)}
-              onClose={() => setShoesOpen(false)}
-            />
+          
+            {collection === "JEWELLERY" ? (
+              <>
+                <JewelleryCategoriesDropdown
+                  open={categoriesOpen}
+                  onOpen={() => setCategoriesOpen(true)}
+                  onClose={() => setCategoriesOpen(false)}
+                />
+
+                <JewelleryDropdown
+                  categories={categories}
+                  open={shoesOpen}
+                  onOpen={() => setShoesOpen(true)}
+                  onClose={() => setShoesOpen(false)}
+                />
+              </>
+            ) : (
+              <>
+                <ShoesCategoriesDropdown
+                  open={categoriesOpen}
+                  onOpen={() => setCategoriesOpen(true)}
+                  onClose={() => setCategoriesOpen(false)}
+                />
+
+                <ShoesDropdown
+                  categories={categories}
+                  open={shoesOpen}
+                  onOpen={() => setShoesOpen(true)}
+                  onClose={() => setShoesOpen(false)}
+                />
+              </>
+            )}
 
           </ul>
 
@@ -104,11 +136,24 @@ export default function Navbar({ categories }) {
         </nav>
       </header>
 
-      <MobileMenuDrawer
+      {/* <MobileMenuDrawer
         categories={categories}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-      />
+      /> */}
+      {collection === "JEWELLERY" ? (
+        <JewelleryMobileMenuDrawer
+          categories={categories}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+        />
+      ) : (
+        <ShoesMobileMenuDrawer
+          categories={categories}
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
     </>
   );
 }

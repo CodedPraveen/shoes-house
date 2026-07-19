@@ -4,12 +4,24 @@ import { wishlistService } from "@/services/wishlist-service";
 import { requireDbUser } from "@/lib/require-db-user";
 
 export async function getWishlistIdsAction() {
-  const user = await requireDbUser();
+  const user = await requireDbUser({
+    throwIfMissing: false,
+  });
+
+  if (!user) {
+    return [];
+  }
   return wishlistService.getProductIds(user.id);
 }
 
 export async function toggleWishlistAction(productId) {
-  const user = await requireDbUser();
+  const user = await requireDbUser({
+    throwIfMissing: false,
+  });
+
+  if (!user) {
+    return [];
+  }
   const added = await wishlistService.toggle(user.id, productId);
   const ids = await wishlistService.getProductIds(user.id);
   return { added, productIds: ids };

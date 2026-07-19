@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import SafeImage from "../ui/safe-image";
 
 const MENU_DATA = {
     categories: [
@@ -168,7 +169,7 @@ export default function ShoesDropdown({
                       "
                                             >
                                                 <div className="relative aspect-square overflow-hidden">
-                                                    <Image
+                                                    <SafeImage
                                                         src={product.image}
                                                         alt={product.title}
                                                         fill

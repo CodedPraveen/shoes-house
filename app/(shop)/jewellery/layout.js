@@ -1,4 +1,5 @@
 import { Inter, Playfair_Display } from "next/font/google";
+import ShopShell from "@/components/shop-shell";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -28,7 +29,9 @@ export default function JewelleryLayout({ children }) {
     <div
       className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-[family-name:var(--font-jewellery-body)] text-[#1b1b1c] antialiased`}
     >
-      {children}
+      <ShopShell collection="JEWELLERY">
+        {children}
+      </ShopShell>
     </div>
   );
-}
+} 

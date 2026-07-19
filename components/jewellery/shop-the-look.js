@@ -9,6 +9,7 @@ import {
   SHOP_THE_LOOK_HOTSPOTS,
 } from "@/data/jewellery-content";
 import { cn } from "@/lib/utils";
+import SafeImage from "../ui/safe-image";
 
 function Hotspot({ top, left, title, price, align = "left", delay = "0s" }) {
   return (
@@ -58,7 +59,7 @@ export default function ShopTheLook() {
 
         <div className="group relative overflow-hidden rounded-2xl">
           <div className="relative h-[420px] sm:h-[560px] lg:h-[700px]">
-            <Image
+            <SafeImage
               src={JEWELLERY_PLACEHOLDER}
               alt="Curated jewellery look with interactive product hotspots"
               fill
