@@ -2,13 +2,13 @@ import ProductGrid from "@/components/product-grid";
 import { productService } from "@/services/product-service";
 
 export const metadata = {
-    title: "Jewellery New Arrivals",
+    title: "Shoes New Arrivals",
 };
 
-export default async function JewelleryNewArrivalsPage() {
+export default async function ShoesNewArrivalsPage() {
     const products = await productService.getNewArrivals(
         100,
-        "JEWELLERY"
+        "SHOES"
     );
 
     return (

@@ -11,7 +11,7 @@ export const metadata = {
 export default async function ProductsPage() {
  const products = await productService.getProducts({
     collection: "SHOES",
-    category,
+    // category,
 });
 
   return <ProductsPageClient initialProducts={products} />;
