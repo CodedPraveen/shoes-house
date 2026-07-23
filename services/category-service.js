@@ -80,7 +80,7 @@ export const categoryService = {
                         name: true,
                         slug: true,
                         parentId: true,
-                        image: true,
+                        imageUrl: true,
                     },
                 },
             },
@@ -90,7 +90,7 @@ export const categoryService = {
             id: item.id,
             name: item.name,
             slug: item.slug,
-            image: item.image ?? null,
+            image: item.imageUrl ?? null,
         }));
 
         await setCache(key, result, 3600);

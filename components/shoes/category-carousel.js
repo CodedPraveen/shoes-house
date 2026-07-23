@@ -50,8 +50,8 @@ export default function CategoryCarousel({ categories }) {
                                     className="group relative block overflow-hidden rounded-3xl"
                                 >
                                     <SafeImage
-                                        src={`/categories/${category.slug}.webp`}
                                         // src={category.imageUrl || `/categories/${category.slug}.webp`}
+                                        src={category.image}
                                         alt={category.name}
                                         width={500}
                                         height={500}

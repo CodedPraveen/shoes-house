@@ -37,6 +37,7 @@ function saveGuestCart(items) {
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
+  console.log("CartProvider mounted");
   const { isSignedIn, isLoaded } = useAuthSafe();
   const [items, setItems] = useState([]);
   const [hydrated, setHydrated] = useState(false);
