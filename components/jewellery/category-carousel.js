@@ -13,6 +13,8 @@ export default function CategoryCarousel({ categories }) {
         loop: true,
     });
 
+    console.log(categories);
+
     return (
         <div className="relative">
             <button
@@ -32,6 +34,8 @@ export default function CategoryCarousel({ categories }) {
             <div ref={emblaRef} className="overflow-hidden">
                 <div className="flex">
                     {categories.map((category) => (
+                        console.log(category),
+                        console.log(category.slug),
                         <div
                             key={category.id}
                             className="

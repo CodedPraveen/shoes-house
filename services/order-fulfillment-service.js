@@ -13,6 +13,7 @@ import {
   InsufficientStockError,
   PaymentAmountMismatchError,
 } from "@/lib/inventory-errors";
+import { acquireLock, releaseLock } from "@/lib/redis/lock";
 
 /**
  * Webhook-only fulfillment: create Order, Payment PAID, decrement stock, clear cart.
@@ -27,7 +28,7 @@ export async function fulfillPaidCheckout({
   rawPayload = null,
   webhookEventId = null,
 }) {
-  
+
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
   if (existingPayment) {
     logDuplicatePayment({
@@ -104,7 +105,22 @@ export async function fulfillPaidCheckout({
 
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+  const redisLocks = [];
+
   try {
+
+    for (const item of session.items) {
+      const key = `variant:${item.variantId}`;
+
+      const ok = await acquireLock(key, 30);
+
+      if (!ok) {
+        throw new Error("Product is currently being processed.");
+      }
+
+      redisLocks.push(key);
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const locked = await tx.checkoutSession.updateMany({
         where: { id: session.id, status: "PENDING" },
@@ -125,10 +141,11 @@ export async function fulfillPaidCheckout({
       const paidAgain = await tx.payment.findFirst({
         where: { razorpayPaymentId, status: "PAID", deletedAt: null },
       });
+
       if (paidAgain) {
         return { duplicate: true, orderId: paidAgain.orderId };
       }
-      
+
       const order = await tx.order.create({
         data: {
           orderNumber,
@@ -203,6 +220,7 @@ export async function fulfillPaidCheckout({
       }
 
       return { duplicate: false, order };
+
     });
 
     if (result.duplicate) {
@@ -233,7 +251,8 @@ export async function fulfillPaidCheckout({
       orderId: result.order.id,
       orderNumber: result.order.orderNumber,
     };
-  } catch (err) {
+  }
+  catch (err) {
     if (err instanceof InsufficientStockError) {
       throw err;
     }
@@ -260,8 +279,12 @@ export async function fulfillPaidCheckout({
     }
     throw err;
   }
-}
+  finally {
 
+    await Promise.all(redisLocks.map(releaseLock));
+
+  }
+}
 export async function markSessionFailed(razorpayOrderId) {
   await prisma.checkoutSession.updateMany({
     where: { razorpayOrderId, status: "PENDING" },

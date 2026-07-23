@@ -4,6 +4,7 @@ import { notDeleted } from "@/lib/prisma-helpers";
 import { cartService } from "@/services/cart-service";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { withPerf } from "@/lib/perf";
+import { acquireLock, releaseLock } from "@/lib/redis/lock";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -168,15 +169,51 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
 export const checkoutService = {
   async validateCartStock(userId) {
     const cartItems = await cartService.getCartItemsForClient(userId);
-    if (!cartItems.length) throw new Error("Cart is empty");
-    const lines = await buildSessionLineItems(cartItems);
-    await validateLinesStock(lines);
-    return { cartItems, lines };
+
+    if (!cartItems.length) {
+      throw new Error("Cart is empty");
+    }
+
+    const locks = [];
+
+    try {
+      for (const item of cartItems) {
+        const key = `variant:${item.productId}:${item.color}:${item.size}`;
+
+        const ok = await acquireLock(key, 15);
+
+        if (!ok) {
+          throw new Error("Another checkout is already processing.");
+        }
+
+        locks.push(key);
+      }
+
+      const lines = await buildSessionLineItems(cartItems);
+
+      await validateLinesStock(lines);
+
+      return { cartItems, lines, locks };
+    } catch (err) {
+      await Promise.all(locks.map(releaseLock));
+      throw err;
+    }
   },
 
   async createPaymentSession(userId, address) {
     return withPerf("checkout.create.cart", async () => {
-      const { lines } = await this.validateCartStock(userId);
+      const { lines, locks } = await this.validateCartStock(userId);
+
+      try {
+        return await createSessionWithRazorpay(
+          userId,
+          address,
+          lines,
+          "CART",
+        );
+      } finally {
+        await Promise.all(locks.map(releaseLock));
+      }
       return createSessionWithRazorpay(userId, address, lines, "CART");
     });
   },

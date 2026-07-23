@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getCache, setCache } from "@/lib/redis/cache";
+import { getCache, setCache } from "@/lib/redis/chache";
 
 export async function getAllCategories() {
     const key = "categories:all";
@@ -80,6 +80,7 @@ export const categoryService = {
                         name: true,
                         slug: true,
                         parentId: true,
+                        image: true,
                     },
                 },
             },

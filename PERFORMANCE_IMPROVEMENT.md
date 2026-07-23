@@ -412,3 +412,9 @@ PERF_LOG=1 npm run dev
 ```bash
 REDIS_URL=redis://localhost:6379
 ```
+
+## Inside Package.json 
+- it not all over and over, change and comfirm for production
+```bash
+prisma generate && prisma db push 
+```

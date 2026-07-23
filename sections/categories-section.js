@@ -1,6 +1,6 @@
 import Link from "next/link";
 import SectionReveal from "@/components/section-reveal";
-import CategoryCarousel from "@/components/catagories-carousel";
+import CategoryCarousel from "@/components/shoes/category-carousel";
 import { categoryService } from "@/services/category-service";
 
 export default async function CategoriesSection() {
