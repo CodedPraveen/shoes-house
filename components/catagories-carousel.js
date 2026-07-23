@@ -44,14 +44,17 @@ export default function CategoryCarousel({ categories }) {
                             >
                                 <img
                                     src={category.image}
-                                    alt={category.title}
+                                    // src={`/categories/${category.slug}.webp`}
+                                    // alt={category.title}
+                                    alt={category.name}
                                     className="h-72 w-full object-cover transition duration-700 group-hover:scale-105"
                                 />
 
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/5" />
 
                                 <h3 className="absolute bottom-5 left-5 text-2xl font-medium text-white">
-                                    {category.title}
+                                    {/* {category.title} */}
+                                    {category.name}
                                 </h3>
                             </Link>
                         </div>

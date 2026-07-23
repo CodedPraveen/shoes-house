@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { cartInclude } from "@/lib/cart-include";
+import { buildCartSummary } from "@/lib/cart-utils";
 
 function mapCartItemRow(item) {
   const images = item.product.images || [];
@@ -19,8 +20,6 @@ function mapCartItemRow(item) {
     variantId: item.variantId,
   };
 }
-
-import { buildCartSummary } from "@/lib/cart-utils";
 
 async function getCartId(userId) {
   const cart = await prisma.cart.upsert({
