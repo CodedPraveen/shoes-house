@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { cartInclude } from "@/lib/cart-include";
 import { buildCartSummary } from "@/lib/cart-utils";
-import { getCache, setCache, deleteCache } from "@/lib/redis/chache";
+import { getCache, setCache, deleteCache } from "@/lib/redis/cache";
 
 function mapCartItemRow(item) {
   const images = item.product.images || [];

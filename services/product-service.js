@@ -3,7 +3,7 @@ import { mapProduct, mapProducts } from "@/lib/mappers/product-mapper";
 import { productInclude } from "@/lib/product-include";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { prisma } from "@/lib/db";
-import { getCache, setCache } from "@/lib/redis/chache";
+import { getCache, setCache } from "@/lib/redis/cache";
 
 const productWhere = { ...notDeleted, category: { deletedAt: null } };
 
