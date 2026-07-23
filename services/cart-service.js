@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { cartInclude } from "@/lib/cart-include";
+import { buildCartSummary } from "@/lib/cart-utils";
+import { getCache, setCache, deleteCache } from "@/lib/redis/chache";
 
 function mapCartItemRow(item) {
   const images = item.product.images || [];
@@ -20,8 +22,6 @@ function mapCartItemRow(item) {
   };
 }
 
-import { buildCartSummary } from "@/lib/cart-utils";
-
 async function getCartId(userId) {
   const cart = await prisma.cart.upsert({
     where: { userId },
@@ -37,17 +37,26 @@ export const cartService = {
   buildCartSummary,
 
   async getCartSummary(userId) {
+    const key = `cart:${userId}`;
+
+    const cached = await getCache(key);
+
+    if (cached) {
+      return cached;
+    }
+
     const cart = await prisma.cart.findUnique({
       where: { userId },
       include: cartInclude,
     });
 
-    if (!cart) {
-      return buildCartSummary([]);
-    }
+    const summary = cart
+      ? buildCartSummary(cart.items.map(mapCartItemRow))
+      : buildCartSummary([]);
 
-    const items = cart.items.map(mapCartItemRow);
-    return buildCartSummary(items);
+    await setCache(key, summary, 300);
+
+    return summary;
   },
 
   /** @deprecated Use getCartSummary — kept for fulfillment paths */
@@ -101,6 +110,8 @@ export const cartService = {
       });
     }
 
+    await deleteCache(`cart:${userId}`);
+
     return this.getCartSummary(userId);
   },
 
@@ -116,6 +127,8 @@ export const cartService = {
         data: { quantity },
       });
     }
+    await deleteCache(`cart:${userId}`);
+
     return this.getCartSummary(userId);
   },
 
@@ -124,6 +137,8 @@ export const cartService = {
       where: { id: lineId, cart: { userId }, deletedAt: null },
       data: { deletedAt: new Date() },
     });
+    await deleteCache(`cart:${userId}`);
+
     return this.getCartSummary(userId);
   },
 
@@ -138,6 +153,8 @@ export const cartService = {
       where: { cartId: cart.id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
+    await deleteCache(`cart:${userId}`);
+
     return buildCartSummary([]);
   },
 };

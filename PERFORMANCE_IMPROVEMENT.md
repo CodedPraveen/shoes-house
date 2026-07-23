@@ -66,7 +66,7 @@ Implemented comprehensive homepage and route performance optimizations focusing 
    - ✅ Hover image only loads when user hovers (lazy loading)
    - ✅ Primary image uses `group-hover:opacity-0` to show background image
 
-   **Impact**: 
+   **Impact**:
    - Eliminates duplicate image request on page load (saves 6 requests per grid)
    - Reduces image bandwidth by ~40-60% via Next.js optimization
    - No visual change to hover effect
@@ -81,7 +81,7 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 
 1. **Disable Footer Link Prefetch** (`components/site-footer.js`)
    - ✅ Added `prefetch={false}` to all footer links
-   - ✅ Applies to: /new-arrivals, /products, /trending, /category/*, /contact, /shipping, /return, /faq, /about, /journal, /careers, /stores
+   - ✅ Applies to: /new-arrivals, /products, /trending, /category/\*, /contact, /shipping, /return, /faq, /about, /journal, /careers, /stores
    - ✅ Rationale: Footer links are low-priority; users rarely click from homepage
 
    **Impact**: Reduces unnecessary DNS prefetch overhead
@@ -100,28 +100,28 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 
 ### Before Optimization (Baseline)
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| FCP (First Contentful Paint) | Unknown | Need to measure with Lighthouse |
-| LCP (Largest Contentful Paint) | Unknown | Hero image not prioritized |
-| TTI (Time to Interactive) | Unknown | Suspense blocking hydration |
-| Total Requests | ~40+ | Both product images per card loaded |
-| Hero Image Load Time | ~1500-2000ms | No priority hint |
-| Product Section Visibility | After data load | Render-blocked by async queries |
-| Cumulative Layout Shift (CLS) | >0 | Images without dimensions |
+| Metric                         | Value           | Notes                               |
+| ------------------------------ | --------------- | ----------------------------------- |
+| FCP (First Contentful Paint)   | Unknown         | Need to measure with Lighthouse     |
+| LCP (Largest Contentful Paint) | Unknown         | Hero image not prioritized          |
+| TTI (Time to Interactive)      | Unknown         | Suspense blocking hydration         |
+| Total Requests                 | ~40+            | Both product images per card loaded |
+| Hero Image Load Time           | ~1500-2000ms    | No priority hint                    |
+| Product Section Visibility     | After data load | Render-blocked by async queries     |
+| Cumulative Layout Shift (CLS)  | >0              | Images without dimensions           |
 
 ### After Optimization (Expected)
 
-| Metric | Expected Value | Improvement |
-|--------|-----------------|-------------|
-| FCP | <1.0s | ~500ms faster (hero renders first) |
-| LCP | <2.0s | ~500-1000ms faster (image prioritized) |
-| TTI | <3.0s | ~300-500ms faster (streaming + memo) |
-| Total Requests | ~20-25 | -40% (hover images removed) |
-| Hero Image Load Time | <500ms | 3-4× faster (priority + optimization) |
-| Product Section Visibility | Instant skeleton | Perceived performance +100% |
-| Cumulative Layout Shift (CLS) | 0 | No shift (dimensions set) |
-| ProductCard Re-renders | -80% | Memo + optimized props |
+| Metric                        | Expected Value   | Improvement                            |
+| ----------------------------- | ---------------- | -------------------------------------- |
+| FCP                           | <1.0s            | ~500ms faster (hero renders first)     |
+| LCP                           | <2.0s            | ~500-1000ms faster (image prioritized) |
+| TTI                           | <3.0s            | ~300-500ms faster (streaming + memo)   |
+| Total Requests                | ~20-25           | -40% (hover images removed)            |
+| Hero Image Load Time          | <500ms           | 3-4× faster (priority + optimization)  |
+| Product Section Visibility    | Instant skeleton | Perceived performance +100%            |
+| Cumulative Layout Shift (CLS) | 0                | No shift (dimensions set)              |
+| ProductCard Re-renders        | -80%             | Memo + optimized props                 |
 
 ---
 
@@ -172,6 +172,7 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 ### Image Optimization Strategy
 
 **Next.js Image Component Benefits**:
+
 - ✅ Automatic format optimization (WebP/AVIF)
 - ✅ Responsive image sizing (srcset generation)
 - ✅ Lazy loading support (`loading="lazy"`)
@@ -180,6 +181,7 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 - ✅ Quality optimization (`quality={80-85}`)
 
 **Estimated Savings**:
+
 - Hero image: 1400×520px → ~180KB → ~60KB (67% reduction)
 - ProductCard images: 400×320px × 2 per card → ~100KB → ~30KB per card (70% reduction)
 - Homepage total: ~40+ images → ~60% bandwidth reduction
@@ -187,10 +189,12 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 ### React Streaming & Suspense
 
 **Why It Matters**:
+
 - Without Suspense: Page waits for FeaturedProducts → FeaturedProducts loads → renders all → waits for TrendingGrid → renders all
 - With Suspense: Page renders Hero immediately → shows skeleton while data loads in parallel → sections hydrate as data arrives
 
 **Rendering Timeline**:
+
 1. ✅ Navbar renders (client hydration)
 2. ✅ Hero renders (no data dependency)
 3. ✅ Skeleton shows (fallback UI)
@@ -201,6 +205,7 @@ Implemented comprehensive homepage and route performance optimizations focusing 
 ### Component Memoization
 
 **ProductCard Re-render Pattern (Before)**:
+
 ```
 Parent Grid Update
   → All 6 ProductCards re-render
@@ -210,6 +215,7 @@ Parent Grid Update
 ```
 
 **ProductCard Re-render Pattern (After)**:
+
 ```
 Parent Grid Update
   → React.memo custom comparison
@@ -223,36 +229,42 @@ Parent Grid Update
 ## Testing & Verification Checklist
 
 ### Load Performance
+
 - [ ] Run Lighthouse on `/` (desktop) → Record FCP, LCP, TTI
 - [ ] Compare with baseline (if available)
 - [ ] Verify FCP <1.5s, LCP <2.5s
 - [ ] Verify CLS = 0 (no layout shift)
 
 ### Visual Rendering
+
 - [ ] Hero section appears instantly
 - [ ] Product skeleton shows while data loads
 - [ ] No blank screen or flickering
 - [ ] Skeleton matches ProductCard layout exactly
 
 ### Image Optimization
+
 - [ ] DevTools Network → Count total image requests (should be ~20-25)
 - [ ] Verify hover images don't load on page load (lazy background-image)
 - [ ] Verify hero image loads with priority
 - [ ] Check image dimensions in DevTools (no size shift)
 
 ### Re-render Optimization
+
 - [ ] DevTools React Profiler → Add product to cart
 - [ ] Observe ProductCard commit count (should not re-render)
 - [ ] Observe other cards don't re-render
 - [ ] Cart badge updates separately
 
 ### Route Prefetch
+
 - [ ] DevTools Network → Look for prefetch requests
 - [ ] Footer links should NOT show prefetch (✓ prefetch=false)
 - [ ] /new-arrivals, /trending should show prefetch (✓ prefetch=true)
 - [ ] /cart should show prefetch (✓ prefetch=true)
 
 ### Mobile Testing
+
 - [ ] Test on 375px width (iPhone SE)
 - [ ] Images should be responsive (sizes applied)
 - [ ] No layout shift on mobile
@@ -260,6 +272,7 @@ Parent Grid Update
 - [ ] Hover state not triggered on mobile (CSS :group-hover preserved)
 
 ### Slow Network Testing
+
 - [ ] DevTools Throttling → Slow 3G
 - [ ] Hero should appear <2s
 - [ ] Skeleton visible immediately
@@ -307,24 +320,29 @@ These optimizations are beyond current scope but recommended for Phase 6:
 ## Deployment Notes
 
 ### Breaking Changes
+
 - ✅ **None** - All optimizations are non-breaking
 - ✅ Next.js Image component is stable (v13+)
 - ✅ React.memo is stable React API
 - ✅ Suspense is stable (v18+)
 
 ### Database Changes
+
 - ✅ **None required** - All optimizations are frontend
 
 ### Environment Variables
+
 - ✅ No new env vars required
 - ✅ All remote image patterns already configured in `next.config.mjs`
 
 ### Backward Compatibility
+
 - ✅ Graceful fallback for older browsers (native `<img>` equivalent)
 - ✅ CSS background-image compatible with all browsers
 - ✅ Suspense fallback provides UX for SSR
 
 ### Monitoring
+
 - ✅ Vercel Analytics automatically captures LCP/CLS
 - ✅ Manual instrumentation available via `PERF_LOG=1`
 - ✅ Monitor for image 404 errors (favicon metrics)
@@ -361,6 +379,7 @@ All changes maintain the exact Shoes House UI design and visual hierarchy. The h
 ## How to Measure Impact
 
 ### Quick Measurement (2 minutes)
+
 ```bash
 # Terminal 1
 npm run dev
@@ -371,6 +390,7 @@ npm run dev
 ```
 
 ### Server-Side Measurement (Production)
+
 ```bash
 PERF_LOG=1 npm run dev
 # Watch terminal for [perf] metrics
@@ -378,8 +398,23 @@ PERF_LOG=1 npm run dev
 ```
 
 ### Automated Measurement (CI/CD)
+
 ```bash
 # Integration with Vercel Analytics (already deployed)
 # View metrics in Vercel dashboard
 # LCP, FCP, CLS automatically captured
+```
+
+## Add redis server
+
+- Don't forget to add to
+
+```bash
+REDIS_URL=redis://localhost:6379
+```
+
+## Inside Package.json 
+- it not all over and over, change and comfirm for production
+```bash
+prisma generate && prisma db push 
 ```

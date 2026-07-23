@@ -5,10 +5,12 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { productAdminService } from "@/services/product-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
+import { clearProductCache } from "@/lib/product-cache";
 
 console.time("create-product");
 
-function revalidateProductPaths(slug) {
+async function revalidateProductPaths(slug) {
+  await clearProductCache(slug);
   revalidateTag("products", "max");
   revalidateTag("search-catalog", "max");
   revalidatePath("/admin/products");
@@ -31,7 +33,7 @@ export async function createProductAction(input) {
   await assertRateLimit({ prefix: "admin-product-create", limit: 20, windowMs: 60_000 });
 
   const product = await productAdminService.create(input);
-  revalidateProductPaths(product.slug);
+  await revalidateProductPaths(product.slug);
   return { ok: true, product };
 }
 
@@ -40,7 +42,7 @@ export async function updateProductAction(id, input) {
   await assertRateLimit({ prefix: "admin-product-update", limit: 30, windowMs: 60_000 });
 
   const product = await productAdminService.update(id, input);
-  revalidateProductPaths(product.slug);
+  await revalidateProductPaths(product.slug);
   return { ok: true, product };
 }
 
@@ -50,7 +52,7 @@ export async function deleteProductAction(id) {
 
   const existing = await productAdminService.getForEdit(id);
   await productAdminService.softDelete(id);
-  revalidateProductPaths(existing?.slug);
+  await revalidateProductPaths(existing?.slug);
   return { ok: true };
 }
 

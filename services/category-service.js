@@ -1,25 +1,36 @@
 import { prisma } from "@/lib/db";
-import { unstable_cache } from "next/cache";
+import { getCache, setCache } from "@/lib/redis/chache";
 
-export const getAllCategories = unstable_cache(
-    async () => {
-        return prisma.category.findMany({
-            where: {
-                deletedAt: null,
-            },
-            orderBy: {
-                name: "asc",
-            },
-        });
-    },
-    ["categories"],
-    {
-        revalidate: 3600,
-    },
-);
+export async function getAllCategories() {
+    const key = "categories:all";
+
+    const cached = await getCache(key);
+
+    if (cached) return cached;
+
+    const categories = await prisma.category.findMany({
+        where: {
+            deletedAt: null,
+        },
+        orderBy: {
+            name: "asc",
+        },
+    });
+
+    await setCache(key, categories, 3600);
+
+    return categories;
+}
 export const categoryService = {
+
     async getAll(collection) {
-        return prisma.category.findMany({
+        const key = `categories:${collection}`;
+
+        const cached = await getCache(key);
+
+        if (cached) return cached;
+
+        const categories = await prisma.category.findMany({
             where: {
                 deletedAt: null,
                 collection,
@@ -29,6 +40,10 @@ export const categoryService = {
                 sortOrder: "asc",
             },
         });
+
+        await setCache(key, categories, 3600);
+
+        return categories;
     },
 
     async getBySlug(slug) {
@@ -40,7 +55,13 @@ export const categoryService = {
         });
     },
 
-   async getSubCategoriesBySlug(slug) {
+    async getSubCategoriesBySlug(slug) {
+        const key = `subcategories:${slug}`;
+
+        const cached = await getCache(key);
+
+        if (cached) return cached;
+
         const category = await prisma.category.findFirst({
             where: {
                 slug,
@@ -59,12 +80,22 @@ export const categoryService = {
                         name: true,
                         slug: true,
                         parentId: true,
+                        imageUrl: true,
                     },
                 },
             },
         });
 
-        return category?.children ?? [];
+        const result = (category?.children ?? []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            slug: item.slug,
+            image: item.imageUrl ?? null,
+        }));
+
+        await setCache(key, result, 3600);
+
+        return result;
     },
-  
+
 };

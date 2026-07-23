@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function SafeImage({
     src,
     alt,
-    fallback = "/placeholder.webp",
+    fallback = "/jewellery/placeholder.svg",
     ...props
 }) {
     const [imageSrc, setImageSrc] = useState(src || fallback);
