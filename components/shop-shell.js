@@ -21,7 +21,7 @@ import SiteFooter from "@/components/site-footer";
 
 export default function ShopShell({
   children,
-  collection = "SHOES",
+  collection,
 }) {
   return (
     <>
