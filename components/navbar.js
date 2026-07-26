@@ -35,6 +35,12 @@ export default function Navbar({ categories, collection = "SHOES", }) {
       ? JEWELLERY_NAV_LINKS
       : SHOES_NAV_LINKS;
 
+  const logoHref =
+    collection === "JEWELLERY"
+      ? "/jewellery"
+      : "/";
+
+
   const shouldPrefetch = (href) => {
     return href === "/new-arrivals" || href === "/trending";
   };
@@ -48,10 +54,10 @@ export default function Navbar({ categories, collection = "SHOES", }) {
           }`}
       >
         <nav className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-5 sm:px-8">
-          <Link href="/" className="text-lg font-semibold tracking-[0.25em]">
+          <Link href={logoHref} className="text-lg font-semibold tracking-[0.25em]">
             SHOES HOUSE
           </Link>
-         
+
 
           <ul className="hidden items-center gap-8 text-sm md:flex font-bold  ">
             {/* {NAV_LINKS.map((item) => ( */}
@@ -66,7 +72,7 @@ export default function Navbar({ categories, collection = "SHOES", }) {
                 </Link>
               </li>
             ))}
-          
+
             {collection === "JEWELLERY" ? (
               <>
                 <JewelleryCategoriesDropdown
