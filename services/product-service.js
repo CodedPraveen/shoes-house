@@ -24,8 +24,7 @@ async function remember(key, callback, ttl = PRODUCT_CACHE_TTL) {
 
   const data = await callback();
 
-  await setCache(key, data, ttl);
-
+  setCache(key, data, ttl).catch(() => { });
   return data;
 }
 
