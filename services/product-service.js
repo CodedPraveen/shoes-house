@@ -116,22 +116,27 @@ export const productService = {
   },
 
   async getBestSellers(limit = 8, collection) {
-    const rows = await prisma.product.findMany({
-      where: {
-        ...notDeleted,
-        ...(collection && { collection }),
-        category: {
-          deletedAt: null,
-        },
-      },
-      include: productInclude,
-      orderBy: {
-        purchaseCount: "desc",
-      },
-      take: limit,
-    });
+    return remember(
+      `products:bestsellers:${collection ?? "all"}:${limit}`,
+      async () => {
+        const rows = await prisma.product.findMany({
+          where: {
+            ...notDeleted,
+            ...(collection && { collection }),
+            category: {
+              deletedAt: null,
+            },
+          },
+          include: productInclude,
+          orderBy: {
+            purchaseCount: "desc",
+          },
+          take: limit,
+        });
 
-    return mapProducts(rows);
+        return mapProducts(rows);
+      }
+    );
   },
 
   async getRelated(productId, limit = 4) {
