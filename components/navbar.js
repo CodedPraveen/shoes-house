@@ -15,7 +15,7 @@ import ShoesDropdown from "@/components/shoes/collection-dropdown";
 import JewelleryCategoriesDropdown from "@/components/jewellery/categories-dropdown";
 import JewelleryDropdown from "@/components/jewellery/collection-dropdown";
 
-export default function Navbar({ categories, collection = "SHOES", }) {
+export default function Navbar({ categories, collection = "SHOES", homeHref, }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function Navbar({ categories, collection = "SHOES", }) {
           }`}
       >
         <nav className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-5 sm:px-8">
-          <Link href={logoHref} className="text-lg font-semibold tracking-[0.25em]">
+          <Link href={homeHref} className="text-lg font-semibold tracking-[0.25em]">
             SHOES HOUSE
           </Link>
 
