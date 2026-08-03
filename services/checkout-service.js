@@ -5,11 +5,12 @@ import { cartService } from "@/services/cart-service";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
+import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
 async function buildLineFromProductVariant(product, variant, color, size, quantity) {
-  const images = product.images || [];
+  const images = product.images || [].map(optimizeCloudinaryImage);
   const primary = images.find((i) => !i.isHover)?.url ?? images[0]?.url ?? "";
 
   return {
