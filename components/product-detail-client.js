@@ -9,6 +9,7 @@ import ProductRecommendations from "@/components/product-recommendations";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
+import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -62,7 +63,7 @@ export default function ProductDetailClient({ product }) {
     <div className="mx-auto w-full max-w-[1400] space-y-20 px-5 py-24 sm:px-8">
       <div className="grid gap-12 lg:grid-cols-2">
 
-        <ProductGallery images={product.images} name={product.name} />
+        <ProductGallery images={optimizeCloudinaryImage(product.images)} name={product.name} />
 
         <div className="space-y-8">
           <div className="space-y-3">

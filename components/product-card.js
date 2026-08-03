@@ -53,6 +53,11 @@ function ProductCard({
     requireAuth(e, () => toggleWishlist(product.id));
   };
 
+  const optimizedImage = product.image.replace(
+    "/upload/",
+    "/upload/f_auto,q_auto/"
+  );
+
   return (
     <Link href={`/product/${product.slug}`} className="block">
       <article className="group no54123-0 sm:no54123-3xl border border-black/5 bg-white  shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
@@ -72,7 +77,8 @@ function ProductCard({
             </span>
           )}
           <SafeImage
-            src={product.image}
+            // src={product.image}
+            src={optimizedImage}
             alt={product.name}
             width={400}
             height={320}

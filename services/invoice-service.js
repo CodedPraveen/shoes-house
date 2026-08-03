@@ -1,5 +1,6 @@
 import { formatPrice } from "@/lib/format-price";
 import { orderService } from "@/services/order-service";
+import Image from "next/image";
 
 function getPaymentMethodLabel(order, payment) {
   if (payment?.paymentMethod) return payment.paymentMethod;
@@ -225,10 +226,10 @@ export const invoiceService = {
   <div style="display:flex;gap:12px;align-items:center;">
     ${item.image
               ? `
-      <img
+      <Image
         src="${item.image}"
-        width="60"
-        height="60"
+        width={60}
+        height={60}
         style="
           width:60px;
           height:60px;

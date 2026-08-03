@@ -170,7 +170,8 @@ export default function ShoesDropdown({
                                             >
                                                 <div className="relative aspect-square overflow-hidden">
                                                     <SafeImage
-                                                        src={product.image}
+                                                        // src={product.image}
+                                                        src={optimizeCloudinaryImage(product.image)}
                                                         alt={product.title}
                                                         fill
                                                         className="

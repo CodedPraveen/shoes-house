@@ -1,5 +1,6 @@
 import SectionReveal from "@/components/section-reveal";
 import { featuredCollection } from "@/data/products";
+import Image from "next/image";
 
 export default function FeaturedCollection() {
   return (
@@ -17,7 +18,9 @@ export default function FeaturedCollection() {
               key={item.id}
               className="group relative overflow-hidden no54123-[2rem]"
             >
-              <img
+              <Image
+                width={800}
+                height={800}
                 src={item.image}
                 alt={item.title}
                 className="h-[400px] w-full object-cover transition duration-700 group-hover:scale-105"

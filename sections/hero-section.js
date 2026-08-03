@@ -1,29 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen overflow-hidden px-5 pt-12 sm:px-0">
+    <section className="relative overflow-hidden mt-10 py-6 sm:py-8 lg:py-10">
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_20%_15%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_80%_40%,rgba(0,0,0,0.07),transparent_32%),linear-gradient(#fff,#f7f7f7)]" />
 
-      <div className="grid w-full items-center gap-12 py-8 ">
-        <div className="relative">
-          <img
-            height={520}
-            width={1400}
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-0">
+        <div className="relative overflow-hidden ">
+          <Image
             src="/shoes/main-homeBanner.webp"
-            alt="hero-section"
-            className="w-full h-[660px] object-cover"
+            alt="Shoes House Hero"
+            width={1600}
+            height={700}
+            priority
+            className="h-[220px] w-full object-cover sm:h-[320px] md:h-[420px] lg:h-[560px] xl:h-[660px]"
           />
 
-          <h1 className="absolute inset-0 flex items-center justify-center text-[10vw] font-black uppercase text-white/20">
-            <p className="bg- text-white/50">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h1 className="text-center text-4xl font-black uppercase tracking-wider text-white/40 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
               SHOES HOUSE
-            </p>
-          </h1>
+            </h1>
+          </div>
         </div>
       </div>
     </section>
