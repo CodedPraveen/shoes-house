@@ -7,32 +7,31 @@ import TrendingGrid from "@/sections/trending-grid";
 import ProductGridSkeleton from "@/components/product-grid-skeleton";
 import { productService } from "@/services/product-service";
 import { categoryService } from "@/services/category-service";
+import dynamic from "next/dynamic";
 
-export default async function ShoesPage({
-  searchParams,
-}) {
+const TrendingGrid = dynamic(
+  () => import("@/sections/trending-grid")
+);
+
+export default async function ShoesPage({ searchParams, }) {
   const params = await searchParams;
 
   const category = params.category;
 
-  const [
-    products,
-    featuredProducts,
-    trendingProducts,
-    shoeCategories,
-  ] = await Promise.all([
-    productService.getProducts({
-      collection: "SHOES",
-      category,
-    }),
+  const [products, featuredProducts, trendingProducts, shoeCategories,] =
+    await Promise.all([
+      productService.getProducts({
+        collection: "SHOES",
+        category,
+      }),
 
-    productService.getBestSellers(6, "SHOES"),
+      productService.getBestSellers(6, "SHOES"),
 
-    productService.getTrending(8, "SHOES"),
+      productService.getTrending(8, "SHOES"),
 
-    categoryService.getSubCategoriesBySlug("shoes"),
-  ]);
-  
+      categoryService.getSubCategoriesBySlug("shoes"),
+    ]);
+
   return (
     <main>
       <HeroSection />
