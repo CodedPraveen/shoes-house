@@ -42,3 +42,6 @@ next-env.d.ts
 
 # design files
 stitch_shoes_house_jewellery_vertical
+
+# prisma test files
+prisma/migrations/test_init
