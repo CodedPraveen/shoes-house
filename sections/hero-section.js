@@ -11,7 +11,7 @@ export default function HeroSection() {
 
       <div className="grid w-full items-center gap-12 py-8 ">
         <div className="relative">
-          <img
+          <Image
             height={520}
             width={1400}
             src="/shoes/main-homeBanner.webp"

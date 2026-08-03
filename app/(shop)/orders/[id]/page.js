@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
@@ -152,7 +153,9 @@ export default function OrderDetailPage() {
                 <ul className="mt-6 space-y-4">
                   {order.items?.map((item) => (
                     <li key={item.id} className="flex gap-4 pb-4 border-b border-black/10 last:border-0">
-                      <img
+                      <Image
+                        width={80}
+                        height={80}
                         src={item.productImage}
                         alt={item.productName}
                         className="h-20 w-20 no54123-lg object-cover"

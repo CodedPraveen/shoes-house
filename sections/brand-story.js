@@ -1,11 +1,12 @@
 import SectionReveal from "@/components/section-reveal";
+import Image from "next/image";
 
 export default function BrandStory() {
   return (
     <SectionReveal id="story" className="px-5 py-8 sm:px-8 lg:py-10">
       <div className="mx-auto grid w-full max-w-[1400px] gap-8 overflow-hidden no54123-[2rem] border border-black/10 bg-zinc-50 lg:grid-cols-2">
         <div className="overflow-hidden">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1400&q=80"
             alt="Sneaker studio storytelling"
             className="h-full min-h-[360px] w-full object-cover"

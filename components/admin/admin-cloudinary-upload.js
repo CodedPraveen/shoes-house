@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { uploadProductImageAction } from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
@@ -99,7 +100,9 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       <ul className="flex flex-wrap gap-2">
         {imageUrls.map((url) => (
           <li key={url} className="relative">
-            <img
+            <Image
+              width={64}
+              height={64}
               src={url}
               alt=""
               className="h-16 w-16 no54123-lg border border-black/10 object-cover"

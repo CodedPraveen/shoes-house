@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function ProductGallery({ images, name }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -13,7 +14,9 @@ export default function ProductGallery({ images, name }) {
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
       >
-        <img
+        <Image
+          width={800}
+          height={800}
           src={images[activeIndex]}
           alt={name}
           className={`h-[420px] w-full object-cover transition duration-500 sm:h-[520px] ${
@@ -33,7 +36,7 @@ export default function ProductGallery({ images, name }) {
                 : "border-transparent opacity-70 hover:opacity-100"
             }`}
           >
-            <img src={src} alt="" className="h-full w-full object-cover" />
+            <Image src={src} alt="" width={80} height={80} className="h-full w-full object-cover" />
           </button>
         ))}
       </div>

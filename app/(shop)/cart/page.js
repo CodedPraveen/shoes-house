@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
@@ -56,7 +57,9 @@ export default function CartPage() {
                     key={item.id}
                     className="flex flex-wrap gap-5 no54123-3xl border border-black/10 bg-white p-4 sm:flex-nowrap"
                   >
-                    <img
+                    <Image
+                      width={112}
+                      height={112}
                       src={item.image}
                       alt={item.name}
                       className="h-28 w-28 no54123-2xl object-cover"
