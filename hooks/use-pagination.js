@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { paginate } from "@/utils/pagination";
 import { PRODUCTS_PER_PAGE } from "@/lib/constants";
 
@@ -12,11 +12,16 @@ export function usePagination(items, perPage = PRODUCTS_PER_PAGE) {
     [items, page, perPage],
   );
 
-  const goToPage = (next) => {
-    setPage(Math.min(Math.max(1, next), result.totalPages));
-  };
+  const resetPage = useCallback(() => {
+    setPage(1);
+  }, []);
 
-  const resetPage = () => setPage(1);
+  const goToPage = useCallback(
+    (next) => {
+      setPage(Math.min(Math.max(1, next), result.totalPages));
+    },
+    [result.totalPages]
+  );
 
   return { ...result, setPage: goToPage, resetPage };
 }
