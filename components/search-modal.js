@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { X } from "lucide-react";
 import Link from "next/link";
 import SearchFilters from "@/components/search-filters";
@@ -21,6 +22,14 @@ export default function SearchModal() {
     resetFilters,
   } = useSearchContext();
 
+  const SearchModal = dynamic(
+    () => import("@/components/search-modal"),
+    {
+      ssr: false,
+      loading: () => null,
+    }
+  );
+  
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);

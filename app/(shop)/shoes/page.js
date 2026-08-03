@@ -3,7 +3,7 @@ import CategoriesSection from "@/sections/categories-section";
 import FeaturedProducts from "@/sections/featured-products";
 import HeroSection from "@/sections/hero-section";
 import NewsletterSection from "@/sections/newsletter-section";
-import TrendingGrid from "@/sections/trending-grid";
+// import TrendingGrid from "@/sections/trending-grid";
 import ProductGridSkeleton from "@/components/product-grid-skeleton";
 import { productService } from "@/services/product-service";
 import { categoryService } from "@/services/category-service";
