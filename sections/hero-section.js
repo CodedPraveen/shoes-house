@@ -14,7 +14,7 @@ export default function HeroSection() {
           <img
             height={520}
             width={1400}
-            src="https://cdn.cartpe.in/images/gallery_lg/37710ab12b80fdbc6fd133ffbeefe1f6.png"
+            src="/shoes/main-homeBanner.webp"
             alt="hero-section"
             className="w-full h-[660px] object-cover"
           />

@@ -5,22 +5,6 @@ import { assertRateLimit } from "@/lib/rate-limit";
 import { withPerf } from "@/lib/perf";
 import { cartService } from "@/services/cart-service";
 
-// export async function getCartAction() {
-//   const user = await requireDbUser();
-
-//   if (!user?.id) {
-//     return {
-//       items: [],
-//       itemCount: 0,
-//       subtotal: 0,
-//     };
-//   }
-
-//   return withPerf("cart.get", () =>
-//     cartService.getCartSummary(user.id)
-//   );
-// }
-
 export async function getCartAction() {
   const user = await requireDbUser({
     throwIfMissing: false,
