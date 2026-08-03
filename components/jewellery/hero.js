@@ -1,6 +1,6 @@
 import Image from "next/image";
 import HeroBanner from "@/public/jewellery/Main_banner_Desktop_1400x.webp";
-import HeroMobile from "@/public/jewellery/necklaces.jpeg";
+import HeroMobile from "@/public/jewellery/necklaces.webp";
 import SafeImage from "../ui/safe-image";
 
 export default function JewelleryHero() {

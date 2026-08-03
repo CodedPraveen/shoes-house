@@ -60,7 +60,7 @@ export default function CategoryCarousel({ categories }) {
                                     )}
                                 >
                                     <SafeImage
-                                        src={`/jewellery/${category.slug}.jpeg`}
+                                        src={`/jewellery/${category.slug}.webp`}
                                         // src={category.imageUrl || "/placeholder-category.jpg"}
                                         alt={category.name}
                                         width={250}

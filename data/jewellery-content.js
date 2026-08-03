@@ -18,7 +18,7 @@ export const JEWELLERY_COLLECTIONS = {
     id: "wedding",
     eyebrow: "Special Edition",
     title: "The Wedding Collection",
-    image: "/jewellery/wedding_collection.jpeg",
+    image: "/jewellery/wedding_collection.webp",
     description:
       "For the moments that last a lifetime. Our bridal collection blends ancestral craftsmanship with a modern aesthetic, ensuring every piece tells a story of love and heritage.",
     ctaLabel: "Shop Wedding",
@@ -30,7 +30,7 @@ export const JEWELLERY_COLLECTIONS = {
     id: "office",
     eyebrow: "Everyday Edit",
     title: "The Office Collection",
-    image: "/jewellery/office_collection.jpeg",
+    image: "/jewellery/office_collection.webp",
     description:
       "Understated elegance for the modern professional. Minimal silhouettes, refined finishes, and pieces that transition effortlessly from boardroom to evening.",
     ctaLabel: "Shop Office",
@@ -42,7 +42,7 @@ export const JEWELLERY_COLLECTIONS = {
     id: "gift",
     eyebrow: "Gift Guide",
     title: "The Gift Collection",
-    image: "/jewellery/gift.jpeg",
+    image: "/jewellery/gift.webp",
     description:
       "Curated treasures for every celebration. Thoughtfully packaged pieces designed to make gifting as memorable as the moment itself.",
     ctaLabel: "Shop Gifts",
@@ -110,4 +110,4 @@ export const JEWELLERY_INSTAGRAM = [
   { id: 5, alt: "Delicate bracelet on wrist", tone: "from-[#f6f3f4] to-[#fdfcfb]" },
   { id: 6, alt: "Mangalsutra modern minimalist styling", tone: "from-[#f7e7ce]/70 to-[#f0edee]" },
 ];
-export const JEWELLERY_PLACEHOLDER = "/jewellery/model.jpeg";
+export const JEWELLERY_PLACEHOLDER = "/jewellery/model.webp";
