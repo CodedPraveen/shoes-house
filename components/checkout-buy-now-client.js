@@ -62,6 +62,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -201,6 +202,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         ...addr,
         country: addr.country || "India",
       }));
+      setShowLocationWarning(true);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to get address");
@@ -253,6 +255,12 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           >
             Use my location
           </LoadingButton>
+        )}
+        {showLocationWarning && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <strong>Location detected.</strong> Your address may not be completely
+            accurate. Please verify and update it before placing your order.
+          </div>
         )}
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="grid gap-3 sm:grid-cols-2">

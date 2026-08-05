@@ -53,7 +53,7 @@ export default function Navbar({ categories, collection = "SHOES", homeHref, }) 
           : "bg-transparent"
           }`}
       >
-        <nav className="mx-auto flex h-20 w-full max-w-[1400px] items-center justify-between px-5 sm:px-8">
+        <nav className="mx-auto flex h-20 w-full max-w-350 items-center justify-between px-5 sm:px-8">
           <Link href={homeHref} className="pl-4 md:pl-8
           ">
             <svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 340 64" fill="none">
