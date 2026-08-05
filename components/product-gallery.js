@@ -36,7 +36,7 @@ export default function ProductGallery({ images, name }) {
                 : "border-transparent opacity-70 hover:opacity-100"
             }`}
           >
-            <Image src={src} alt="" width={80} height={80} className="h-full w-full object-cover" />
+            <Image src={src} alt="Popular Shoe Brands" width={80} height={80} className="h-full w-full object-cover" />
           </button>
         ))}
       </div>

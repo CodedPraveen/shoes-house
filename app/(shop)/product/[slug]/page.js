@@ -4,8 +4,21 @@ import ProductViewTracker from "@/components/product-view-tracker";
 import { getCachedProductBySlug } from "@/lib/product-cache";
 
 export const metadata = {
-  title: "Products | Post Mart",
-  description: "Explore our collection of high-quality shoes for every occasion. Find the perfect pair that matches your style and needs.",
+  title: "Shoes & Footwear Online at Best Prices | Post Cart",
+  description:
+    "Shop men's, women's and kids' shoes online. Explore sports shoes, sneakers, casual shoes, sandals and more with affordable prices and fast delivery across India.",
+  keywords: [
+    "shoes online",
+    "footwear online",
+    "men shoes",
+    "women shoes",
+    "kids shoes",
+    "sports shoes",
+    "casual shoes",
+    "sneakers",
+    "buy shoes online",
+    "Post Cart"
+  ],
 };
 
 export const revalidate = 120;

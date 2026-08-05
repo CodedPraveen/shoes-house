@@ -9,7 +9,7 @@ export default function InstagramFeed() {
       <JewelleryContainer>
         <div className="mb-10 text-center">
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.25em] text-[#575757]">
-            @aurum.luxe
+            
           </p>
           <h2 className="font-[family-name:var(--font-jewellery-display)] text-2xl font-medium italic text-[#1b1b1c] sm:text-[32px]">
             Follow Our Journey
