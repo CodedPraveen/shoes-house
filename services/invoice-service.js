@@ -157,7 +157,7 @@ export const invoiceService = {
     <!-- Header -->
     <div class="header">
       <div class="brand">
-        <h1>Shoes House</h1>
+        <h1>Post Mart</h1>
         <p>Premium Sneaker Ecommerce</p>
         <p style="margin-top: 10px; font-size: 12px;">support@shoeshouse.com</p>
       </div>
@@ -190,7 +190,7 @@ export const invoiceService = {
         <div class="address-section">
           <div>
             <h3>From</h3>
-            <p>Shoes House</p>
+            <p>Post Mart</p>
             <p>Sanchore Road, Dhorimanna</p>
             <p>Dhorimanna, Rajasthan</p>
             <p>India - 344704</p>
@@ -284,7 +284,7 @@ export const invoiceService = {
     <div class="footer">
     <p>www.shoeshouse.com</p>
 <p>support@shoeshouse.com</p>
-      <p>Thank you for shopping with Shoes House. For order status and support, visit our website.</p>
+      <p>Thank you for shopping with Post Mart. For order status and support, visit our website.</p>
       <p style="margin-top: 8px; font-size: 11px;">This is not a GST invoice. For tax purposes, refer to your order confirmation email.</p>
     </div>
   </div>

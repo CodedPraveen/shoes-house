@@ -1,5 +1,5 @@
 export const metadata = {
-    title: "Return Policy | Shoes House",
+    title: "Return Policy | Post Mart",
 };
 
 export default function ReturnPage() {
@@ -10,7 +10,7 @@ export default function ReturnPage() {
 
                 <div className="space-y-8 text-zinc-700">
                     <p>
-                        At Shoes House, we are committed to delivering premium-quality sneakers. If you
+                        At Post Mart, we are committed to delivering premium-quality sneakers. If you
                         receive a product with a manufacturing defect or damage, you may request a
                         return subject to the conditions below.
                     </p>
@@ -164,7 +164,7 @@ export default function ReturnPage() {
                         <h2 className="mb-3 text-2xl font-semibold">Fraud Prevention</h2>
 
                         <p>
-                            To protect our customers and business, Shoes House reserves the right to reject
+                            To protect our customers and business, Post Mart reserves the right to reject
                             returns involving substituted products, manipulated evidence,
                             fraudulent claims, or abuse of the return process.
                         </p>

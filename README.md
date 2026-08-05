@@ -1,4 +1,4 @@
-# Shoes House — Scalable Ecommerce
+# Post Mart — Scalable Ecommerce
 
 A modern, scalable eCommerce platform built with **Next.js**, **Prisma**, **Supabase**, **Clerk**, **Razorpay**, and **Cloudinary**.
 

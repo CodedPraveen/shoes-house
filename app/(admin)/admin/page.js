@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 
 export const revalidate = 300;
 
-export const metadata = { title: "Admin | Shoes House" };
+export const metadata = { title: "Admin | Post Mart" };
 
 export default async function AdminDashboardPage() {
   const [

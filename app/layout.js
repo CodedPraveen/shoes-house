@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Shoes House - Premium Sneakers",
+  title: "Post Mart - Premium Sneakers",
   description:
-    "Quiet luxury premium sneaker ecommerce — modern fashion, elevated design.",
+    "Discover the latest collection of shoes and footwear at Post Mart . Shop stylish sneakers, sports shoes, casual shoes, formal shoes, sandals and slippers for men, women and kids. Find comfortable, durable and trendy footwear at affordable prices with fast delivery across India.",
 };
 
 export default function RootLayout({ children }) {

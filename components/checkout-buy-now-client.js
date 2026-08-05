@@ -62,6 +62,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -160,7 +161,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         key: result.keyId,
         amount: result.amount * 100,
         currency: result.currency,
-        name: "Shoes House",
+        name: "Post Mart",
         description: "Buy Now",
         order_id: result.razorpayOrderId,
         prefill: {
@@ -201,6 +202,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         ...addr,
         country: addr.country || "India",
       }));
+      setShowLocationWarning(true);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to get address");
@@ -227,7 +229,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   return (
     <form
       onSubmit={handlePay}
-      className="mx-auto grid w-full max-w-[1400px] gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
+      className="mx-auto grid w-full max-w-350 gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
     >
       <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>
@@ -253,6 +255,12 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           >
             Use my location
           </LoadingButton>
+        )}
+        {showLocationWarning && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <strong>Location detected.</strong> Your address may not be completely
+            accurate. Please verify and update it before placing your order.
+          </div>
         )}
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="grid gap-3 sm:grid-cols-2">

@@ -1,8 +1,8 @@
-# Shoes House — Project Context
+# Post Mart — Project Context
 
 ## What this is
 
-Premium sneaker ecommerce (**Shoes House**) built with Next.js 16 App Router, JavaScript, Tailwind CSS.
+Premium sneaker ecommerce (**Post Mart**) built with Next.js 16 App Router, JavaScript, Tailwind CSS.
 
 ## Stack
 

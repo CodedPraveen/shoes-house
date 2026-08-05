@@ -4,8 +4,8 @@ import { productService } from "@/services/product-service";
 export const revalidate = 120;
 
 export const metadata = {
-  title: "All Shoes | Shoes House",
-  description: "Browse the complete Shoes House premium sneaker collection.",
+  title: "All Shoes | Post Mart",
+  description: "Browse the complete Post Mart premium sneaker collection.",
 };
 
 export default async function ProductsPage({ searchParams }) {

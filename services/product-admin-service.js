@@ -103,7 +103,7 @@ export const productAdminService = {
     const created = await prisma.product.create({
       data: {
         name: input.name,
-        brand: input.brand || "Shoes House",
+        brand: input.brand || "Post Mart",
         slug,
         description: input.description,
         price: Number(input.price),
@@ -206,7 +206,7 @@ export const productAdminService = {
         where: { id },
         data: {
           name: input.name,
-          brand: input.brand || "Shoes House",
+          brand: input.brand || "Post Mart",
           slug,
           description: input.description,
           price: Number(input.price),

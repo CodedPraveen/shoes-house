@@ -56,7 +56,7 @@ export default function CategoryCarousel({ categories }) {
                             >
                                 <div
                                     className={cn(
-                                        "aspect-square w-full overflow-hidden rounded-full border border-[#c5c7c1]/20 bg-gradient-to-br transition duration-500 group-hover:border-[#D4AF37]"
+                                        "aspect-square w-full overflow-hidden rounded-full border border-[#c5c7c1]/20 bg-linear-to-br transition duration-500 group-hover:border-[#D4AF37]"
                                     )}
                                 >
                                     <SafeImage

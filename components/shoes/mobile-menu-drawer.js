@@ -93,7 +93,7 @@ export default function MobileMenuDrawer({
           >
             <div className="flex items-center justify-between border-b border-black/10 px-5 py-6">
               <p className="text-lg font-semibold tracking-[0.2em]">
-                SHOES HOUSE
+                Post Mart
               </p>
 
               <button

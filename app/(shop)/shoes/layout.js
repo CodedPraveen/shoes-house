@@ -13,20 +13,20 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "AURUM Jewellery | Shoes House",
+  title: "Home | Post Mart",
   description:
-    "Discover imitation jewellery crafted for everyday luxury. Necklaces, earrings, rings, and bridal collections with anti-tarnish finish.",
+    "Shoes & Footwear Online at Best Prices.",
   openGraph: {
-    title: "AURUM Jewellery | Shoes House",
+    title: "Home Page | Post Mart",
     description:
-      "Everyday luxury jewellery — waterproof, hypoallergenic, and 18K gold plated.",
+      "Shop men's, women's and kids' shoes online at Post Mart. Explore sports shoes, casual shoes, sneakers, sandals and more with affordable prices and fast delivery across India.",
   },
 };
 
 export default function JewelleryLayout({ children }) {
   return (
     <div
-      className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-[family-name:var(--font-jewellery-body)] text-[#1b1b1c] antialiased`}
+      className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-(family-name:--font-jewellery-body) text-[#1b1b1c] antialiased`}
     >
       {children}
     </div>

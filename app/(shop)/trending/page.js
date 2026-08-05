@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export const metadata = {
-  title: "Trending | Shoes House",
+  title: "Trending | Post Mart",
   description: "Best sellers and trending sneakers this week.",
 };
 

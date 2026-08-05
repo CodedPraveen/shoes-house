@@ -6,7 +6,7 @@ import { userService } from "@/services/user-service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Profile | Shoes House" };
+export const metadata = { title: "Profile | Post Mart" };
 
 async function syncClerkUser() {
   if (!process.env.CLERK_SECRET_KEY) return null;

@@ -3,7 +3,7 @@ import { getAdminOrdersAction } from "@/actions/order-actions";
 import AdminOrdersClient from "@/components/admin-orders-client";
 import { formatPrice } from "@/lib/format-price";
 
-export const metadata = { title: "Orders | Admin | Shoes House" };
+export const metadata = { title: "Orders | Admin | Post Mart" };
 
 export default async function AdminOrdersPage() {
   let orders = [];

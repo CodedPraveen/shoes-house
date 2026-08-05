@@ -5,7 +5,7 @@ import CheckoutBuyNowClient from "@/components/checkout-buy-now-client";
 import { productService } from "@/services/product-service";
 import { notFound } from "next/navigation";
 
-export const metadata = { title: "Buy Now | Shoes House" };
+export const metadata = { title: "Buy Now | Post Mart" };
 
 export default async function BuyNowCheckoutPage({ searchParams }) {
   const params = await searchParams;

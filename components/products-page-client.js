@@ -33,7 +33,7 @@ export default function ProductsPageClient({ initialProducts = [] }) {
       <PageHeader
         eyebrow="Shop"
         title="All Shoes"
-        description={`Browse the full Shoes House collection — ${total} pairs available.`}
+        description={`Browse the full Post Mart collection — ${total} pairs available.`}
       >
         <SortSelect value={sortBy} onChange={setSortBy} />
       </PageHeader>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import AdminProductForm from "@/components/admin/admin-product-form";
 import { productAdminService } from "@/services/product-admin-service";
 
-export const metadata = { title: "Add Product | Admin | Shoes House" };
+export const metadata = { title: "Add Product | Admin | Post Mart" };
 
 export default async function AdminNewProductPage() {
   

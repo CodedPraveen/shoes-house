@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminUsers } from "@/data/admin-mock";
 
-export const metadata = { title: "Users | Admin | Shoes House" };
+export const metadata = { title: "Users | Admin | Post Mart" };
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
