@@ -7,7 +7,7 @@ export default function TrendingGrid({ products }) {
 
   return (
     <SectionReveal id="trending" className="sm:px-8 lg:pb-10" loading="lazy">
-      <div className="mx-auto w-full max-w-[1400px] space-y-10">
+      <div className="mx-auto w-full max-w-350 space-y-10">
         <div className="flex flex-wrap items-end justify-between gap-4 px-5 pb-8 mb-0">
           <div className="space-y-3">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-5xl">

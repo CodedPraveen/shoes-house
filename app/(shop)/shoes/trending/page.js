@@ -12,7 +12,7 @@ export default async function ShoesTrendingPage() {
     );
 
     return (
-        <main className="mx-auto max-w-[1280px] px-4 py-12 md:px-16 pt-22">
+        <main className="mx-auto max-w-7xl px-4 py-12 md:px-16 pt-22">
             <h1 className="mb-8 text-3xl font-semibold">
                 Trending Shoes
             </h1>

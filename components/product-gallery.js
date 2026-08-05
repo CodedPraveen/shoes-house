@@ -19,7 +19,7 @@ export default function ProductGallery({ images, name }) {
           height={800}
           src={images[activeIndex]}
           alt={name}
-          className={`h-[420px] w-full object-cover transition duration-500 sm:h-[520px] ${
+          className={`h-105 w-full object-cover transition duration-500 sm:h-130 ${
             zoom ? "scale-110" : "scale-100"
           }`}
         />

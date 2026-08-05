@@ -26,7 +26,7 @@ export const metadata = {
 export default function JewelleryLayout({ children }) {
   return (
     <div
-      className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-[family-name:var(--font-jewellery-body)] text-[#1b1b1c] antialiased`}
+      className={`${playfair.variable} ${inter.variable} bg-[#fcf8f9] font-(family-name:--font-jewellery-body) text-[#1b1b1c] antialiased`}
     >
       {children}
     </div>

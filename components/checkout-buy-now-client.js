@@ -229,7 +229,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   return (
     <form
       onSubmit={handlePay}
-      className="mx-auto grid w-full max-w-[1400px] gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
+      className="mx-auto grid w-full max-w-350 gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
     >
       <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>

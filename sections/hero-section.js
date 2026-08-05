@@ -7,7 +7,7 @@ export default function HeroSection() {
     <section className="relative overflow-hidden mt-10 py-6 sm:py-8 lg:py-10">
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_20%_15%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_80%_40%,rgba(0,0,0,0.07),transparent_32%),linear-gradient(#fff,#f7f7f7)]" />
 
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-0">
+      <div className="mx-auto w-full max-w-400 px-4 sm:px-0">
         <div className="relative overflow-hidden ">
           <Image
             src="/shoes/main-homeBanner.webp"
@@ -15,7 +15,7 @@ export default function HeroSection() {
             width={1600}
             height={700}
             priority
-            className="h-[220px] w-full object-cover sm:h-[320px] md:h-[420px] lg:h-[560px] xl:h-[660px]"
+            className="h-55 w-full object-cover sm:h-80 md:h-105 lg:h-140 xl:h-165"
           />
 
           <div className="absolute inset-0 flex items-center justify-center">
