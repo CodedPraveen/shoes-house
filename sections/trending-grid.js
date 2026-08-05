@@ -22,7 +22,7 @@ export default function TrendingGrid({ products }) {
           </Link>
         </div>
         <div className="bg-red-">
-          <TrendingTabs initialProducts={products} />
+          <TrendingTabs initialProducts={products.slice(0, 6)} />
         </div>
       </div>
     </SectionReveal>

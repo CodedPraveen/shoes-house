@@ -88,7 +88,7 @@ export default function Navbar({ categories, collection = "SHOES", homeHref, }) 
 
 
           <ul className="hidden items-center gap-8 text-sm md:flex font-bold  ">
-            {/* {NAV_LINKS.map((item) => ( */}
+        
             {navLinks.map((item) => (
               <li key={item.href}>
                 <Link
