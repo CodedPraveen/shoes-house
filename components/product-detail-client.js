@@ -14,11 +14,11 @@ import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default function ProductDetailClient({ product }) {
+  const color = product.colors[0]?.id;
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
-  const [color, setColor] = useState(product.colors[0]?.id ?? "black");
   const [size, setSize] = useState(product.sizes[0] ?? 40);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -92,24 +92,7 @@ export default function ProductDetailClient({ product }) {
             {product.description}
           </p>
 
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
-              Color
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {product.colors.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setColor(item.id)}
-                  title={item.label}
-                  className={`h-10 w-10 no54123-full border-2 transition ${color === item.id ? "border-black scale-110" : "border-black/10"
-                    }`}
-                  style={{ backgroundColor: item.hex }}
-                />
-              ))}
-            </div>
-          </div>
+          <div className="space-y-4"></div>
 
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.2em] text-black/45">

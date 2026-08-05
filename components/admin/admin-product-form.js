@@ -125,11 +125,6 @@ export default function AdminProductForm({
     setLoading(true);
     try {
       const payload = buildPayload();
-      console.log(payload.imageUrls);
-      console.log(
-        JSON.stringify(payload).length / 1024,
-        "KB"
-      );
       const result =
         mode === "edit"
           ? await updateProductAction(productId, payload)
@@ -325,6 +320,7 @@ export default function AdminProductForm({
             loading={loading}
             className="no54123-full bg-black px-6 py-2.5 text-sm text-white"
           >
+            {/* add loading spinner */}
             {mode === "edit" ? "Save changes" : "Create product"}
           </LoadingButton>
           {mode === "edit" ? (
