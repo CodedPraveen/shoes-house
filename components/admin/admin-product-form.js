@@ -42,7 +42,7 @@ export default function AdminProductForm({
     name: initial?.name ?? "",
     slug: initial?.slug ?? "",
     description: initial?.description ?? "",
-    brand: initial?.brand ?? "Shoes House",
+    brand: initial?.brand ?? "Post Mart",
     price: initial?.price ?? "",
     stockPerVariant: initial?.variantRecords?.[0]?.stock ?? 10,
     sizes: initial?.sizes?.join(",") ?? "38,40,42,44",

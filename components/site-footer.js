@@ -15,7 +15,7 @@ export default function SiteFooter() {
 
           <div className="space-y-4 text-center lg:text-left">
             <p className="text-lg font-semibold tracking-[0.2em]">
-              Shoes House
+              Post Mart
             </p>
 
             <p className="mx-auto max-w-md text-sm leading-relaxed text-black/60 lg:mx-0">
@@ -52,7 +52,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="border-t border-black/10 px-4 py-5 text-center text-xs text-black/45">
-        Copyright {new Date().getFullYear()} Shoes House. All rights reserved.
+        Copyright {new Date().getFullYear()} Post Mart. All rights reserved.
       </div>
     </footer>
   );

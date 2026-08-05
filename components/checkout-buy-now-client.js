@@ -160,7 +160,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         key: result.keyId,
         amount: result.amount * 100,
         currency: result.currency,
-        name: "Shoes House",
+        name: "Post Mart",
         description: "Buy Now",
         order_id: result.razorpayOrderId,
         prefill: {

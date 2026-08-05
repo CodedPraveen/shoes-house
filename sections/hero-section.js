@@ -11,7 +11,7 @@ export default function HeroSection() {
         <div className="relative overflow-hidden ">
           <Image
             src="/shoes/main-homeBanner.webp"
-            alt="Shoes House Hero"
+            alt="Post Mart Hero"
             width={1600}
             height={700}
             priority
@@ -19,8 +19,8 @@ export default function HeroSection() {
           />
 
           <div className="absolute inset-0 flex items-center justify-center">
-            <h1 className="text-center text-4xl font-black uppercase tracking-wider text-white/40 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
-              SHOES HOUSE
+            <h1 className="text-center text-4xl font-black uppercase tracking-wider text-white/60 sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
+              Post Mart
             </h1>
           </div>
         </div>

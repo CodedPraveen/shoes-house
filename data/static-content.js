@@ -2,7 +2,7 @@ export const staticPages = {
   contact: {
     eyebrow: "Contact",
     title: "We're here to help",
-    description: "Reach the Shoes House team for orders, sizing, and support.",
+    description: "Reach the Post Mart team for orders, sizing, and support.",
     sections: [
       {
         heading: "Customer Care",
@@ -10,7 +10,7 @@ export const staticPages = {
       },
       {
         heading: "Flagship",
-        body: "Shoes House(for testing name), Dhorimanna, Balotra, Rajasthan, India",
+        body: "Post Mart(for testing name), Dhorimanna, Balotra, Rajasthan, India",
       },
     ],
   },
@@ -49,14 +49,14 @@ export const staticPages = {
       },
       {
         heading: "Authenticity",
-        body: "Every Shoes House pair ships with a unique authenticity card.",
+        body: "Every Post Mart pair ships with a unique authenticity card.",
       },
     ],
   },
   about: {
     eyebrow: "About",
     title: "Quiet luxury in motion",
-    description: "Shoes House designs premium sneakers for modern city life.",
+    description: "Post Mart designs premium sneakers for modern city life.",
     sections: [
       {
         heading: "Philosophy",
@@ -85,7 +85,7 @@ export const staticPages = {
   },
   careers: {
     eyebrow: "Careers",
-    title: "Join Shoes House",
+    title: "Join Post Mart",
     description: "Build the future of premium sneaker retail with us.",
     sections: [
       {
@@ -101,11 +101,11 @@ export const staticPages = {
 
   stores: {
     eyebrow: "Stores",
-    title: "Experience Shoes House",
+    title: "Experience Post Mart",
     description: "Visit our studios for fit sessions and exclusive drops.",
     sections: [
       {
-        heading: "Shoes House ",
+        heading: "Post Mart ",
         body: "Dhorimanna, Balotra, Rajasthan, India",
       },
     ],

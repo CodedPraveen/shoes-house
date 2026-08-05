@@ -45,3 +45,6 @@ stitch_shoes_house_jewellery_vertical
 
 # prisma test files
 prisma/migrations/test_init
+
+# svg files for testing
+public/svg/

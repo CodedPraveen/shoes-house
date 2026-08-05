@@ -1,4 +1,4 @@
-# Shoes House — Architecture Decisions
+# Post Mart — Architecture Decisions
 
 ## ADR-001: Slug-based product URLs
 

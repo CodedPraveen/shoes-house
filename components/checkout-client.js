@@ -195,7 +195,7 @@ export default function CheckoutClient() {
         key: result.keyId,
         amount: result.amount * 100,
         currency: result.currency,
-        name: "Shoes House",
+        name: "Post Mart",
         description: "Premium sneakers",
         order_id: result.razorpayOrderId,
         prefill: {

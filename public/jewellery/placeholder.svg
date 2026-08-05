@@ -3,5 +3,5 @@
   <rect x="80" y="120" width="640" height="760" rx="24" fill="#F7E7CE" fill-opacity="0.45"/>
   <circle cx="400" cy="460" r="120" stroke="#D4AF37" stroke-width="2" fill="none" opacity="0.5"/>
   <path d="M400 340v240M340 460h120" stroke="#D4AF37" stroke-width="1.5" opacity="0.35"/>
-  <text x="400" y="720" text-anchor="middle" fill="#757873" font-family="Georgia, serif" font-size="28" letter-spacing="0.15em">Post Cart</text>
+  <text x="400" y="720" text-anchor="middle" fill="#757873" font-family="Georgia, serif" font-size="28" letter-spacing="0.15em">Post Mart</text>
 </svg>

@@ -13,11 +13,11 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "AURUM Jewellery | Shoes House",
+  title: "AURUM Jewellery | Post Mart",
   description:
     "Discover imitation jewellery crafted for everyday luxury. Necklaces, earrings, rings, and bridal collections with anti-tarnish finish.",
   openGraph: {
-    title: "AURUM Jewellery | Shoes House",
+    title: "AURUM Jewellery | Post Mart",
     description:
       "Everyday luxury jewellery — waterproof, hypoallergenic, and 18K gold plated.",
   },

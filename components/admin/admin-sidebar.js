@@ -20,7 +20,7 @@ export default function AdminSidebar() {
       <div className="text-sm font-semibold tracking-[0.2em]">
 
         <Link href="/admin">
-          Shoes House
+          Post Mart
         </Link>
         <p className="mt-1 text-xs text-black/45">Admin</p>
       </div>

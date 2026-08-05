@@ -1,4 +1,4 @@
-# Shoes House Database Setup (Supabase + Prisma)
+# Post Mart Database Setup (Supabase + Prisma)
 
 ## 1. Create Supabase project
 

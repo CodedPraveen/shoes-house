@@ -10,7 +10,7 @@ export const products = [
   {
     id: "aero-one",
     name: "Aero One",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "aero-one",
     description:
       "A sculpted lifestyle runner with premium knit upper and cushioned midsole for all-day comfort.",
@@ -46,7 +46,7 @@ export const products = [
   {
     id: "vertex-pro",
     name: "Vertex Pro",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "vertex-pro",
     description:
       "Performance-forward silhouette with responsive cushioning built for training and street wear.",
@@ -81,7 +81,7 @@ export const products = [
   {
     id: "drift-mono",
     name: "Drift Mono",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "drift-mono",
     description:
       "Minimal monochrome essential with clean lines and elevated street presence.",
@@ -110,7 +110,7 @@ export const products = [
   {
     id: "pulse-knit",
     name: "Pulse Knit",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "pulse-knit",
     description:
       "Lightweight running profile with breathable knit and adaptive fit system.",
@@ -138,7 +138,7 @@ export const products = [
   {
     id: "form-legacy",
     name: "Form Legacy",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "form-legacy",
     description:
       "Heritage court inspiration reimagined with modern proportions and luxury finishing.",
@@ -170,7 +170,7 @@ export const products = [
   {
     id: "cloud-axis",
     name: "Cloud Axis",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "cloud-axis",
     description:
       "Everyday essential with cloud-soft cushioning and understated branding.",
@@ -197,7 +197,7 @@ export const products = [
   {
     id: "junior-sprint",
     name: "Junior Sprint",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "junior-sprint",
     description:
       "Lightweight boys trainer with durable outsole and flexible forefoot.",
@@ -224,7 +224,7 @@ export const products = [
   {
     id: "court-youth",
     name: "Court Youth",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "court-youth",
     description:
       "Classic court style scaled for younger athletes with premium comfort.",
@@ -251,7 +251,7 @@ export const products = [
   {
     id: "studio-low",
     name: "Studio Low",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "studio-low",
     description:
       "Low-profile luxury sneaker with tonal paneling and refined silhouette.",
@@ -278,7 +278,7 @@ export const products = [
   {
     id: "terra-glide",
     name: "Terra Glide",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "terra-glide",
     description:
       "Outdoor-inspired tread with urban refinement for versatile daily wear.",
@@ -305,7 +305,7 @@ export const products = [
   {
     id: "essence-90",
     name: "Essence 90",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "essence-90",
     description:
       "Retro runner reborn with modern cushioning and archival design lines.",
@@ -332,7 +332,7 @@ export const products = [
   {
     id: "night-runner",
     name: "Night Runner",
-    brand: "Shoes House",
+    brand: "Post Mart",
     slug: "night-runner",
     description:
       "Reflective details and bold profile for after-hours city movement.",

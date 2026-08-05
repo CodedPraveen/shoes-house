@@ -4,7 +4,7 @@ import { productService } from "@/services/product-service";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Search | Shoes House",
+  title: "Search | Post Mart",
 };
 
 export default async function SearchPage() {

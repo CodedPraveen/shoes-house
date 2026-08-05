@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Shoes House - Premium Sneakers",
+  title: "Post Mart - Premium Sneakers",
   description:
     "Quiet luxury premium sneaker ecommerce — modern fashion, elevated design.",
 };
