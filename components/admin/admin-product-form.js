@@ -125,6 +125,11 @@ export default function AdminProductForm({
     setLoading(true);
     try {
       const payload = buildPayload();
+      console.log(payload.imageUrls);
+      console.log(
+        JSON.stringify(payload).length / 1024,
+        "KB"
+      );
       const result =
         mode === "edit"
           ? await updateProductAction(productId, payload)

@@ -30,6 +30,8 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
+    console.log("File size:", file.size / 1024 / 1024, "MB");
+    console.log(file);
   }
 
   function openWidget() {
