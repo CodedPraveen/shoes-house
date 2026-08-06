@@ -246,7 +246,6 @@ export const invoiceService = {
       <div class="product-name">${item.name}</div>
       <div class="product-details">
         SKU: ${item.sku}
-        ${item.color ? `• ${item.color}` : ""}
         ${item.size ? `• Size ${item.size}` : ""}
       </div>
     </div>

@@ -79,7 +79,7 @@ export default async function AdminOrderDetailsPage({ params }) {
                                 </p>
 
                                 <p className="text-sm text-black/60">
-                                    {item.color} • {item.size}
+                                    {`Size ${item.size} `}
                                 </p>
 
                             </div>
