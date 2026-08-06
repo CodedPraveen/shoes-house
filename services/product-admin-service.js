@@ -72,7 +72,6 @@ export const productAdminService = {
   },
 
   async create(input) {
-    // console.log(input);
     const category = await this.getCategoryBySlug(input.categorySlug);
 
     if (!category || category.deletedAt) {
