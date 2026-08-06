@@ -300,10 +300,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             <h3 className="font-medium">{lineItem.name}</h3>
 
             <p className="text-sm text-black/60">
-              Color: {color}
-            </p>
-
-            <p className="text-sm text-black/60">
               Size: {size}
             </p>
 

@@ -163,7 +163,7 @@ export default function OrderDetailPage() {
                       <div className="flex-1">
                         <h3 className="font-medium">{item.productName}</h3>
                         <p className="mt-1 text-sm text-black/60">
-                          {item.color} · Size {item.size} · Qty {item.quantity}
+                         Size {item.size} · Qty {item.quantity}
                         </p>
                         <p className="mt-2 text-sm font-medium">
                           {formatPrice(item.priceAtPurchase * item.quantity)}

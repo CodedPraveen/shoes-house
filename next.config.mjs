@@ -13,6 +13,7 @@ const nextConfig = {
     ],
     qualities: [75, 80, 85],
   },
+
   allowedDevOrigins: [
     "192.168.31.89",
     "*.trycloudflare.com",
