@@ -187,11 +187,26 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
   const success = async (pos) => {
     try {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const { latitude, longitude, accuracy } = pos.coords;
 
+      console.log("📍 GPS LOCATION:", {
+        latitude,
+        longitude,
+        accuracy,
+      });
 
-      const addr = await reverseGeocodeAction(lat, lng);
+      // Reject inaccurate location
+      if (accuracy > 1000) {
+        setError(
+          `Location accuracy is too low (${Math.round(
+            accuracy
+          )}m). Please enable precise location and try again.`
+        );
+        setLocating(false);
+        return;
+      }
+
+      const addr = await reverseGeocodeAction(latitude, longitude);
 
       setAddressMode("new");
 
@@ -200,7 +215,21 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         ...addr,
         country: addr.country || "India",
       }));
+
       setShowLocationWarning(true);
+
+      if (accuracy > 1000) {
+        setShowLocationWarning(false);
+
+        setError(
+          `Your location accuracy is too low (${Math.round(
+            accuracy
+          )}m). Please enable precise location or enter your address manually.`
+        );
+
+        setLocating(false);
+        return;
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to get address");
@@ -210,16 +239,25 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   };
 
   const erro = (err) => {
-    console.error(err);
+    console.error("📍 GEOLOCATION ERROR:", {
+      code: err.code,
+      message: err.message,
+    });
 
-    alert(
-      "Location unavailable or permission denied. Please fill the address manually."
-    );
+    let message = "Unable to detect your location.";
 
-    setError(
-      "Location unavailable or permission denied. Please fill the address manually."
-    );
+    if (err.code === 1) {
+      message =
+        "Location permission was denied. Please allow location access in your browser settings.";
+    } else if (err.code === 2) {
+      message =
+        "Your device could not determine your location. Please try again.";
+    } else if (err.code === 3) {
+      message =
+        "Location request timed out. Please try again.";
+    }
 
+    setError(message);
     setLocating(false);
   };
 
@@ -239,6 +277,9 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             onClick={async () => {
               setLocating(true);
 
+              console.log("Secure context:", window.isSecureContext);
+              console.log("Protocol:", window.location.protocol);
+              console.log("Hostname:", window.location.hostname);
               navigator.geolocation.getCurrentPosition(
                 success,
                 erro,
