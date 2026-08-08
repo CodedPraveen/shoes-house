@@ -46,7 +46,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
-  const color = searchParams.get("color");
   const size = searchParams.get("size");
   const quantity = Number(searchParams.get("quantity") || 1);
 
@@ -103,7 +102,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     })();
   }, []);
 
-  if (!productId || !color || !size || !lineItem) {
+  if (!productId || !size || !lineItem) {
     return (
       <p className="text-sm text-black/60">
         Invalid buy-now link.{" "}
@@ -133,7 +132,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       const result = await createBuyNowCheckoutSessionAction({
         ...addressPayload,
         productId,
-        color,
         size,
         quantity,
         paymentMethod,

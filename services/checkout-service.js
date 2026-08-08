@@ -316,6 +316,7 @@ export const checkoutService = {
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+      console.log("Creating order...");
       const order = await prisma.order.create({
         data: {
           orderNumber,
@@ -344,6 +345,7 @@ export const checkoutService = {
         },
         include: { items: true },
       });
+      console.log("Order Created");
 
       return order;
     });
