@@ -157,4 +157,21 @@ export const cartService = {
 
     return buildCartSummary([]);
   },
+
+  async clearCartInTransaction(db, userId) {
+    const cart = await db.cart.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!cart) return;
+
+    await db.cartItem.updateMany({
+      where: { cartId: cart.id, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+  },
+
+  async invalidateCartCache(userId) {
+    await deleteCache(`cart:${userId}`);
+  },
 };

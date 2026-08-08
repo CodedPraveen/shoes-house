@@ -13,7 +13,7 @@ export async function findProcessedPayment(razorpayPaymentId) {
       status: "PAID",
       deletedAt: null,
     },
-    include: { order: { select: { id: true, orderNumber: true } } },
+    include: { order: { select: { id: true, orderNumber: true, userId: true } } },
   });
 }
 

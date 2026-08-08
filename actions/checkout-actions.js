@@ -7,6 +7,13 @@ import {
 } from "@/services/address-service";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { requireDbUser } from "@/lib/require-db-user";
+import {
+  firstAddressError,
+  validateAddressInput,
+} from "@/lib/address-validation";
+import { razorpayService } from "@/services/payment/razorpay-service";
+import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
+import { revalidatePath } from "next/cache";
 
 async function resolveShippingAddress(userId, { addressId, ...manual }) {
   if (addressId) {
@@ -15,20 +22,12 @@ async function resolveShippingAddress(userId, { addressId, ...manual }) {
     return toCheckoutAddress(saved);
   }
 
-  if (!manual.fullName || !manual.phone || !manual.line1 || !manual.city) {
-    throw new Error("Complete shipping address required");
+  const result = validateAddressInput(manual);
+  if (!result.isValid) {
+    throw new Error(firstAddressError(result.errors));
   }
 
-  return {
-    fullName: manual.fullName,
-    phone: manual.phone,
-    line1: manual.line1,
-    line2: manual.line2 || null,
-    city: manual.city,
-    state: manual.state || "",
-    country: manual.country || "India",
-    pincode: manual.pincode,
-  };
+  return result.address;
 }
 
 export async function createBuyNowCheckoutSessionAction(input) {
@@ -79,7 +78,7 @@ export async function createCheckoutSessionAction(input) {
     const { paymentMethod = "razorpay" } = input;
 
     if (paymentMethod === "cod") {
-      const order = await checkoutService.createOrder(
+      const order = await checkoutService.createCartOrder(
         user.id,
         {
           ...shipping,
@@ -104,6 +103,102 @@ export async function createCheckoutSessionAction(input) {
     return {
       ok: false,
       error: err.message || "Checkout failed",
+    };
+  }
+}
+
+export async function verifyRazorpayPaymentAction(input) {
+  const user = await requireDbUser();
+
+  try {
+    await assertRateLimit({
+      prefix: "checkout-verify",
+      limit: 12,
+      windowMs: 60_000,
+    });
+
+    const razorpayOrderId =
+      typeof input?.razorpayOrderId === "string" ? input.razorpayOrderId : "";
+    const razorpayPaymentId =
+      typeof input?.razorpayPaymentId === "string" ? input.razorpayPaymentId : "";
+    const razorpaySignature =
+      typeof input?.razorpaySignature === "string" ? input.razorpaySignature : "";
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return {
+        ok: false,
+        error: "Payment details are incomplete. Please check My Orders before retrying.",
+      };
+    }
+
+    if (
+      !razorpayService.verifyPaymentSignature({
+        razorpayOrderId,
+        razorpayPaymentId,
+        signature: razorpaySignature,
+      })
+    ) {
+      return { ok: false, error: "Payment verification failed." };
+    }
+
+    const payment = await razorpayService.getPayment(razorpayPaymentId);
+
+    if (payment.order_id !== razorpayOrderId) {
+      return { ok: false, error: "Payment does not match this checkout." };
+    }
+
+    if (payment.status !== "captured" && payment.captured !== true) {
+      return {
+        ok: false,
+        pending: true,
+        error:
+          "Payment was received and is still being confirmed. Please check My Orders shortly.",
+      };
+    }
+
+    const result = await fulfillPaidCheckout({
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      amountPaise: Number(payment.amount),
+      expectedUserId: user.id,
+      rawPayload: {
+        source: "checkout-verification",
+        payment: {
+          id: payment.id,
+          orderId: payment.order_id,
+          amount: payment.amount,
+          currency: payment.currency,
+          status: payment.status,
+          method: payment.method,
+          captured: payment.captured,
+        },
+      },
+    });
+
+    revalidatePath("/orders");
+    revalidatePath(`/orders/${result.orderId}`);
+    revalidatePath("/admin/orders");
+
+    return {
+      ok: true,
+      orderId: result.orderId,
+      orderNumber: result.orderNumber,
+      duplicate: Boolean(result.duplicate),
+    };
+  } catch (error) {
+    console.error("[checkout] Razorpay payment persistence failed", {
+      razorpayOrderId: input?.razorpayOrderId,
+      razorpayPaymentId: input?.razorpayPaymentId,
+      message: error?.message,
+    });
+
+    return {
+      ok: false,
+      paid: true,
+      recoverable: true,
+      error:
+        "Payment was received, but we could not finish saving the order yet. Please check My Orders shortly; do not pay again.",
     };
   }
 }

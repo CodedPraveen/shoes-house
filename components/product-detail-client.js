@@ -51,6 +51,7 @@ export default function ProductDetailClient({ product }) {
     requireAuth(() => {
       const q = new URLSearchParams({
         productId: product.id,
+        color,
         size: String(size),
         quantity: String(quantity),
       });

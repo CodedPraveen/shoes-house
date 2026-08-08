@@ -1,5 +1,13 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
+
+function signaturesMatch(expected, received) {
+  if (typeof received !== "string" || expected.length !== received.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+}
+
 function getClient() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -29,6 +37,10 @@ export const razorpayService = {
     });
   },
 
+  async getPayment(razorpayPaymentId) {
+    return getClient().payments.fetch(razorpayPaymentId);
+  },
+
   verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, signature }) {
     const secret = process.env.RAZORPAY_KEY_SECRET;
     if (!secret) throw new Error("RAZORPAY_KEY_SECRET missing");
@@ -39,7 +51,7 @@ export const razorpayService = {
       .update(body)
       .digest("hex");
 
-    return expected === signature;
+    return signaturesMatch(expected, signature);
   },
 
   verifyWebhookSignature(rawBody, signature) {
@@ -51,6 +63,6 @@ export const razorpayService = {
       .update(rawBody)
       .digest("hex");
 
-    return expected === signature;
+    return signaturesMatch(expected, signature);
   },
 };

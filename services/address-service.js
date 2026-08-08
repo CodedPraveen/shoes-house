@@ -1,11 +1,40 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
+import {
+  firstAddressError,
+  validateAddressInput,
+} from "@/lib/address-validation";
+
+function validatedAddress(data) {
+  const result = validateAddressInput(data);
+  if (!result.isValid) {
+    throw new Error(firstAddressError(result.errors));
+  }
+  return result.address;
+}
+
+function addressData(data) {
+  return {
+    label: data.label,
+    fullName: data.fullName,
+    phone: data.phone,
+    line1: data.line1,
+    landmark: data.landmark,
+    line2: data.line2,
+    city: data.city,
+    state: data.state,
+    country: data.country,
+    pincode: data.pincode,
+  };
+}
 
 export function toCheckoutAddress(row) {
   return {
+    label: row.label || "Home",
     fullName: row.fullName,
     phone: row.phone,
     line1: row.line1,
+    landmark: row.landmark || null,
     line2: row.line2,
     city: row.city,
     state: row.state,
@@ -35,79 +64,137 @@ export const addressService = {
   },
 
   async setDefault(userId, addressId) {
-    const existing = await prisma.address.findFirst({
-      where: { id: addressId, userId, ...notDeleted },
-    });
-    if (!existing) return null;
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.address.findFirst({
+        where: { id: addressId, userId, ...notDeleted },
+      });
+      if (!existing) return null;
 
-    await prisma.address.updateMany({
-      where: { userId, ...notDeleted },
-      data: { isDefault: false },
-    });
+      await tx.address.updateMany({
+        where: { userId, ...notDeleted },
+        data: { isDefault: false },
+      });
 
-    return prisma.address.update({
-      where: { id: addressId },
-      data: { isDefault: true },
+      return tx.address.update({
+        where: { id: addressId },
+        data: { isDefault: true },
+      });
     });
   },
 
   async create(userId, data) {
-    if (data.isDefault) {
-      await prisma.address.updateMany({
-        where: { userId, ...notDeleted },
-        data: { isDefault: false },
-      });
-    }
+    const address = validatedAddress(data);
 
-    return prisma.address.create({
-      data: {
-        userId,
-        fullName: data.fullName,
-        phone: data.phone,
-        line1: data.line1,
-        line2: data.line2 || null,
-        city: data.city,
-        state: data.state,
-        country: data.country || "India",
-        pincode: data.pincode,
-        isDefault: Boolean(data.isDefault),
-      },
+    return prisma.$transaction(async (tx) => {
+      const activeCount = await tx.address.count({
+        where: { userId, ...notDeleted },
+      });
+      const shouldBeDefault = Boolean(data.isDefault) || activeCount === 0;
+
+      if (shouldBeDefault) {
+        await tx.address.updateMany({
+          where: { userId, ...notDeleted },
+          data: { isDefault: false },
+        });
+      }
+
+      return tx.address.create({
+        data: {
+          userId,
+          ...addressData(address),
+          isDefault: shouldBeDefault,
+        },
+      });
     });
   },
 
   async update(userId, addressId, data) {
-    const existing = await prisma.address.findFirst({
-      where: { id: addressId, userId, ...notDeleted },
-    });
-    if (!existing) return null;
+    const address = validatedAddress(data);
 
-    if (data.isDefault) {
-      await prisma.address.updateMany({
-        where: { userId, ...notDeleted },
-        data: { isDefault: false },
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.address.findFirst({
+        where: { id: addressId, userId, ...notDeleted },
       });
-    }
+      if (!existing) return null;
 
-    return prisma.address.update({
-      where: { id: addressId },
-      data: {
-        fullName: data.fullName,
-        phone: data.phone,
-        line1: data.line1,
-        line2: data.line2 || null,
-        city: data.city,
-        state: data.state,
-        country: data.country || "India",
-        pincode: data.pincode,
-        isDefault: data.isDefault ?? existing.isDefault,
-      },
+      if (data.isDefault) {
+        await tx.address.updateMany({
+          where: { userId, ...notDeleted },
+          data: { isDefault: false },
+        });
+      }
+
+      return tx.address.update({
+        where: { id: addressId },
+        data: {
+          ...addressData(address),
+          isDefault: data.isDefault ?? existing.isDefault,
+        },
+      });
     });
   },
 
   async remove(userId, addressId) {
-    return prisma.address.updateMany({
-      where: { id: addressId, userId },
-      data: { deletedAt: new Date() },
+    return prisma.$transaction(async (tx) => {
+      const existing = await tx.address.findFirst({
+        where: { id: addressId, userId, ...notDeleted },
+      });
+      if (!existing) return { count: 0 };
+
+      const removed = await tx.address.updateMany({
+        where: { id: addressId, userId, ...notDeleted },
+        data: { deletedAt: new Date(), isDefault: false },
+      });
+
+      if (existing.isDefault) {
+        const next = await tx.address.findFirst({
+          where: { userId, ...notDeleted },
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+        });
+        if (next) {
+          await tx.address.update({
+            where: { id: next.id },
+            data: { isDefault: true },
+          });
+        }
+      }
+
+      return removed;
     });
   },
 };
+
+export async function saveShippingAddressForUser(db, userId, data) {
+  const address = validatedAddress(data);
+  const matching = await db.address.findFirst({
+    where: {
+      userId,
+      ...notDeleted,
+      label: address.label,
+      fullName: address.fullName,
+      phone: address.phone,
+      line1: address.line1,
+      landmark: address.landmark,
+      line2: address.line2,
+      city: address.city,
+      state: address.state,
+      country: address.country,
+      pincode: address.pincode,
+    },
+  });
+
+  if (matching) return matching;
+
+  const activeCount = await db.address.count({
+    where: { userId, ...notDeleted },
+  });
+
+  return db.address.create({
+    data: {
+      userId,
+      ...addressData(address),
+      isDefault: activeCount === 0,
+    },
+  });
+}
