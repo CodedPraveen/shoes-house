@@ -56,24 +56,10 @@ export default function Navbar({ categories, collection = "SHOES", homeHref, }) 
         <nav className="mx-auto flex h-20 w-full max-w-350 items-center justify-between px-5 sm:px-8">
           <Link href={homeHref} className="pl-4 md:pl-8
           ">
-            <svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 380 64" fill="none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="180" height="auto" viewBox="0 0 250 64" fill="none">
               <g fill="#0A192F">
-                <rect x="18" y="18" width="27" height="4.5" rx="3" />
-                <rect x="23" y="26" width="25" height="4.5" rx="3" />
-                <rect x="27" y="34" width="23" height="4.5" rx="3" />
-
-                <path d="M18 12H42c5 0 9 3 10 8l4 20c1 4 4 6 8 6h36c3 0 6-2 7-5l9-23H55"
-                  fill="none"
-                  stroke="#0A192F"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round" />
-
-
-                <circle cx="69" cy="56" r="4" />
-                <circle cx="96" cy="56" r="4" />
-
-                <text x="125"
+            
+                <text x="25"
                   y="45"
                   fontFamily="Inter, Poppins, Montserrat, Arial, sans-serif"
                   fontSize="34"

@@ -54,6 +54,7 @@ export default function ProductDetailClient({ product }) {
         size: String(size),
         quantity: String(quantity),
       });
+
       router.push(`/checkout/buy-now?${q.toString()}`);
     });
   };

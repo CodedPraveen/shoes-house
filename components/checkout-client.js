@@ -52,7 +52,11 @@ function addressToForm(a) {
     pincode: a.pincode,
   };
 }
-
+console.log({
+  latitude: pos.coords.latitude,
+  longitude: pos.coords.longitude,
+  accuracy: pos.coords.accuracy,
+});
 export default function CheckoutClient() {
   const { user } = useUser();
   const router = useRouter();
@@ -124,6 +128,10 @@ export default function CheckoutClient() {
       return;
     }
     setLocating(true);
+
+    console.log("Secure context:", window.isSecureContext);
+    console.log("Protocol:", window.location.protocol);
+    console.log("Hostname:", window.location.hostname);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
