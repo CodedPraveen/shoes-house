@@ -23,6 +23,7 @@ export default async function BuyNowCheckoutPage({ searchParams }) {
     name: product.name,
     price: product.price,
     image: product.image,
+    defaultColor: product.colors[0]?.id || "",
   };
 
   return (

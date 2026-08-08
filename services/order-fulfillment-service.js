@@ -14,9 +14,10 @@ import {
   PaymentAmountMismatchError,
 } from "@/lib/inventory-errors";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
+import { saveShippingAddressForUser } from "@/services/address-service";
 
 /**
- * Webhook-only fulfillment: create Order, Payment PAID, decrement stock, clear cart.
+ * Verified-payment fulfillment: create Order, Payment PAID, decrement stock, clear cart.
  * Idempotent on razorpayPaymentId + checkout session status lock.
  */
 export async function fulfillPaidCheckout({
@@ -27,10 +28,32 @@ export async function fulfillPaidCheckout({
   fromWebhook = false,
   rawPayload = null,
   webhookEventId = null,
+  expectedUserId = null,
 }) {
 
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
   if (existingPayment) {
+    if (expectedUserId && existingPayment.order?.userId !== expectedUserId) {
+      throw new Error("Payment does not belong to this user");
+    }
+
+    const backfill = {};
+    if (!existingPayment.razorpaySignature && razorpaySignature) {
+      backfill.razorpaySignature = razorpaySignature;
+    }
+    if (!existingPayment.webhookEventId && webhookEventId) {
+      backfill.webhookEventId = webhookEventId;
+    }
+    if (!existingPayment.rawPayload && rawPayload) {
+      backfill.rawPayload = rawPayload;
+    }
+    if (Object.keys(backfill).length > 0) {
+      await prisma.payment.update({
+        where: { id: existingPayment.id },
+        data: backfill,
+      });
+    }
+
     logDuplicatePayment({
       razorpayPaymentId,
       razorpayOrderId,
@@ -68,6 +91,10 @@ export async function fulfillPaidCheckout({
     throw new Error("Checkout session not found");
   }
 
+  if (expectedUserId && session.userId !== expectedUserId) {
+    throw new Error("Checkout session does not belong to this user");
+  }
+
   if (session.status === "COMPLETED" && session.orderId) {
     logDuplicatePayment({
       razorpayPaymentId,
@@ -76,14 +103,6 @@ export async function fulfillPaidCheckout({
       orderId: session.orderId,
     });
     return { ok: true, duplicate: true, orderId: session.orderId };
-  }
-
-  if (session.expiresAt < new Date()) {
-    await prisma.checkoutSession.update({
-      where: { id: session.id },
-      data: { status: "EXPIRED" },
-    });
-    throw new Error("Checkout session expired");
   }
 
   const paidRupees = fromPaise(amountPaise);
@@ -123,7 +142,10 @@ export async function fulfillPaidCheckout({
 
     const result = await prisma.$transaction(async (tx) => {
       const locked = await tx.checkoutSession.updateMany({
-        where: { id: session.id, status: "PENDING" },
+        where: {
+          id: session.id,
+          status: { in: ["PENDING", "FAILED", "EXPIRED"] },
+        },
         data: { updatedAt: new Date() },
       });
 
@@ -157,6 +179,7 @@ export async function fulfillPaidCheckout({
           shipFullName: session.shipFullName,
           shipPhone: session.shipPhone,
           shipLine1: session.shipLine1,
+          shipLandmark: session.shipLandmark,
           shipLine2: session.shipLine2,
           shipState: session.shipState,
           shipCity: session.shipCity,
@@ -207,6 +230,24 @@ export async function fulfillPaidCheckout({
           webhookEventId: webhookEventId ?? undefined,
         },
       });
+
+      await saveShippingAddressForUser(tx, session.userId, {
+        label: session.shipAddressLabel || "Home",
+        fullName: session.shipFullName,
+        phone: session.shipPhone,
+        line1: session.shipLine1,
+        landmark: session.shipLandmark,
+        line2: session.shipLine2,
+        city: session.shipCity,
+        state: session.shipState,
+        country: session.shipCountry,
+        pincode: session.shipPincode,
+      });
+
+      if (session.mode !== "BUY_NOW") {
+        await cartService.clearCartInTransaction(tx, session.userId);
+      }
+
       await tx.checkoutSession.update({
         where: { id: session.id },
         data: { status: "COMPLETED", orderId: order.id },
@@ -234,7 +275,7 @@ export async function fulfillPaidCheckout({
     }
 
     if (session.mode !== "BUY_NOW") {
-      await cartService.clearCart(session.userId);
+      await cartService.invalidateCartCache(session.userId);
     }
 
     logWebhook("FULFILLED", {
@@ -262,6 +303,9 @@ export async function fulfillPaidCheckout({
     if (err.code === "P2002") {
       const dup = await findProcessedPayment(razorpayPaymentId);
       if (dup) {
+        if (expectedUserId && dup.order?.userId !== expectedUserId) {
+          throw new Error("Payment does not belong to this user");
+        }
         logDuplicatePayment({
           razorpayPaymentId,
           razorpayOrderId,

@@ -85,6 +85,7 @@ export default function OrderDetailPage() {
                   <h2 className="text-lg  font-medium">Shipping Address</h2>
                   <p className="font-medium">{order.shipFullName}</p>
                   <p className="text-black/60">{order.shipLine1}</p>
+                  {order.shipLandmark && <p className="text-black/60">{order.shipLandmark}</p>}
                   {order.shipLine2 && <p className="text-black/60">{order.shipLine2}</p>}
                   <p className="text-black/60">
                     {order.shipCity}, {order.shipState} {order.shipPincode}
@@ -203,7 +204,7 @@ export default function OrderDetailPage() {
                   <div className="flex justify-between">
                     <span className="text-black/60">Payment</span>
                     <span className="text-black/60">
-                      {order.payments?.some((p) => p.status === "COMPLETED")
+                      {order.payments?.some((p) => p.status === "PAID")
                         ? "Paid"
                         : "Pending"}
                     </span>

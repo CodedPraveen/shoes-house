@@ -17,6 +17,7 @@ export default function CartPage() {
   const handleBuyNow = (item) => {
     const q = new URLSearchParams({
       productId: item.productId,
+      color: item.color,
       size: String(item.size),
       quantity: String(item.quantity),
     });
