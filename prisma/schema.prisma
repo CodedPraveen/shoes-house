@@ -211,11 +211,9 @@ model Wishlist {
 model Address {
   id        String    @id @default(cuid())
   userId    String
-  label     String    @default("Home")
   fullName  String
   phone     String
   line1     String
-  landmark  String?
   line2     String?
   city      String
   state     String
@@ -225,6 +223,8 @@ model Address {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  label     String    @default("Home")
+  landmark  String?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -243,11 +243,9 @@ model CheckoutSession {
   total            Int
   currency         String                @default("INR")
   status           CheckoutSessionStatus @default(PENDING)
-  shipAddressLabel String?
   shipFullName     String
   shipPhone        String
   shipLine1        String
-  shipLandmark     String?
   shipLine2        String?
   shipCity         String
   shipState        String
@@ -258,6 +256,8 @@ model CheckoutSession {
   updatedAt        DateTime              @updatedAt
   orderId          String?               @unique
   mode             CheckoutSessionMode   @default(CART)
+  shipAddressLabel String?
+  shipLandmark     String?
   order            Order?                @relation(fields: [orderId], references: [id])
   user             User                  @relation(fields: [userId], references: [id])
   items            CheckoutSessionItem[]
@@ -288,24 +288,23 @@ model CheckoutSessionItem {
 }
 
 model Order {
-  id                  String               @id @default(cuid())
-  orderNumber         String               @unique
+  id                  String      @id @default(cuid())
+  orderNumber         String      @unique
   userId              String
-  status              OrderStatus          @default(PENDING)
+  status              OrderStatus @default(PENDING)
   subtotal            Int
-  shippingCost        Int                  @default(0)
+  shippingCost        Int         @default(0)
   total               Int
   shipFullName        String
   shipPhone           String
   shipLine1           String
-  shipLandmark        String?
   shipLine2           String?
   shipCity            String
   shipState           String
-  shipCountry         String               @default("India")
+  shipCountry         String      @default("India")
   shipPincode         String
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
   deletedAt           DateTime?
   refundReason        String?
   aftershipTrackingId String?
@@ -313,14 +312,19 @@ model Order {
   lastTrackingSync    DateTime?
   shippedAt           DateTime?
   trackingNumber      String?
-  trackingStatus      String?              @default("PENDING")
+  trackingStatus      String?     @default("PENDING")
   trackingUrl         String?
-  checkoutSession     CheckoutSession?
-  inventoryMovements  InventoryMovement[]
-  user                User                 @relation(fields: [userId], references: [id])
-  items               OrderItem[]
-  payments            Payment[]
-  checkpoints         TrackingCheckpoint[]
+  shipLandmark        String?
+
+  confirmedByCall Boolean   @default(false)
+  confirmedAt     DateTime?
+
+  checkoutSession    CheckoutSession?
+  inventoryMovements InventoryMovement[]
+  user               User                 @relation(fields: [userId], references: [id])
+  items              OrderItem[]
+  payments           Payment[]
+  checkpoints        TrackingCheckpoint[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -329,6 +333,7 @@ model Order {
   @@index([createdAt])
   @@index([userId, status])
   @@index([userId, createdAt])
+  @@index([confirmedByCall, status])
 }
 
 model TrackingCheckpoint {

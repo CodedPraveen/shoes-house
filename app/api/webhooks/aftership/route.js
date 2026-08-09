@@ -47,7 +47,7 @@ export async function POST(req) {
             tracking.tag,
         );
 
-       const order = await prisma.order.findFirst({
+        await prisma.order.updateMany({
             where: {
                 trackingNumber:
                     tracking.tracking_number,
@@ -55,10 +55,12 @@ export async function POST(req) {
             data: {
                 trackingStatus: status,
                 lastTrackingSync: new Date(),
-                deliveredAt:
-                    status === "DELIVERED"
-                        ? new Date()
-                        : null,
+                ...(status === "DELIVERED"
+                    ? {
+                        deliveredAt: new Date(),
+                        status: "DELIVERED",
+                    }
+                    : {}),
             },
         });
 
