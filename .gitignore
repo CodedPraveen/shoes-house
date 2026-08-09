@@ -51,3 +51,4 @@ prisma/migrations/test_init
 # svg files for testing
 public/svg/
 public/shoes/home-banner-mobile.png
+public/shoes/*
