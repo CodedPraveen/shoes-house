@@ -56,7 +56,7 @@ export default function Navbar({ categories, collection = "SHOES", homeHref, }) 
         <nav className="mx-auto flex h-20 w-full max-w-350 items-center justify-between px-5 sm:px-8">
           <Link href={homeHref} className="pl-4 md:pl-8
           ">
-            <svg xmlns="http://www.w3.org/2000/svg" width="180" height="auto" viewBox="0 0 250 64" fill="none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="180" height="auto" viewBox="0 0 280 64" fill="none">
               <g fill="#0A192F">
             
                 <text x="25"
