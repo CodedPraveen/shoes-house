@@ -6,6 +6,7 @@ import { razorpayService } from "@/services/payment/razorpay-service";
 import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
+import { saveShippingAddressForUser } from "@/services/address-service";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -123,9 +124,11 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
       shippingCost,
       total,
       status: "PENDING",
+      shipAddressLabel: address.label || "Home",
       shipFullName: address.fullName,
       shipPhone: address.phone,
       shipLine1: address.line1,
+      shipLandmark: address.landmark || null,
       shipLine2: address.line2 || null,
       shipCity: address.city,
       shipState: address.state,
@@ -215,7 +218,6 @@ export const checkoutService = {
       } finally {
         await Promise.all(locks.map(releaseLock));
       }
-      return createSessionWithRazorpay(userId, address, lines, "CART");
     });
   },
 
@@ -316,33 +318,39 @@ export const checkoutService = {
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-      const order = await prisma.order.create({
-        data: {
-          orderNumber,
-          userId,
-          subtotal,
-          shippingCost,
-          total,
-          status: "PENDING",
-          shipFullName: address.fullName,
-          shipPhone: address.phone,
-          shipLine1: address.line1,
-          shipLine2: address.line2 || null,
-          shipCity: address.city,
-          shipState: address.state,
-          shipCountry: address.country || "India",
-          shipPincode: address.pincode,
-          items: { create: [line] },
-          payments: {
-            create: {
-              paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
-              status: "PENDING",
-              amount: total,
-              currency: "INR",
+      const order = await prisma.$transaction(async (tx) => {
+        const created = await tx.order.create({
+          data: {
+            orderNumber,
+            userId,
+            subtotal,
+            shippingCost,
+            total,
+            status: "PENDING",
+            shipFullName: address.fullName,
+            shipPhone: address.phone,
+            shipLine1: address.line1,
+            shipLandmark: address.landmark || null,
+            shipLine2: address.line2 || null,
+            shipCity: address.city,
+            shipState: address.state,
+            shipCountry: address.country || "India",
+            shipPincode: address.pincode,
+            items: { create: [line] },
+            payments: {
+              create: {
+                paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
+                status: "PENDING",
+                amount: total,
+                currency: "INR",
+              },
             },
           },
-        },
-        include: { items: true },
+          include: { items: true },
+        });
+
+        await saveShippingAddressForUser(tx, userId, address);
+        return created;
       });
 
       return order;
@@ -354,59 +362,72 @@ export const checkoutService = {
     paymentMethod = "cod",
   ) {
     return withPerf("checkout.create.cart.cod", async () => {
-      const { lines } = await this.validateCartStock(userId);
+      const { lines, locks } = await this.validateCartStock(userId);
 
-      const subtotal = lines.reduce(
-        (sum, line) => sum + line.priceAtPurchase * line.quantity,
-        0
-      );
+      try {
+        const subtotal = lines.reduce(
+          (sum, line) => sum + line.priceAtPurchase * line.quantity,
+          0,
+        );
 
-      const shippingCost = calculateShipping(subtotal);
-      const total = subtotal + shippingCost;
+        const shippingCost = calculateShipping(subtotal);
+        const total = subtotal + shippingCost;
 
-      const orderNumber = `ORD-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)
-        .toUpperCase()}`;
+        const orderNumber = `ORD-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)
+          .toUpperCase()}`;
 
-      const order = await prisma.order.create({
-        data: {
-          orderNumber,
-          userId,
-          subtotal,
-          shippingCost,
-          total,
+        const order = await prisma.$transaction(async (tx) => {
+          const created = await tx.order.create({
+            data: {
+              orderNumber,
+              userId,
+              subtotal,
+              shippingCost,
+              total,
 
-          status: "PENDING",
-
-          shipFullName: address.fullName,
-          shipPhone: address.phone,
-          shipLine1: address.line1,
-          shipLine2: address.line2 || null,
-          shipCity: address.city,
-          shipState: address.state,
-          shipCountry: address.country || "India",
-          shipPincode: address.pincode,
-
-          items: {
-            create: lines,
-          },
-
-          payments: {
-            create: {
-              paymentMethod: "Cash on Delivery",
               status: "PENDING",
-              amount: total,
-              currency: "INR",
-            },
-          },
-        },
-        include: {
-          items: true,
-        },
-      });
 
-      return order;
+              shipFullName: address.fullName,
+              shipPhone: address.phone,
+              shipLine1: address.line1,
+              shipLandmark: address.landmark || null,
+              shipLine2: address.line2 || null,
+              shipCity: address.city,
+              shipState: address.state,
+              shipCountry: address.country || "India",
+              shipPincode: address.pincode,
+
+              items: {
+                create: lines,
+              },
+
+              payments: {
+                create: {
+                  paymentMethod: "Cash on Delivery",
+                  status: "PENDING",
+                  amount: total,
+                  currency: "INR",
+                },
+              },
+            },
+            include: {
+              items: true,
+            },
+          });
+
+          await saveShippingAddressForUser(tx, userId, address);
+          await cartService.clearCartInTransaction(tx, userId);
+          return created;
+        });
+
+        await cartService.invalidateCartCache(userId);
+
+        return order;
+      } finally {
+        await Promise.all(locks.map(releaseLock));
+      }
     });
   },
 };

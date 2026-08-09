@@ -75,7 +75,7 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <div>
+      {/* <div className="">
         <p className="mb-3 text-xs uppercase tracking-[0.2em] text-black/45">
           Color
         </p>
@@ -97,7 +97,7 @@ export default function SearchFilters({
             );
           })}
         </div>
-      </div>
+      </div> */}
 
       <button
         type="button"

@@ -45,6 +45,10 @@ export default async function AdminOrderDetailsPage({ params }) {
                     <p>{order.shipFullName}</p>
                     <p>{order.shipLine1}</p>
 
+                    {order.shipLandmark && (
+                        <p>{order.shipLandmark}</p>
+                    )}
+
                     {order.shipLine2 && (
                         <p>{order.shipLine2}</p>
                     )}
@@ -79,7 +83,7 @@ export default async function AdminOrderDetailsPage({ params }) {
                                 </p>
 
                                 <p className="text-sm text-black/60">
-                                    {item.color} • {item.size}
+                                    {`Size ${item.size} `}
                                 </p>
 
                             </div>

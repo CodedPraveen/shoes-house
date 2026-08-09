@@ -11,8 +11,6 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
-        items: true,
-        payments: true,
         checkpoints: true,
       },
       orderBy: { createdAt: "desc" },
@@ -56,8 +54,6 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
-        items: true,
-        payments: true,
         checkpoints: true,
       },
     });
@@ -70,8 +66,6 @@ export const orderService = {
         items: { where: { deletedAt: null } },
         payments: { where: { deletedAt: null } },
         user: true,
-        items: true,
-        payments: true,
         checkpoints: true,
       },
       orderBy: { createdAt: "desc" },
@@ -271,4 +265,3 @@ export async function syncTracking(orderId) {
     return order;
   }
 }
-

@@ -211,9 +211,11 @@ model Wishlist {
 model Address {
   id        String    @id @default(cuid())
   userId    String
+  label     String    @default("Home")
   fullName  String
   phone     String
   line1     String
+  landmark  String?
   line2     String?
   city      String
   state     String
@@ -233,30 +235,32 @@ model Address {
 }
 
 model CheckoutSession {
-  id              String                @id @default(cuid())
-  userId          String
-  razorpayOrderId String?               @unique
-  subtotal        Int
-  shippingCost    Int                   @default(0)
-  total           Int
-  currency        String                @default("INR")
-  status          CheckoutSessionStatus @default(PENDING)
-  shipFullName    String
-  shipPhone       String
-  shipLine1       String
-  shipLine2       String?
-  shipCity        String
-  shipState       String
-  shipCountry     String                @default("India")
-  shipPincode     String
-  expiresAt       DateTime
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  orderId         String?               @unique
-  mode            CheckoutSessionMode   @default(CART)
-  order           Order?                @relation(fields: [orderId], references: [id])
-  user            User                  @relation(fields: [userId], references: [id])
-  items           CheckoutSessionItem[]
+  id               String                @id @default(cuid())
+  userId           String
+  razorpayOrderId  String?               @unique
+  subtotal         Int
+  shippingCost     Int                   @default(0)
+  total            Int
+  currency         String                @default("INR")
+  status           CheckoutSessionStatus @default(PENDING)
+  shipAddressLabel String?
+  shipFullName     String
+  shipPhone        String
+  shipLine1        String
+  shipLandmark     String?
+  shipLine2        String?
+  shipCity         String
+  shipState        String
+  shipCountry      String                @default("India")
+  shipPincode      String
+  expiresAt        DateTime
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  orderId          String?               @unique
+  mode             CheckoutSessionMode   @default(CART)
+  order            Order?                @relation(fields: [orderId], references: [id])
+  user             User                  @relation(fields: [userId], references: [id])
+  items            CheckoutSessionItem[]
 
   @@index([userId])
   @@index([status])
@@ -294,6 +298,7 @@ model Order {
   shipFullName        String
   shipPhone           String
   shipLine1           String
+  shipLandmark        String?
   shipLine2           String?
   shipCity            String
   shipState           String

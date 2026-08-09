@@ -1,15 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
-import { createCheckoutSessionAction } from "@/actions/checkout-actions";
+import {
+  createCheckoutSessionAction,
+  verifyRazorpayPaymentAction,
+} from "@/actions/checkout-actions";
 import { getAddressesAction } from "@/actions/address-actions";
-import { reverseGeocodeAction } from "@/actions/geocode-actions";
-import LoadingButton from "@/components/ui/loading-button";
+import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
+import AddressFields from "@/components/address-fields";
+import {
+  firstAddressError,
+  mergeGeocodedAddress,
+  validateAddressInput,
+} from "@/lib/address-validation";
 
 
 function loadRazorpayScript() {
@@ -26,13 +34,12 @@ function loadRazorpayScript() {
   });
 }
 
-const inputClass =
-  "h-11 no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
-
 const emptyForm = {
+  label: "Home",
   fullName: "",
   phone: "",
   line1: "",
+  landmark: "",
   line2: "",
   city: "",
   state: "",
@@ -42,9 +49,11 @@ const emptyForm = {
 
 function addressToForm(a) {
   return {
+    label: a.label || "Home",
     fullName: a.fullName,
     phone: a.phone,
     line1: a.line1,
+    landmark: a.landmark || "",
     line2: a.line2 || "",
     city: a.city,
     state: a.state,
@@ -52,9 +61,11 @@ function addressToForm(a) {
     pincode: a.pincode,
   };
 }
-
 export default function CheckoutClient() {
   const { user } = useUser();
+  const customerName =
+    user?.fullName ||
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
   const router = useRouter();
   const { items, subtotal } = useCart();
   const shippingCost = calculateShipping(subtotal);
@@ -66,8 +77,11 @@ export default function CheckoutClient() {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [locating, setLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const touchedFieldsRef = useRef(new Set());
 
   useEffect(() => {
     (async () => {
@@ -88,20 +102,10 @@ export default function CheckoutClient() {
     })();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-
-    setForm((prev) => ({
-      ...prev,
-      fullName:
-        user.fullName ||
-        `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-    }));
-  }, [user]);
-
-
   function updateField(key, value) {
+    touchedFieldsRef.current.add(key);
     setForm((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((previous) => ({ ...previous, [key]: undefined }));
   }
 
   function selectSavedAddress(id) {
@@ -109,66 +113,54 @@ export default function CheckoutClient() {
     if (!addr) return;
     setSelectedAddressId(id);
     setForm(addressToForm(addr));
+    touchedFieldsRef.current.clear();
+    setFieldErrors({});
+    setSelectedCoordinates(null);
+    setShowLocationWarning(false);
   }
 
   function switchToNewAddress() {
     setAddressMode("new");
     setSelectedAddressId(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, fullName: customerName });
+    touchedFieldsRef.current.clear();
+    setFieldErrors({});
+    setSelectedCoordinates(null);
+    setShowLocationWarning(false);
   }
 
-  async function useMyLocation() {
+  function handleLocationConfirmed({ address, coordinates }) {
     setError("");
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported in this browser.");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const addr = await reverseGeocodeAction(
-            position.coords.latitude,
-            position.coords.longitude,
-          );
-          setAddressMode("new");
-          setSelectedAddressId(null);
-          setForm((prev) => ({
-            ...prev,
-            line1: addr.line1 || prev.line1,
-            line2: addr.line2 || prev.line2,
-            city: addr.city || prev.city,
-            state: addr.state || prev.state,
-            country: addr.country || "India",
-            pincode: addr.pincode || prev.pincode,
-          }));
-        } catch (err) {
-          setError(err.message || "Could not detect address");
-        } finally {
-          setLocating(false);
-        }
-      },
-      () => {
-        setError("Location permission denied or unavailable.");
-        setLocating(false);
-      },
-      { enableHighAccuracy: false, timeout: 15000 },
+    setAddressMode("new");
+    setSelectedAddressId(null);
+    setSelectedCoordinates(coordinates);
+    setForm((previous) =>
+      mergeGeocodedAddress(previous, address, touchedFieldsRef.current),
     );
+    setShowLocationWarning(true);
   }
 
   async function handlePay(e) {
-    if (!/^\d{10}$/.test(form.phone)) {
-      setError("Please enter a valid 10-digit phone number");
-      return;
-    }
     e.preventDefault();
     setError("");
+
+    const validation = validateAddressInput({
+      ...form,
+      fullName: form.fullName || customerName,
+    });
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setError(firstAddressError(validation.errors));
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
 
     const payload =
       addressMode === "saved" && selectedAddressId
         ? { addressId: selectedAddressId }
-        : { ...form };
+        : { ...form, fullName: form.fullName || customerName };
 
     try {
       const result = await createCheckoutSessionAction({
@@ -204,8 +196,26 @@ export default function CheckoutClient() {
           contact: result.user.contact,
         },
         theme: { color: "#111111" },
-        handler() {
-          router.push("/orders?status=processing");
+        async handler(response) {
+          setLoading(true);
+          setError("");
+
+          const persisted = await verifyRazorpayPaymentAction({
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+
+          if (persisted.ok) {
+            router.push(`/orders/${persisted.orderId}?status=confirmed`);
+            return;
+          }
+
+          setError(
+            persisted.error ||
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+          );
+          setLoading(false);
         },
         modal: {
           ondismiss() {
@@ -273,7 +283,7 @@ export default function CheckoutClient() {
                 />
                 <span className="text-sm text-black/80">
                   <span className="font-medium text-black">
-                    {addr.fullName}
+                    {addr.label || "Home"} · {addr.fullName}
                     {addr.isDefault ? (
                       <span className="ml-2 text-xs text-black/45">
                         Default
@@ -282,6 +292,7 @@ export default function CheckoutClient() {
                   </span>
                   <br />
                   {addr.line1}
+                  {addr.landmark ? `, ${addr.landmark}` : ""}
                   {addr.line2 ? `, ${addr.line2}` : ""}
                   <br />
                   {addr.city}, {addr.state} {addr.pincode}
@@ -303,71 +314,24 @@ export default function CheckoutClient() {
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <LoadingButton
-                type="button"
-                loading={locating}
-                onClick={useMyLocation}
-                className="no54123-full border border-black/15 px-4 py-2 text-xs"
-              >
-                Use my location
-              </LoadingButton>
+              <GoogleLocationPicker
+                initialCoordinates={selectedCoordinates}
+                onLocationConfirmed={handleLocationConfirmed}
+              />
               <span className="text-xs text-black/45">or enter address manually</span>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-           
-              <input required placeholder="Full name" className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
-
-              <input
-                required
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]{10}"
-                maxLength={10}
-                placeholder="Phone"
-                className={inputClass}
-                value={form.phone}
-                onChange={(e) =>
-                  updateField(
-                    "phone",
-                    e.target.value.replace(/\D/g, "").slice(0, 10)
-                  )
-                }
-              />
-              <input
-                required
-                placeholder="Address line 1"
-                className={`${inputClass} sm:col-span-2`}
-                value={form.line1}
-                onChange={(e) => updateField("line1", e.target.value)}
-              />
-              <input
-                placeholder="Address line 2"
-                className={`${inputClass} sm:col-span-2`}
-                value={form.line2}
-                onChange={(e) => updateField("line2", e.target.value)}
-              />
-              <input
-                required
-                placeholder="City"
-                className={inputClass}
-                value={form.city}
-                onChange={(e) => updateField("city", e.target.value)}
-              />
-              <input
-                required
-                placeholder="State"
-                className={inputClass}
-                value={form.state}
-                onChange={(e) => updateField("state", e.target.value)}
-              />
-              <input
-                required
-                placeholder="PIN code"
-                className={inputClass}
-                value={form.pincode}
-                onChange={(e) => updateField("pincode", e.target.value)}
-              />
-            </div>
+            {showLocationWarning ? (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                The map-selected address has been filled in. Please verify and edit
+                any details before placing your order. Fields you already edited
+                were kept.
+              </div>
+            ) : null}
+            <AddressFields
+              form={{ ...form, fullName: form.fullName || customerName }}
+              errors={fieldErrors}
+              onChange={updateField}
+            />
           </div>
         )}
 
@@ -377,9 +341,9 @@ export default function CheckoutClient() {
           </p>
         ) : null}
         <p className="text-xs text-black/50">
-          Payment is confirmed via secure webhook only. Your order appears after
-          verification (usually within a minute). Manage addresses on your{" "}
-          <a href="/profile" className="underline">
+          Online payment is verified before your order is confirmed, with the
+          secure webhook as an idempotent fallback. Manage addresses on your{" "}
+          <a href="/profile#saved-addresses" className="underline">
             profile
           </a>
           .

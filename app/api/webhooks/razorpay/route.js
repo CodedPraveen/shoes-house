@@ -5,6 +5,7 @@ export async function POST(request) {
   const signature = request.headers.get("x-razorpay-signature");
   const webhookEventId = request.headers.get("x-razorpay-event-id");
   const rawBody = await request.text();
+  console.log("Razorpay Webhook Hit");
 
   try {
     const result = await webhookService.handleRazorpayEvent(
@@ -20,7 +21,7 @@ export async function POST(request) {
   } catch (err) {
     console.error("[razorpay webhook]", err);
     return NextResponse.json(
-      { ok: false, error: err.message || "Webhook error" },
+      { ok: false, error: "Webhook processing failed" },
       { status: 500 },
     );
   }

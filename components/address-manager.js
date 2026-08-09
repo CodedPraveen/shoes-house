@@ -7,11 +7,18 @@ import {
   deleteAddressAction,
   setDefaultAddressAction,
 } from "@/actions/address-actions";
+import AddressFields from "@/components/address-fields";
+import {
+  firstAddressError,
+  validateAddressInput,
+} from "@/lib/address-validation";
 
 const empty = {
+  label: "Home",
   fullName: "",
   phone: "",
   line1: "",
+  landmark: "",
   line2: "",
   city: "",
   state: "",
@@ -24,40 +31,100 @@ export default function AddressManager() {
   const [addresses, setAddresses] = useState([]);
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function load() {
-    const rows = await getAddressesAction();
-    setAddresses(rows);
+    try {
+      const rows = await getAddressesAction();
+      setAddresses(rows);
+    } catch (loadError) {
+      setError(loadError?.message || "Could not load saved addresses.");
+    }
   }
 
   useEffect(() => {
-    load();
+    let active = true;
+
+    getAddressesAction()
+      .then((rows) => {
+        if (active) setAddresses(rows);
+      })
+      .catch((loadError) => {
+        if (active) {
+          setError(loadError?.message || "Could not load saved addresses.");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleSave(e) {
     e.preventDefault();
-    await saveAddressAction({ ...form, id: editingId || undefined });
-    setForm(empty);
-    setEditingId(null);
-    load();
+    setError("");
+
+    const validation = validateAddressInput(form);
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setError(firstAddressError(validation.errors));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await saveAddressAction({ ...form, id: editingId || undefined });
+      setForm(empty);
+      setEditingId(null);
+      setFieldErrors({});
+      await load();
+    } catch (saveError) {
+      setError(saveError?.message || "Could not save this address.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id) {
-    await deleteAddressAction(id);
-    load();
+    if (!window.confirm("Remove this saved address? Existing orders will keep their shipping address.")) {
+      return;
+    }
+
+    setError("");
+    try {
+      await deleteAddressAction(id);
+      if (editingId === id) {
+        setEditingId(null);
+        setForm(empty);
+      }
+      await load();
+    } catch (deleteError) {
+      setError(deleteError?.message || "Could not remove this address.");
+    }
   }
 
   async function handleSetDefault(id) {
-    await setDefaultAddressAction(id);
-    load();
+    setError("");
+    try {
+      await setDefaultAddressAction(id);
+      await load();
+    } catch (defaultError) {
+      setError(defaultError?.message || "Could not update the default address.");
+    }
   }
 
   function startEdit(addr) {
     setEditingId(addr.id);
+    setError("");
+    setFieldErrors({});
     setForm({
+      label: addr.label || "Home",
       fullName: addr.fullName,
       phone: addr.phone,
       line1: addr.line1,
+      landmark: addr.landmark || "",
       line2: addr.line2 || "",
       city: addr.city,
       state: addr.state,
@@ -67,11 +134,13 @@ export default function AddressManager() {
     });
   }
 
-  const inputClass =
-    "h-10 no54123-xl border border-black/15 bg-white px-3 text-sm w-full";
+  function updateField(key, value) {
+    setForm((previous) => ({ ...previous, [key]: value }));
+    setFieldErrors((previous) => ({ ...previous, [key]: undefined }));
+  }
 
   return (
-    <section className="space-y-4 no54123-3xl border border-black/10 p-6">
+    <section id="saved-addresses" className="space-y-4 no54123-3xl border border-black/10 p-6">
       <h2 className="text-xl font-semibold">Address book</h2>
       <p className="text-sm text-black/60">
         Save addresses for faster checkout. Select one at checkout or enter a new
@@ -85,7 +154,7 @@ export default function AddressManager() {
           >
             <div>
               <p className="font-medium text-black">
-                {a.fullName}
+                {a.label || "Home"} · {a.fullName}
                 {a.isDefault ? (
                   <span className="ml-2 no54123-full bg-black px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
                     Default
@@ -94,6 +163,7 @@ export default function AddressManager() {
               </p>
               <p>
                 {a.line1}
+                {a.landmark ? `, ${a.landmark}` : ""}
                 {a.line2 ? `, ${a.line2}` : ""}
               </p>
               <p>
@@ -129,55 +199,8 @@ export default function AddressManager() {
           </li>
         ))}
       </ul>
-      <form onSubmit={handleSave} className="grid gap-2 sm:grid-cols-2">
-        <input
-          required
-          placeholder="Full name"
-          className={inputClass}
-          value={form.fullName}
-          onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-        />
-        <input
-          required
-          placeholder="Phone"
-          className={inputClass}
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-        />
-        <input
-          required
-          placeholder="Address line 1"
-          className={`${inputClass} sm:col-span-2`}
-          value={form.line1}
-          onChange={(e) => setForm({ ...form, line1: e.target.value })}
-        />
-        <input
-          placeholder="Address line 2"
-          className={`${inputClass} sm:col-span-2`}
-          value={form.line2}
-          onChange={(e) => setForm({ ...form, line2: e.target.value })}
-        />
-        <input
-          required
-          placeholder="City"
-          className={inputClass}
-          value={form.city}
-          onChange={(e) => setForm({ ...form, city: e.target.value })}
-        />
-        <input
-          required
-          placeholder="State"
-          className={inputClass}
-          value={form.state}
-          onChange={(e) => setForm({ ...form, state: e.target.value })}
-        />
-        <input
-          required
-          placeholder="PIN"
-          className={inputClass}
-          value={form.pincode}
-          onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-        />
+      <form onSubmit={handleSave} className="space-y-3">
+        <AddressFields form={form} errors={fieldErrors} onChange={updateField} />
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input
             type="checkbox"
@@ -190,10 +213,26 @@ export default function AddressManager() {
         </label>
         <button
           type="submit"
-          className="sm:col-span-2 no54123-full bg-black py-2.5 text-sm text-white"
+          disabled={saving}
+          className="w-full no54123-full bg-black py-2.5 text-sm text-white disabled:opacity-60"
         >
-          {editingId ? "Update address" : "Add address"}
+          {saving ? "Saving…" : editingId ? "Update address" : "Add address"}
         </button>
+        {editingId ? (
+          <button
+            type="button"
+            onClick={() => {
+              setEditingId(null);
+              setForm(empty);
+              setFieldErrors({});
+              setError("");
+            }}
+            className="w-full text-xs text-black/60 underline"
+          >
+            Cancel editing
+          </button>
+        ) : null}
+        {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
       </form>
     </section>
   );

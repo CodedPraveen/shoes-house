@@ -25,7 +25,7 @@
 |-------|----------|
 | Duplicate rate limit | `assertRateLimit` called **twice** per add |
 | Double DB round-trip | `addItem` then full `getCartItemsForClient` |
-| Overfetch | `getOrCreateCart` used `productInclude` (images, colors, sizes, variants) for every cart line |
+| Overfetch | `getOrCreateCart` used `productInclude` (images, sizes, variants) for every cart line |
 | Debug overhead | `console.time` / `console.timeLog` in `cart-service.addItem` |
 
 **Query count (before, signed-in add):**
@@ -78,7 +78,7 @@ allProducts = await productService.getAll(); // full productInclude × N product
 **File:** `product-detail-client.js` (before)
 
 ```javascript
-addItem({ product, color, size, quantity });
+addItem({ product, size, quantity });
 router.push("/checkout"); // entire cart checked out
 ```
 

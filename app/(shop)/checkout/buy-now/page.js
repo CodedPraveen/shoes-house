@@ -10,10 +10,9 @@ export const metadata = { title: "Buy Now | Post Mart" };
 export default async function BuyNowCheckoutPage({ searchParams }) {
   const params = await searchParams;
   const productId = params.productId;
-  const color = params.color;
   const size = params.size;
 
-  if (!productId || !color || !size) {
+  if (!productId || !size) {
     notFound();
   }
 
@@ -24,6 +23,7 @@ export default async function BuyNowCheckoutPage({ searchParams }) {
     name: product.name,
     price: product.price,
     image: product.image,
+    defaultColor: product.colors[0]?.id || "",
   };
 
   return (

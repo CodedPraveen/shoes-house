@@ -1,16 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
-import { createBuyNowCheckoutSessionAction } from "@/actions/checkout-actions";
+import {
+  createBuyNowCheckoutSessionAction,
+  verifyRazorpayPaymentAction,
+} from "@/actions/checkout-actions";
 import { getAddressesAction } from "@/actions/address-actions";
-import { reverseGeocodeAction } from "@/actions/geocode-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
 import SafeImage from "./ui/safe-image";
+import AddressFields from "@/components/address-fields";
+import {
+  firstAddressError,
+  mergeGeocodedAddress,
+  validateAddressInput,
+} from "@/lib/address-validation";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -26,14 +34,12 @@ function loadRazorpayScript() {
   });
 }
 
-const inputClass =
-  "h-11 no54123-xl border border-black/15 bg-white px-4 text-sm outline-none ring-black/20 focus:ring-2";
-
-
 const emptyForm = {
+  label: "Home",
   fullName: "",
   phone: "",
   line1: "",
+  landmark: "",
   line2: "",
   city: "",
   state: "",
@@ -41,12 +47,30 @@ const emptyForm = {
   pincode: "",
 };
 
+function addressToForm(address) {
+  return {
+    label: address.label || "Home",
+    fullName: address.fullName,
+    phone: address.phone,
+    line1: address.line1,
+    landmark: address.landmark || "",
+    line2: address.line2 || "",
+    city: address.city,
+    state: address.state,
+    country: address.country || "India",
+    pincode: address.pincode,
+  };
+}
+
 export default function CheckoutBuyNowClient({ lineItem }) {
   const { user } = useUser();
+  const customerName =
+    user?.fullName ||
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
-  const color = searchParams.get("color");
+  const color = searchParams.get("color") || lineItem.defaultColor;
   const size = searchParams.get("size");
   const quantity = Number(searchParams.get("quantity") || 1);
 
@@ -60,20 +84,11 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [locating, setLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [showLocationWarning, setShowLocationWarning] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setForm((prev) => ({
-      ...prev,
-      fullName:
-        user.fullName ||
-        `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-    }));
-  }, [user]);
+  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const touchedFieldsRef = useRef(new Set());
 
   useEffect(() => {
     (async () => {
@@ -83,16 +98,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         if (rows.length > 0) {
           const def = rows.find((a) => a.isDefault) ?? rows[0];
           setSelectedAddressId(def.id);
-          setForm({
-            fullName: def.fullName,
-            phone: def.phone,
-            line1: def.line1,
-            line2: def.line2 || "",
-            city: def.city,
-            state: def.state,
-            country: def.country,
-            pincode: def.pincode,
-          });
+          setForm(addressToForm(def));
           setAddressMode("saved");
         } else {
           setAddressMode("new");
@@ -115,19 +121,26 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   }
 
   async function handlePay(e) {
-    if (!/^\d{10}$/.test(form.phone)) {
-      setError("Please enter a valid 10-digit phone number");
-      setLoading(false);
-      return;
-    }
     e.preventDefault();
     setError("");
+
+    const validation = validateAddressInput({
+      ...form,
+      fullName: form.fullName || customerName,
+    });
+    if (!validation.isValid) {
+      setFieldErrors(validation.errors);
+      setError(firstAddressError(validation.errors));
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
 
     const addressPayload =
       addressMode === "saved" && selectedAddressId
         ? { addressId: selectedAddressId }
-        : { ...form };
+        : { ...form, fullName: form.fullName || customerName };
 
     try {
       const result = await createBuyNowCheckoutSessionAction({
@@ -170,8 +183,26 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           contact: result.user.contact,
         },
         theme: { color: "#111111" },
-        handler() {
-          router.push("/orders?status=processing");
+        async handler(response) {
+          setLoading(true);
+          setError("");
+
+          const persisted = await verifyRazorpayPaymentAction({
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+
+          if (persisted.ok) {
+            router.push(`/orders/${persisted.orderId}?status=confirmed`);
+            return;
+          }
+
+          setError(
+            persisted.error ||
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+          );
+          setLoading(false);
         },
         modal: { ondismiss: () => setLoading(false) },
       });
@@ -187,43 +218,47 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     }
   }
 
-  const success = async (pos) => {
-    try {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+  function selectSavedAddress(id) {
+    const address = savedAddresses.find((item) => item.id === id);
+    if (!address) return;
 
+    setSelectedAddressId(id);
+    setForm(addressToForm(address));
+    touchedFieldsRef.current.clear();
+    setFieldErrors({});
+    setSelectedCoordinates(null);
+    setShowLocationWarning(false);
+  }
 
-      const addr = await reverseGeocodeAction(lat, lng);
+  function switchToNewAddress() {
+    setAddressMode("new");
+    setSelectedAddressId(null);
+    setForm((previous) => ({
+      ...emptyForm,
+      fullName: previous.fullName || customerName,
+    }));
+    touchedFieldsRef.current.clear();
+    setFieldErrors({});
+    setSelectedCoordinates(null);
+    setShowLocationWarning(false);
+  }
 
-      setAddressMode("new");
-
-      setForm((prev) => ({
-        ...prev,
-        ...addr,
-        country: addr.country || "India",
-      }));
-      setShowLocationWarning(true);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to get address");
-    } finally {
-      setLocating(false);
-    }
-  };
-
-  const erro = (err) => {
-    console.error(err);
-
-    alert(
-      "Location unavailable or permission denied. Please fill the address manually."
+  function handleLocationConfirmed({ address, coordinates }) {
+    setError("");
+    setAddressMode("new");
+    setSelectedAddressId(null);
+    setSelectedCoordinates(coordinates);
+    setForm((previous) =>
+      mergeGeocodedAddress(previous, address, touchedFieldsRef.current),
     );
+    setShowLocationWarning(true);
+  }
 
-    setError(
-      "Location unavailable or permission denied. Please fill the address manually."
-    );
-
-    setLocating(false);
-  };
+  function updateField(key, value) {
+    touchedFieldsRef.current.add(key);
+    setForm((previous) => ({ ...previous, [key]: value }));
+    setFieldErrors((previous) => ({ ...previous, [key]: undefined }));
+  }
 
 
   return (
@@ -234,53 +269,83 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>
         <p className="text-xs text-black/45">Buy Now — cart is not modified</p>
-        {(addressMode === "new" || savedAddresses.length === 0) && (
-          <LoadingButton
-            type="button"
-            loading={locating}
-            onClick={async () => {
-              setLocating(true);
 
-              navigator.geolocation.getCurrentPosition(
-                success,
-                erro,
-                {
-                  enableHighAccuracy: true,
-                  timeout: 15000,
-                  maximumAge: 0,
-                }
-              );
-            }}
-            className="no54123-full border border-black/15 px-4 py-2 text-xs"
-          >
-            Use my location
-          </LoadingButton>
+        {savedAddresses.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-wider text-black/45">
+              Address book
+            </p>
+            {savedAddresses.map((address) => (
+              <label
+                key={address.id}
+                className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${
+                  addressMode === "saved" && selectedAddressId === address.id
+                    ? "border-black bg-white"
+                    : "border-black/10 bg-white/60"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="savedAddress"
+                  className="mt-1"
+                  checked={
+                    addressMode === "saved" && selectedAddressId === address.id
+                  }
+                  onChange={() => {
+                    setAddressMode("saved");
+                    selectSavedAddress(address.id);
+                  }}
+                />
+                <span className="text-sm text-black/80">
+                  <span className="font-medium text-black">
+                    {address.label || "Home"} · {address.fullName}
+                    {address.isDefault ? (
+                      <span className="ml-2 text-xs text-black/45">Default</span>
+                    ) : null}
+                  </span>
+                  <br />
+                  {address.line1}
+                  {address.landmark ? `, ${address.landmark}` : ""}
+                  {address.line2 ? `, ${address.line2}` : ""}
+                  <br />
+                  {address.city}, {address.state} {address.pincode}
+                  <br />
+                  {address.phone}
+                </span>
+              </label>
+            ))}
+            <button
+              type="button"
+              onClick={switchToNewAddress}
+              className="text-xs text-black/60 underline"
+            >
+              Use a different address
+            </button>
+          </div>
+        ) : null}
+
+        {(addressMode === "new" || savedAddresses.length === 0) && (
+          <div className="flex flex-wrap items-center gap-2">
+            <GoogleLocationPicker
+              initialCoordinates={selectedCoordinates}
+              onLocationConfirmed={handleLocationConfirmed}
+            />
+            <span className="text-xs text-black/45">or enter address manually</span>
+          </div>
         )}
         {showLocationWarning && (
           <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            <strong>Location detected.</strong> Your address may not be completely
-            accurate. Please verify and update it before placing your order.
+            The map-selected address has been filled in. Please verify and edit
+            any details before placing your order. Fields you already edited were
+            kept.
           </div>
         )}
         {(addressMode === "new" || savedAddresses.length === 0) && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input required placeholder="Full name" className={inputClass} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
-            <input required type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="Phone" className={inputClass} value={form.phone}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-
-                setForm({
-                  ...form,
-                  phone: value,
-                });
-              }}
-            />
-            <input required placeholder="House No / Flat No / Landmark" className={`${inputClass} sm:col-span-2`} value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} />
-            <input required placeholder="Address line 1" className={`${inputClass} sm:col-span-2`} value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
-            <input required placeholder="City" className={inputClass} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            <input required placeholder="State" className={inputClass} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-            <input required placeholder="PIN code" className={inputClass} value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
-          </div>
+          <AddressFields
+            form={{ ...form, fullName: form.fullName || customerName }}
+            errors={fieldErrors}
+            onChange={updateField}
+          />
         )}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
@@ -298,10 +363,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
           <div className="flex-1">
             <h3 className="font-medium">{lineItem.name}</h3>
-
-            <p className="text-sm text-black/60">
-              Color: {color}
-            </p>
 
             <p className="text-sm text-black/60">
               Size: {size}
