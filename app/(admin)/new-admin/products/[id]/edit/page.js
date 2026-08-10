@@ -4,11 +4,13 @@ import NewAdminProductForm from "@/components/new-admin/products/product-form";
 import { PageHeader } from "@/components/new-admin/ui";
 import { productAdminService } from "@/services/product-admin-service";
 import { prisma } from "@/lib/db";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const metadata = { title: "Edit product" };
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminEditProductPage({ params }) {
+  await requireNewAdminPage();
   const { id } = await params;
   const [product, productRecord] = await Promise.all([
     productAdminService.getForEdit(id),

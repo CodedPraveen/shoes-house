@@ -5,11 +5,13 @@ import { getProductsPage } from "@/services/new-admin-service";
 import { formatPrice } from "@/lib/format-price";
 import { EmptyState, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";
 import Pagination from "@/components/new-admin/pagination";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminProductsPage({ searchParams }) {
+  await requireNewAdminPage();
   const params = await searchParams;
   const data = await getProductsPage(params);
   return (

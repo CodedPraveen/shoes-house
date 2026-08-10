@@ -1,23 +1,30 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { orderService } from "@/services/order-service";
 import { userService } from "@/services/user-service";
 import { isAdminUser } from "@/lib/auth";
-import { currentUser } from "@clerk/nextjs/server";
 import { syncTracking } from "@/services/order-service";
 
 export async function GET(_request, { params }) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const { orderId } = await params;
-  // const order = await orderService.getById(orderId);
-  const order = await syncTracking(orderId);
+  if (!/^[A-Za-z0-9_-]{10,64}$/.test(orderId)) {
+    return NextResponse.json({ error: "Invalid order id" }, { status: 400 });
+  }
+
+  const [clerkUser, dbUser, order] = await Promise.all([
+    currentUser(),
+    userService.getByClerkId(clerkId),
+    orderService.getById(orderId),
+  ]);
 
   if (!order) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  const { userId: clerkId } = await auth();
-  const clerkUser = await currentUser();
-  const dbUser = clerkId ? await userService.getByClerkId(clerkId) : null;
 
   const isOwner = dbUser?.id === order.userId;
   const isAdmin = isAdminUser(clerkUser);
@@ -26,5 +33,5 @@ export async function GET(_request, { params }) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json(order);
+  return NextResponse.json(await syncTracking(orderId));
 }

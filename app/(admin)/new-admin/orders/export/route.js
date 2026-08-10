@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
+import { getAdminErrorStatus, requireAdmin } from "@/lib/admin-auth";
 import { getOrdersForExport } from "@/services/new-admin-service";
 
 function csvEscape(value) {
@@ -10,8 +10,19 @@ function csvEscape(value) {
 export async function GET(request) {
   try {
     await requireAdmin();
-  } catch {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch (error) {
+    const status = getAdminErrorStatus(error);
+    return NextResponse.json(
+      {
+        error:
+          status === 401
+            ? "Authentication required"
+            : status === 403
+              ? "Forbidden"
+              : "Unable to authorize request",
+      },
+      { status },
+    );
   }
   const params = Object.fromEntries(request.nextUrl.searchParams.entries());
   const orders = await getOrdersForExport(params);

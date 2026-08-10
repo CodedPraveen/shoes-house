@@ -44,7 +44,7 @@ export default function OrderList({ orders }) {
       {selected.length ? <div className="flex items-center justify-between rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm"><span>{selected.length} selected</span><button type="button" onClick={() => exportSelected(selectedOrders)} className="inline-flex items-center gap-2 font-medium text-indigo-700"><Download className="size-4" />Export selected</button></div> : null}
 
       <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-        <table className="w-full text-left text-sm">
+        <table className="w-full h-64 text-left text-sm">
           <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3"><input aria-label="Select all visible orders" type="checkbox" checked={allSelected} onChange={() => setSelected(allSelected ? [] : orders.map((order) => order.id))} /></th><th className="px-4 py-3">Order</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Items</th><th className="px-4 py-3">Payment</th><th className="px-4 py-3">Amount</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Tracking</th><th className="px-4 py-3">Actions</th></tr></thead>
           <tbody className="divide-y divide-slate-100">
             {orders.map((order) => (
@@ -58,7 +58,9 @@ export default function OrderList({ orders }) {
                 <td className="px-4 py-4 font-semibold">{formatPrice(order.total)}</td>
                 <td className="px-4 py-4"><StatusBadge tone={toneFor(order.workflowLabel)}>{order.workflowLabel}</StatusBadge></td>
                 <td className="px-4 py-4"><p className="max-w-28 truncate text-xs font-medium">{order.trackingNumber || "Not added"}</p><p className="mt-1 text-xs text-slate-400">{order.trackingStatus || "—"}</p></td>
-                <td className="px-4 py-4"><details className="relative"><summary className="cursor-pointer list-none rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium">Manage</summary><div className="absolute right-0 z-10 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"><div className="mb-3 flex gap-3"><Link href={`/new-admin/orders/${order.id}`} className="text-xs font-medium text-indigo-600">View details</Link><a href={`/api/orders/${order.id}/invoice`} target="_blank" rel="noreferrer" className="text-xs font-medium text-slate-600">Invoice</a></div><OrderActions order={order} compact /></div></details></td>
+                <td className="px-4 py-4"><details className="relative"><summary className="cursor-pointer list-none rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium">Manage</summary><div className="absolute right-0 z-10 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"><div className="mb-3 flex gap-3">
+                  <Link href={`/new-admin/orders/${order.id}`} className="text-xs font-medium text-indigo-600 bg-red-900">View details</Link>
+                  <a href={`/api/orders/${order.id}/invoice`} target="_blank" rel="noreferrer" className="text-xs font-medium text-slate-600">Invoice</a></div><OrderActions order={order} compact /></div></details></td>
               </tr>
             ))}
           </tbody>
