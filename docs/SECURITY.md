@@ -36,6 +36,8 @@ Never accept an arbitrary customer/admin `userId` when the server can derive it.
 - Cloudinary API credentials remain server-only.
 - New-admin accepts JPG, PNG, and WEBP files up to 10 MB each.
 - Newly introduced stored URLs must be HTTPS Cloudinary delivery URLs for the configured cloud.
+- Storefront lists exclude products containing missing or unsupported images; new-admin retains and reports those records for repair.
+- `SafeImage` validates before rendering `next/image` and switches to a local fallback after remote request failure.
 - Failed product saves attempt to destroy newly uploaded assets.
 - Successful image removal currently soft-deletes the database row but does not destroy the Cloudinary asset.
 

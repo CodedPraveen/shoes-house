@@ -11,7 +11,7 @@ function stockStatus(stock) {
 }
 
 export default async function AdminInventoryPage() {
-  const all = await productService.getAll();
+  const all = await productService.getAll({ includeInvalid: true });
   const lowStock = all.filter((p) => (p.stock ?? 0) <= 5);
 
   return (

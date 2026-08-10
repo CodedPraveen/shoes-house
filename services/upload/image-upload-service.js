@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { validateProductImageUrl } from "@/lib/product-image";
 
 function isConfigured() {
   return Boolean(
@@ -45,12 +46,21 @@ export const imageUploadService = {
         },
         (err, result) => {
           if (err) reject(err);
-          else
+          else {
+            const validation = validateProductImageUrl(result?.secure_url);
+            if (!validation.isValid) {
+              resolve({
+                ok: false,
+                message: `Cloudinary returned an invalid product image URL: ${validation.reason}`,
+              });
+              return;
+            }
             resolve({
               ok: true,
-              url: result.secure_url,
+              url: validation.url,
               publicId: result.public_id,
             });
+          }
         },
       );
       stream.end(buffer);
@@ -69,13 +79,20 @@ export const imageUploadService = {
       };
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const result = await this.uploadBuffer(buffer, {
-      folder: options.folder,
-      fileName: file.name || "upload",
-    });
-    return result;
+    if (typeof file.arrayBuffer !== "function") {
+      return { ok: false, message: "Invalid upload file" };
+    }
+
+    try {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      return await this.uploadBuffer(buffer, {
+        folder: options.folder,
+        fileName: file.name || "upload",
+      });
+    } catch (error) {
+      return { ok: false, message: error.message || "Cloudinary upload failed" };
+    }
   },
 
   async uploadMany(files, options) {

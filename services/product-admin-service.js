@@ -3,6 +3,7 @@ import { productInclude } from "@/lib/product-include";
 import { mapProduct } from "@/lib/mappers/product-mapper";
 import { ensureUniqueProductSlug, slugify } from "@/lib/slugify";
 import { notDeleted } from "@/lib/prisma-helpers";
+import { validateProductImageUrl } from "@/lib/product-image";
 
 function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   const rows = [];
@@ -21,26 +22,15 @@ function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   return rows;
 }
 
-function isCloudinaryProductUrl(value) {
-  try {
-    const url = new URL(String(value));
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    return (
-      url.protocol === "https:" &&
-      url.hostname === "res.cloudinary.com" &&
-      (!cloudName || url.pathname.startsWith(`/${cloudName}/image/upload/`))
-    );
-  } catch {
-    return false;
-  }
-}
-
 function normalizeImages(imageUrls = [], allowedExistingUrls = new Set()) {
   return imageUrls
     .filter(Boolean)
     .map((value, index) => {
       const url = String(value).trim();
-      if (!allowedExistingUrls.has(url) && !isCloudinaryProductUrl(url)) {
+      if (
+        !allowedExistingUrls.has(url) &&
+        !validateProductImageUrl(url).isValid
+      ) {
         throw new Error("Product images must be uploaded through Cloudinary");
       }
       return {

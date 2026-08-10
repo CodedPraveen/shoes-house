@@ -20,6 +20,7 @@ Status reflects source code inspected on 2026-08-10.
 - [x] Protected `/new-admin` operations system.
 - [x] Server-side Cloudinary device uploads for new-admin product images.
 - [x] Product image ordering and edit preservation.
+- [x] Central product-image validation, storefront filtering, SafeImage fallback, and new-admin failure reporting.
 - [x] India Post tracking through AfterShip, including webhook and manual refresh.
 - [x] Newsletter subscription and admin subscriber visibility.
 - [x] Searchable developer-facing `/docs` web route.

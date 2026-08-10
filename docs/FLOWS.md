@@ -19,6 +19,8 @@ The first image has `sortOrder = 0` and is the primary image. The current mapper
 
 On edit, existing image URLs are retained by default. Explicitly removed records are soft-deleted, retained records keep their IDs, and new local files append after retained images.
 
+Customer product lists validate every product image before rendering. A product with a missing, malformed, non-HTTPS, or non-Cloudinary image is omitted from storefront lists and reported in new-admin as needing attention. `SafeImage` validates before calling `next/image` and falls back safely if a permitted source later fails to load.
+
 ## Cart and Buy Now
 
 ```text

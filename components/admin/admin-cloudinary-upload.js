@@ -1,14 +1,25 @@
 "use client";
 
-import Image from "next/image";
 import { useRef, useState } from "react";
 import { uploadProductImageAction } from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import SafeImage from "@/components/ui/safe-image";
+import { validateProductImageUrl } from "@/lib/product-image";
 
 export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  function appendCloudinaryUrl(url) {
+    const validation = validateProductImageUrl(url);
+    if (!validation.isValid) {
+      setError(validation.reason || "Cloudinary returned an invalid image URL");
+      return false;
+    }
+    onChange([...imageUrls, validation.url]);
+    return true;
+  }
 
   async function handleFile(e) {
     const file = e.target.files?.[0];
@@ -23,7 +34,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         setError(result.error || "Upload failed");
         return;
       }
-      onChange([...imageUrls, result.url]);
+      appendCloudinaryUrl(result.url);
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
@@ -57,7 +68,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           return;
         }
         if (result?.event === "success") {
-          onChange([...imageUrls, result.info.secure_url]);
+          appendCloudinaryUrl(result.info.secure_url);
         }
       },
     );
@@ -100,7 +111,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       <ul className="flex flex-wrap gap-2">
         {imageUrls.map((url) => (
           <li key={url} className="relative">
-            <Image
+            <SafeImage
               width={64}
               height={64}
               src={url}
