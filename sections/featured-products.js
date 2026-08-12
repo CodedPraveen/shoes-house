@@ -7,16 +7,7 @@
   // export default async function FeaturedProducts() {
   //   const products = await productService.getBestSellers(6);
   export default function FeaturedProducts({ products }) {
-    console.log("[PRODUCT DEBUG] FEATURED PRODUCTS:", {
-      count: products?.length,
-      products: products?.map((product) => ({
-        id: product.id,
-        name: product.name,
-        image: product.image,
-        images: product.images,
-        imageValidation: product.imageValidation,
-      })),
-    });
+   
     return (
       <SectionReveal className="px-0 py-1 sm:px-8 lg:py-10">
         <div className="mx-auto w-full max-w-[1400px] space-y-10">
