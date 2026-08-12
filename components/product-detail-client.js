@@ -64,7 +64,7 @@ export default function ProductDetailClient({ product }) {
     <div className="mx-auto w-full max-w-[1400] space-y-20 px-5 py-24 sm:px-8">
       <div className="grid gap-12 lg:grid-cols-2">
 
-        <ProductGallery images={optimizeCloudinaryImage(product.images)} name={product.name} />
+        <ProductGallery images={(product.images || []).map(optimizeCloudinaryImage)} name={product.name} />
 
         <div className="space-y-8">
           <div className="space-y-3">

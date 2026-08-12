@@ -4,6 +4,7 @@ import { productInclude } from "@/lib/product-include";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { prisma } from "@/lib/db";
 import { getCache, setCache } from "@/lib/redis/cache";
+import { validateProductImages } from "@/lib/product-image";
 
 import { activeProductWhere } from "@/lib/product-where";
 
@@ -19,22 +20,37 @@ async function fetchAllRaw() {
 }
 
 const PRODUCT_CACHE_TTL = 60 * 5;
+const PRODUCT_CACHE_VERSION = "product-images-v2";
+
+function mapCustomerProduct(row) {
+  return mapProduct(row);
+}
 
 async function remember(key, callback, ttl = PRODUCT_CACHE_TTL) {
-  const cached = await getCache(key);
+  const cacheKey = `${PRODUCT_CACHE_VERSION}:${key}`;
+  const cached = await getCache(cacheKey);
 
   if (cached) return cached;
 
   const data = await callback();
 
-  setCache(key, data, ttl).catch(() => { });
+  setCache(cacheKey, data, ttl).catch(() => { });
   return data;
 }
 
 export const productService = {
-  async getAll() {
+  async getAll({ includeInvalid = false } = {}) {
     const rows = await fetchAllRaw();
-    return mapProducts(rows);
+    console.log("[PRODUCT DEBUG] product-service Mapped products:", {
+      count: rows?.length,
+      products: rows?.map((p) => ({
+        id: p.id,
+        name: p.name,
+        image: p.image,
+        images: p.images,
+      })),
+    });
+    return mapProducts(rows, { includeInvalid });
   },
 
   async getById(id) {
@@ -42,7 +58,7 @@ export const productService = {
       where: { id, ...notDeleted },
       include: productInclude,
     });
-    return row ? mapProduct(row) : null;
+    return row ? mapCustomerProduct(row) : null;
   },
 
   async getBySlug(slug) {
@@ -52,7 +68,7 @@ export const productService = {
         include: productInclude,
       });
 
-      return row ? mapProduct(row) : null;
+      return row ? mapCustomerProduct(row) : null;
     });
   },
 
@@ -88,10 +104,21 @@ export const productService = {
           orderBy: {
             createdAt: "desc",
           },
-          take: limit,
         });
 
-        return mapProducts(rows);
+        const products = mapProducts(rows, {
+          includeInvalid: true,
+        });
+
+        const validProducts = products.filter(
+          (product) => product.imageValidation?.isValid,
+        );
+
+        const invalidProducts = products.filter(
+          (product) => !product.imageValidation?.isValid,
+        );
+
+        return [...validProducts, ...invalidProducts].slice(0, limit);
       },
     );
   },
@@ -110,15 +137,26 @@ export const productService = {
           orderBy: {
             purchaseCount: "desc",
           },
-          take: limit,
         });
 
-        return mapProducts(rows);
+        const products = mapProducts(rows, {
+          includeInvalid: true,
+        });
+
+        const validProducts = products.filter(
+          (product) => product.imageValidation?.isValid,
+        );
+
+        const invalidProducts = products.filter(
+          (product) => !product.imageValidation?.isValid,
+        );
+
+        return [...validProducts, ...invalidProducts].slice(0, limit);
       },
     );
   },
 
- async getBestSellers(limit = 8, collection) {
+  async getBestSellers(limit = 8, collection) {
     return remember(
       `products:bestsellers:${collection ?? "all"}:${limit}`,
       async () => {
@@ -131,11 +169,24 @@ export const productService = {
           orderBy: {
             purchaseCount: "desc",
           },
-          take: limit,
         });
 
-        return mapProducts(rows);
-      }
+        const products = mapProducts(rows, {
+          includeInvalid: true,
+        });
+
+        const validProducts = products.filter(
+          (product) => product.imageValidation?.isValid,
+        );
+
+        const invalidProducts = products.filter(
+          (product) => !product.imageValidation?.isValid,
+        );
+
+        // Prefer products with valid images.
+        // Keep invalid products only as fallback if there are not enough valid ones.
+        return [...validProducts, ...invalidProducts].slice(0, limit);
+      },
     );
   },
 
@@ -192,10 +243,20 @@ export const productService = {
   },
 
   async getAllSlugs() {
-    return prisma.product.findMany({
+    const rows = await prisma.product.findMany({
       where: notDeleted,
-      select: { slug: true },
+      select: {
+        slug: true,
+        images: {
+          where: { deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+          select: { url: true },
+        },
+      },
     });
+    return rows
+      .filter((product) => validateProductImages(product.images).isValid)
+      .map(({ slug }) => ({ slug }));
   },
 
   /** Lightweight catalog for search modal (no variants/colors join) */
@@ -230,6 +291,7 @@ export const productService = {
     return rows.map((p) => {
       const primary = p.images.find((i) => !i.isHover) ?? p.images[0];
       const hover = p.images.find((i) => i.isHover) ?? p.images[1] ?? primary;
+      const imageValidation = validateProductImages(p.images);
       return {
         id: p.id,
         slug: p.slug,
@@ -247,6 +309,7 @@ export const productService = {
         image: primary?.url ?? "",
         hoverImage: hover?.url ?? primary?.url ?? "",
         images: p.images.map((i) => i.url),
+        imageValidation,
         sizes: p.sizes.map((s) => s.size).sort((a, b) => a - b),
         colors: p.colors.map((c) => ({
           id: c.colorKey,
@@ -254,10 +317,10 @@ export const productService = {
           hex: c.hex,
         })),
       };
-    });
+    }).filter((product) => product.imageValidation.isValid);
   },
 
- async getSimilarBySlug(slug, limit = 4) {
+  async getSimilarBySlug(slug, limit = 4) {
 
     const product = await this.getBySlug(slug);
 
@@ -338,12 +401,10 @@ export const productService = {
     );
   },
 
-   async getProducts({ collection, category }) {
-
+  async getProducts({ collection, category }) {
     return remember(
       `products:list:${collection ?? "all"}:${category ?? "all"}`,
       async () => {
-
         const where = {
           ...activeProductWhere,
         };
@@ -373,7 +434,38 @@ export const productService = {
           },
         });
 
-        return mapProducts(rows);
+        console.log("[PRODUCT DEBUG] product-service RAW products:", {
+          count: rows.length,
+          products: rows.map((p) => ({
+            id: p.id,
+            name: p.name,
+            images: p.images?.map((image) => ({
+              url: image.url,
+              isHover: image.isHover,
+            })),
+          })),
+        });
+
+        const products = mapProducts(rows, {
+          includeInvalid: true,
+        });
+
+        console.log("[PRODUCT DEBUG] product-service MAPPED products:", {
+          count: products.length,
+          invalidCount: products.filter(
+            (product) => !product.imageValidation.isValid,
+          ).length,
+          products: products.map((p) => ({
+            id: p.id,
+            name: p.name,
+            image: p.image,
+            hoverImage: p.hoverImage,
+            images: p.images,
+            imageValidation: p.imageValidation,
+          })),
+        });
+
+        return products;
       },
     );
   },
@@ -415,4 +507,3 @@ export const productService = {
   //   });
   // },
 };
-

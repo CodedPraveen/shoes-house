@@ -3,6 +3,7 @@ import { productInclude } from "@/lib/product-include";
 import { mapProduct } from "@/lib/mappers/product-mapper";
 import { ensureUniqueProductSlug, slugify } from "@/lib/slugify";
 import { notDeleted } from "@/lib/prisma-helpers";
+import { validateProductImageUrl } from "@/lib/product-image";
 
 function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   const rows = [];
@@ -21,15 +22,24 @@ function buildVariantRows(slug, colors, sizes, stockPerVariant) {
   return rows;
 }
 
-function normalizeImages(imageUrls = []) {
+function normalizeImages(imageUrls = [], allowedExistingUrls = new Set()) {
   return imageUrls
     .filter(Boolean)
-    .map((url, index) => ({
-      url: String(url).trim(),
-      alt: null,
-      sortOrder: index,
-      isHover: index === 1,
-    }));
+    .map((value, index) => {
+      const url = String(value).trim();
+      if (
+        !allowedExistingUrls.has(url) &&
+        !validateProductImageUrl(url).isValid
+      ) {
+        throw new Error("Product images must be uploaded through Cloudinary");
+      }
+      return {
+        url,
+        alt: null,
+        sortOrder: index,
+        isHover: index === 1,
+      };
+    });
 }
 
 export const productAdminService = {
@@ -158,7 +168,10 @@ export const productAdminService = {
   async update(id, input) {
     const existing = await prisma.product.findFirst({
       where: { id, ...notDeleted },
-      include: { variants: true },
+      include: {
+        variants: true,
+        images: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
+      },
     });
     if (!existing) throw new Error("Product not found");
 
@@ -184,10 +197,47 @@ export const productAdminService = {
       input.stockPerVariant ?? 0,
     );
     const totalStock = variantRows.reduce((s, v) => s + v.stock, 0);
-    const images = normalizeImages(input.imageUrls);
+    const images = normalizeImages(
+      input.imageUrls,
+      new Set(existing.images.map((image) => image.url)),
+    );
+
+    if (!images.length) {
+      throw new Error("At least one product image is required");
+    }
 
     await prisma.$transaction(async (tx) => {
-      await tx.productImage.deleteMany({ where: { productId: id } });
+      const availableImages = new Map();
+      for (const image of existing.images) {
+        const matches = availableImages.get(image.url) || [];
+        matches.push(image);
+        availableImages.set(image.url, matches);
+      }
+      const retainedImageIds = [];
+      for (const image of images) {
+        const matches = availableImages.get(image.url) || [];
+        const existingImage = matches.shift();
+        if (existingImage) {
+          retainedImageIds.push(existingImage.id);
+          await tx.productImage.update({
+            where: { id: existingImage.id },
+            data: { alt: image.alt, sortOrder: image.sortOrder, isHover: image.isHover },
+          });
+        } else {
+          const createdImage = await tx.productImage.create({
+            data: { productId: id, ...image },
+          });
+          retainedImageIds.push(createdImage.id);
+        }
+      }
+      await tx.productImage.updateMany({
+        where: {
+          productId: id,
+          deletedAt: null,
+          ...(retainedImageIds.length ? { id: { notIn: retainedImageIds } } : {}),
+        },
+        data: { deletedAt: new Date() },
+      });
       await tx.productColor.deleteMany({ where: { productId: id } });
       await tx.productSize.deleteMany({ where: { productId: id } });
       await tx.productVariant.deleteMany({ where: { productId: id } });
@@ -222,7 +272,6 @@ export const productAdminService = {
           returnPolicy: input.returnPolicy || null,
           tags: input.tags || [],
           categoryId: category.id,
-          images: { create: images },
           colors: {
             create: colors.map((c) => ({
               colorKey: c.colorKey,

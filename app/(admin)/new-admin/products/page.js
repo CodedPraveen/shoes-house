@@ -5,11 +5,13 @@ import { getProductsPage } from "@/services/new-admin-service";
 import { formatPrice } from "@/lib/format-price";
 import { EmptyState, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";
 import Pagination from "@/components/new-admin/pagination";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminProductsPage({ searchParams }) {
+  await requireNewAdminPage();
   const params = await searchParams;
   const data = await getProductsPage(params);
   return (
@@ -22,6 +24,30 @@ export default async function NewAdminProductsPage({ searchParams }) {
         <select name="stock" defaultValue={params.stock ?? ""} className={inputClass}><option value="">All stock</option><option value="in">In stock</option><option value="low">Low stock</option><option value="out">Out of stock</option></select>
         <button className="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white">Apply</button>
       </form>
+
+      {data.failedProducts.length ? (
+        <section className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 px-4 py-4 sm:px-5">
+            <div>
+              <h2 className="font-semibold text-amber-950">Needs Attention</h2>
+              <p className="mt-1 text-sm text-amber-800">These products are hidden from storefront lists until their images are fixed.</p>
+            </div>
+            <StatusBadge tone="amber">{data.failedProducts.length} failed</StatusBadge>
+          </div>
+          <div className="divide-y divide-amber-200">
+            {data.failedProducts.map((product) => (
+              <div key={product.id} className="grid gap-3 px-4 py-4 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-center sm:px-5">
+                <div>
+                  <p className="font-semibold text-amber-950">{product.name}</p>
+                  <p className="mt-1 text-xs text-amber-700">{product.slug}</p>
+                </div>
+                <p className="text-amber-900">{product.imageValidation.reason}</p>
+                <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">Fix images</Link>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {data.products.length ? (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

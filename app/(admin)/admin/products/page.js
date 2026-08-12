@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Products | Admin | Post Mart" };
 
 export default async function AdminProductsPage() {
-  const products = await productService.getAll();
+  const products = await productService.getAll({ includeInvalid: true });
 
   return (
     <div className="space-y-8">

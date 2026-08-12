@@ -5,11 +5,13 @@ import OrderActions from "@/components/new-admin/orders/order-actions";
 import { PageHeader, StatusBadge } from "@/components/new-admin/ui";
 import { getOrderDetail } from "@/services/new-admin-service";
 import { formatPrice } from "@/lib/format-price";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Order details" };
 
 export default async function NewAdminOrderDetailPage({ params }) {
+  await requireNewAdminPage();
   const { id } = await params;
   const order = await getOrderDetail(id);
   if (!order) notFound();

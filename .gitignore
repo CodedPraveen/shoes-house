@@ -52,3 +52,5 @@ prisma/migrations/test_init
 public/svg/
 public/shoes/home-banner-mobile.png
 public/shoes/*
+.vercel
+.env*

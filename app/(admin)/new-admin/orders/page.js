@@ -5,6 +5,7 @@ import { formatPrice } from "@/lib/format-price";
 import { EmptyState, MetricCard, PageHeader, inputClass } from "@/components/new-admin/ui";
 import OrderList from "@/components/new-admin/orders/order-list";
 import Pagination from "@/components/new-admin/pagination";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const metadata = { title: "Orders" };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ function queryString(params, overrides = {}) {
 }
 
 export default async function NewAdminOrdersPage({ searchParams }) {
+  await requireNewAdminPage();
   const params = await searchParams;
   const data = await getOrdersPage(params);
   const quickFilters = [

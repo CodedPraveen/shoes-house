@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import SafeImage from "@/components/ui/safe-image";
 
 export default function CartPage() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function CartPage() {
                     key={item.id}
                     className="flex flex-wrap gap-5 no54123-3xl border border-black/10 bg-white p-4 sm:flex-nowrap"
                   >
-                    <Image
+                    <SafeImage
                       width={112}
                       height={112}
                       src={item.image}

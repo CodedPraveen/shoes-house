@@ -8,7 +8,7 @@ export async function GET() {
   try {
     await requireAdmin();
     await assertRateLimit({ prefix: "admin-api-products", limit: 60, windowMs: 60_000 });
-    const products = await productService.getAll();
+    const products = await productService.getAll({ includeInvalid: true });
     return NextResponse.json({ products });
   } catch (err) {
     const status = err.message === "Forbidden" ? 403 : 500;

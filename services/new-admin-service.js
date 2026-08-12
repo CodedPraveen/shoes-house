@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { isCodMethod, isRealizedOrder, serializeOrder } from "@/lib/new-admin/order-utils";
+import { validateProductImages } from "@/lib/product-image";
 
 const COD_PAYMENT_MATCH = {
   OR: [
@@ -299,18 +300,50 @@ export async function getProductsPage(params = {}) {
     ...(params.category ? { category: { slug: params.category } } : {}),
     ...(stock === "out" ? { stock: 0 } : stock === "low" ? { stock: { gt: 0, lte: 5 } } : stock === "in" ? { stock: { gt: 5 } } : {}),
   };
-  const [products, total, categories] = await Promise.all([
+  const [products, total, categories, imageCandidates] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { category: { select: { name: true, slug: true } }, images: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" }, take: 1 }, _count: { select: { variants: true } } },
+      include: { category: { select: { name: true, slug: true } }, images: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } }, _count: { select: { variants: true } } },
     }),
     prisma.product.count({ where }),
     prisma.category.findMany({ where: { deletedAt: null, parentId: { not: null } }, orderBy: { name: "asc" }, select: { name: true, slug: true, collection: true } }),
+    prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        images: {
+          where: { deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+          select: { url: true },
+        },
+      },
+    }),
   ]);
-  return { products, categories, total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
+  const validatedProducts = products.map((product) => ({
+    ...product,
+    imageValidation: validateProductImages(product.images),
+  }));
+  const failedProducts = imageCandidates
+    .map((product) => ({
+      ...product,
+      imageValidation: validateProductImages(product.images),
+    }))
+    .filter((product) => !product.imageValidation.isValid);
+  return {
+    products: validatedProducts.filter((product) => product.imageValidation.isValid),
+    failedProducts,
+    categories,
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function getInventoryPage(params = {}) {

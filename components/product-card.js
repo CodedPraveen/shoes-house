@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
@@ -11,6 +10,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import SafeImage from "./ui/safe-image";
+import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -53,22 +53,22 @@ function ProductCard({
     requireAuth(e, () => toggleWishlist(product.id));
   };
 
-  const optimizedImage = product.image.replace(
-    "/upload/",
-    "/upload/f_auto,q_auto/"
-  );
+  const optimizedImage = optimizeCloudinaryImage(product.image);
 
   return (
     <Link href={`/product/${product.slug}`} className="block">
       <article className="group no54123-0 sm:no54123-3xl border border-black/5 bg-white  shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
         <div
           className="relative overflow-hidden sm:no54123-2xl bg-zinc-100"
-          style={{
-            backgroundImage: `url(${product.hoverImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
         >
+
+          <SafeImage
+            src={product.hoverImage}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
+          />
 
           {showRank && product.rank && <RankingBadge rank={product.rank} />}
           {showNewBadge && product.isNew && (
@@ -77,7 +77,6 @@ function ProductCard({
             </span>
           )}
           <SafeImage
-            // src={product.image}
             src={optimizedImage}
             alt={product.name}
             width={400}
@@ -140,6 +139,21 @@ function ProductCard({
   );
 }
 
+// export default memo(ProductCard, (prevProps, nextProps) => {
+//   console.log("[PRODUCT DEBUG] PRODUCT CARD:", {
+//   id: product?.id,
+//   name: product?.name,
+//   image: product?.image,
+//   hoverImage: product?.hoverImage,
+//   images: product?.images,
+//   imageValidation: product?.imageValidation,
+// });
+//   return (
+//     prevProps.product.id === nextProps.product.id &&
+//     prevProps.showRank === nextProps.showRank &&
+//     prevProps.showNewBadge === nextProps.showNewBadge
+//   );
+// });
 export default memo(ProductCard, (prevProps, nextProps) => {
   return (
     prevProps.product.id === nextProps.product.id &&
@@ -147,4 +161,3 @@ export default memo(ProductCard, (prevProps, nextProps) => {
     prevProps.showNewBadge === nextProps.showNewBadge
   );
 });
-

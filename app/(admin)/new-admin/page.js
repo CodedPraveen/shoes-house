@@ -3,11 +3,13 @@ import { AlertTriangle, ArrowRight, Boxes, PackagePlus, ShoppingBag } from "luci
 import { getDashboardData } from "@/services/new-admin-service";
 import { formatPrice } from "@/lib/format-price";
 import { EmptyState, MetricCard, PageHeader, StatusBadge } from "@/components/new-admin/ui";
+import { requireNewAdminPage } from "@/lib/admin-auth";
 
 export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminDashboardPage() {
+  await requireNewAdminPage();
   const data = await getDashboardData();
   const attentionItems = [
     { label: "Orders awaiting call confirmation", value: data.attention.waitingConfirmation, href: "/new-admin/orders?workflow=confirm" },

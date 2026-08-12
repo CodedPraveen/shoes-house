@@ -78,6 +78,39 @@ export async function uploadProductImageAction(formData) {
   return { ok: true, url: result.url, publicId: result.publicId };
 }
 
+export async function uploadNewAdminProductImageAction(formData) {
+  await requireAdmin();
+  await assertRateLimit({ prefix: "new-admin-upload", limit: 40, windowMs: 60_000 });
+
+  const file = formData.get("file");
+  const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!file || !supportedTypes.has(file.type)) {
+    return { ok: false, error: "Choose a JPG, PNG, or WEBP image." };
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return { ok: false, error: "Each product image must be 10 MB or smaller." };
+  }
+  const result = await imageUploadService.uploadFile(file, {
+    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products",
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: result.message || "Upload failed" };
+  }
+
+  return { ok: true, url: result.url, publicId: result.publicId };
+}
+
+export async function discardProductImageUploadsAction(publicIds) {
+  await requireAdmin();
+  const folder = (process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products").replace(/^\/+|\/+$/g, "");
+  const ids = Array.from(publicIds || [])
+    .filter((value) => typeof value === "string" && value.startsWith(`${folder}/`))
+    .slice(0, 40);
+  await Promise.allSettled(ids.map((publicId) => imageUploadService.delete(publicId)));
+  return { ok: true };
+}
+
 export async function getCloudinaryConfigAction() {
   await requireAdmin();
   return {
