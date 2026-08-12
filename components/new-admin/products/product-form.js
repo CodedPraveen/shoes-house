@@ -2,31 +2,44 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
+
 import {
   createProductAction,
   deleteProductAction,
-  discardProductImageUploadsAction,
+  getCloudinaryConfigAction,
   getSubCategoriesAction,
   updateProductAction,
-  uploadNewAdminProductImageAction,
 } from "@/actions/admin-product-actions";
+
+import AdminCloudinaryUpload from "@/components/admin/admin-cloudinary-upload";
+import LoadingButton from "@/components/ui/loading-button";
 import { buttonClass, inputClass } from "@/components/new-admin/ui";
 import { COLOR_FILTERS } from "@/lib/constants";
 import { slugify } from "@/lib/slugify-text";
 
-const defaultColors = COLOR_FILTERS.slice(0, 3).map((color) => ({ colorKey: color.id, label: color.label, hex: color.hex }));
+const MAX_PRODUCT_IMAGES = 8;
 
-export default function NewAdminProductForm({ mode = "create", productId, initial, collections, subCategories }) {
+const defaultColors = COLOR_FILTERS.slice(0, 3).map((color) => ({
+  colorKey: color.id,
+  label: color.label,
+  hex: color.hex,
+}));
 
+export default function NewAdminProductForm({
+  mode = "create",
+  productId,
+  initial,
+  collections,
+  subCategories,
+}) {
   const router = useRouter();
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [existingImageUrls, setExistingImageUrls] = useState(
-    initial?.images ?? [],
-  );
+  const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
   const [categories, setCategories] = useState(subCategories ?? []);
+
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     slug: initial?.slug ?? "",
@@ -35,253 +48,605 @@ export default function NewAdminProductForm({ mode = "create", productId, initia
     price: initial?.price ?? "",
     stockPerVariant: initial?.variantRecords?.[0]?.stock ?? 0,
     sizes: initial?.sizes?.join(", ") ?? "38, 40, 42, 44",
-    collection: initial?.collection ?? collections?.[0]?.collection ?? "SHOES",
-    categorySlug: initial?.category ?? subCategories?.[0]?.slug ?? "",
+
+    collection:
+      initial?.collection ??
+      collections?.[0]?.collection ??
+      "SHOES",
+
+    categorySlug:
+      initial?.category ??
+      subCategories?.[0]?.slug ??
+      "",
+
     isNew: initial?.isNew ?? false,
     isTrending: initial?.isTrending ?? false,
-    colors: initial?.colorRecords?.length ? initial.colorRecords.map((color) => ({ colorKey: color.colorKey, label: color.label, hex: color.hex })) : defaultColors,
+
+    imageUrls: initial?.images ?? [],
+
+    colors: initial?.colorRecords?.length
+      ? initial.colorRecords.map((color) => ({
+        colorKey: color.colorKey,
+        label: color.label,
+        hex: color.hex,
+      }))
+      : defaultColors,
   });
 
-  function handleImageUpload(event) {
-    const files = Array.from(event.target.files || []);
-
-    if (!files.length) return;
-
-    setImageFiles((current) => [...current, ...files]);
-
-    const previews = files.map((file) => ({
-      id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
-      name: file.name,
-      url: URL.createObjectURL(file),
-    }));
-
-    setImagePreviews((current) => [...current, ...previews]);
-
-    event.target.value = "";
-  }
-
+  /*
+   * Load Cloudinary configuration.
+   *
+   * This only loads public widget configuration.
+   * The Cloudinary API secret stays on the server.
+   */
   useEffect(() => {
     let active = true;
-    getSubCategoriesAction(form.collection).then((items) => {
-      if (!active) return;
-      setCategories(items);
-      setForm((current) => ({ ...current, categorySlug: items.some((item) => item.slug === current.categorySlug) ? current.categorySlug : items[0]?.slug ?? "" }));
-    }).catch(() => setError("Unable to load subcategories."));
-    return () => { active = false; };
+
+    async function loadCloudinaryConfig() {
+      try {
+        const config = await getCloudinaryConfigAction();
+
+        if (active) {
+          setCloudinaryConfig(config);
+        }
+      } catch (configError) {
+        console.error(
+          "[new-admin] Cloudinary config failed:",
+          configError,
+        );
+
+        if (active) {
+          setCloudinaryConfig({
+            configured: false,
+          });
+        }
+      }
+    }
+
+    loadCloudinaryConfig();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /*
+   * Load subcategories whenever collection changes.
+   */
+  useEffect(() => {
+    let active = true;
+
+    async function loadSubCategories() {
+      try {
+        const items = await getSubCategoriesAction(
+          form.collection,
+        );
+
+        if (!active) return;
+
+        setCategories(items);
+
+        setForm((current) => ({
+          ...current,
+          categorySlug: items.some(
+            (item) => item.slug === current.categorySlug,
+          )
+            ? current.categorySlug
+            : items[0]?.slug ?? "",
+        }));
+      } catch (categoryError) {
+        console.error(
+          "[new-admin] category loading failed:",
+          categoryError,
+        );
+
+        if (active) {
+          setError("Unable to load subcategories.");
+        }
+      }
+    }
+
+    loadSubCategories();
+
+    return () => {
+      active = false;
+    };
   }, [form.collection]);
 
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value, ...(key === "name" && mode === "create" && !current.slug ? { slug: slugify(value) } : {}) }));
+  function update(key, value) {
+    setForm((current) => {
+      const next = {
+        ...current,
+        [key]: value,
+      };
+
+      if (
+        key === "name" &&
+        mode === "create" &&
+        !current.slug
+      ) {
+        next.slug = slugify(value);
+      }
+
+      return next;
+    });
+  }
+
+  function handleImagesChange(urls) {
+    setError("");
+
+    if (urls.length > MAX_PRODUCT_IMAGES) {
+      setError(
+        `Maximum ${MAX_PRODUCT_IMAGES} product images are allowed.`,
+      );
+
+      return;
+    }
+
+    update("imageUrls", urls);
+  }
 
   async function submit(event) {
     event.preventDefault();
 
-    if (!existingImageUrls.length && !imageFiles.length) {
-      setError("Select at least one product image.");
+    setError("");
+
+    if (!form.imageUrls.length) {
+      setError("Add at least one product image.");
+      return;
+    }
+
+    if (form.imageUrls.length > MAX_PRODUCT_IMAGES) {
+      setError(
+        `Maximum ${MAX_PRODUCT_IMAGES} product images are allowed.`,
+      );
+      return;
+    }
+
+    if (!form.name.trim()) {
+      setError("Product name is required.");
+      return;
+    }
+
+    if (!form.slug.trim()) {
+      setError("Product slug is required.");
+      return;
+    }
+
+    if (!form.categorySlug) {
+      setError("Please select a category.");
       return;
     }
 
     setSaving(true);
-    setError("");
-
-    const uploadedImages = [];
 
     try {
-      for (const file of imageFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const upload = await uploadNewAdminProductImageAction(formData);
-
-        if (!upload?.ok) {
-          throw new Error(
-            upload?.error || `Unable to upload ${file.name}.`,
-          );
-        }
-
-        uploadedImages.push({
-          url: upload.url,
-          publicId: upload.publicId,
-        });
-      }
-
       const payload = {
         ...form,
+
         price: Number(form.price),
-        stockPerVariant: Number(form.stockPerVariant) || 0,
-        imageUrls: [
-          ...existingImageUrls,
-          ...uploadedImages.map((image) => image.url),
-        ],
+
+        stockPerVariant:
+          Number(form.stockPerVariant) || 0,
+
+        imageUrls: form.imageUrls,
+
         sizes: form.sizes
           .split(",")
           .map((value) => Number(value.trim()))
-          .filter((value) => Number.isFinite(value) && value > 0),
+          .filter(
+            (value) =>
+              Number.isFinite(value) && value > 0,
+          ),
       };
 
       const result =
         mode === "edit"
-          ? await updateProductAction(productId, payload)
+          ? await updateProductAction(
+            productId,
+            payload,
+          )
           : await createProductAction(payload);
 
       if (!result?.ok) {
-        throw new Error(result?.error || "Save failed.");
+        throw new Error(
+          result?.error || "Unable to save product.",
+        );
       }
-
-      // Cleanup local preview URLs after successful save
-      imagePreviews.forEach((preview) => {
-        if (preview.url) {
-          URL.revokeObjectURL(preview.url);
-        }
-      });
 
       router.push("/new-admin/products");
       router.refresh();
     } catch (saveError) {
-      if (uploadedImages.length) {
-        await discardProductImageUploadsAction(
-          uploadedImages.map((image) => image.publicId),
-        ).catch(() => null);
-      }
+      console.error(
+        "[new-admin] product save failed:",
+        saveError,
+      );
 
-      setError(saveError.message || "Unable to save product.");
+      setError(
+        saveError?.message ||
+        "Unable to save product.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   async function remove() {
-      if (!productId || !window.confirm("Soft-delete this product?")) return;
-      setSaving(true);
-      try {
-        await deleteProductAction(productId);
-        router.push("/new-admin/products");
-        router.refresh();
-      } catch (deleteError) {
-        setError(deleteError.message || "Unable to delete product.");
-        setSaving(false);
-      }
+    if (
+      !productId ||
+      !window.confirm("Soft-delete this product?")
+    ) {
+      return;
     }
 
+    setSaving(true);
+    setError("");
 
-    return (
-      <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    try {
+      await deleteProductAction(productId);
+
+      router.push("/new-admin/products");
+      router.refresh();
+    } catch (deleteError) {
+      console.error(
+        "[new-admin] product delete failed:",
+        deleteError,
+      );
+
+      setError(
+        deleteError?.message ||
+        "Unable to delete product.",
+      );
+
+      setSaving(false);
+    }
+  }
+
+  /*
+   * Use a product-specific Cloudinary folder.
+   *
+   * Create mode:
+   * products/{slug}
+   *
+   * Edit mode:
+   * products/{productId}
+   *
+   * The existing Cloudinary widget accepts this folder
+   * through cloudinaryConfig.
+   */
+  const cloudinaryFolder = productId
+    ? `products/${productId}`
+    : form.slug
+      ? `products/${form.slug}`
+      : cloudinaryConfig?.folder || "aere/products";
+
+  const productCloudinaryConfig = cloudinaryConfig
+    ? {
+      ...cloudinaryConfig,
+      folder: cloudinaryFolder,
+    }
+    : null;
+
+  return (
+    <>
+      <Script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        strategy="lazyOnload"
+      />
+
+      <form
+        onSubmit={submit}
+        className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
+      >
+        {/* LEFT */}
         <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-medium text-slate-500">Product name</span><input required className={inputClass} value={form.name} onChange={(event) => update("name", event.target.value)} /></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Slug</span><input required className={inputClass} value={form.slug} onChange={(event) => update("slug", event.target.value)} /></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Brand</span><input required className={inputClass} value={form.brand} onChange={(event) => update("brand", event.target.value)} /></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Collection</span><select className={inputClass} value={form.collection} onChange={(event) => update("collection", event.target.value)}>{collections.map((item) => <option key={item.id} value={item.collection}>{item.name}</option>)}</select></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Category</span><select required className={inputClass} value={form.categorySlug} onChange={(event) => update("categorySlug", event.target.value)}>{categories.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label>
-            <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-medium text-slate-500">Description</span><textarea required rows={6} className={`${inputClass} h-auto py-3`} value={form.description} onChange={(event) => update("description", event.target.value)} /></label>
-          </div>
-        </div>
-        <div className="space-y-5">
-          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Price (₹)</span><input required type="number" min="1" className={inputClass} value={form.price} onChange={(event) => update("price", event.target.value)} /></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Stock per variant</span><input type="number" min="0" className={inputClass} value={form.stockPerVariant} onChange={(event) => update("stockPerVariant", event.target.value)} /></label>
-            <label><span className="mb-1.5 block text-xs font-medium text-slate-500">Sizes</span><input className={inputClass} value={form.sizes} onChange={(event) => update("sizes", event.target.value)} /></label>
-            <label className="block text-sm font-medium text-slate-700">
-              Product images
+            {/* Product name */}
+            <label className="sm:col-span-2">
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Product name
+              </span>
+
+              <input
+                required
+                className={inputClass}
+                value={form.name}
+                onChange={(event) =>
+                  update(
+                    "name",
+                    event.target.value,
+                  )
+                }
+              />
             </label>
 
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={handleImageUpload}
-              className="block w-full text-sm text-slate-600
-    file:mr-4 file:rounded-lg file:border-0
-    file:bg-slate-900 file:px-4 file:py-2
-    file:text-sm file:font-medium file:text-white
-    hover:file:bg-slate-800"
-            />
+            {/* Slug */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Slug
+              </span>
 
-            <p className="mt-1 text-xs text-slate-500">
-              Upload product images from your device. JPG, PNG or WEBP.
-            </p>
+              <input
+                required
+                className={inputClass}
+                value={form.slug}
+                onChange={(event) =>
+                  update(
+                    "slug",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
 
-            {existingImageUrls.length > 0 || imagePreviews.length > 0 ? (
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {existingImageUrls.map((url, index) => (
-                  <div
-                    key={`${url}-${index}`}
-                    className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+            {/* Brand */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Brand
+              </span>
+
+              <input
+                required
+                className={inputClass}
+                value={form.brand}
+                onChange={(event) =>
+                  update(
+                    "brand",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
+
+            {/* Collection */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Collection
+              </span>
+
+              <select
+                className={inputClass}
+                value={form.collection}
+                onChange={(event) =>
+                  update(
+                    "collection",
+                    event.target.value,
+                  )
+                }
+              >
+                {collections.map((item) => (
+                  <option
+                    key={item.id}
+                    value={item.collection}
                   >
-                    <img
-                      src={url}
-                      alt={`Existing product image ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setExistingImageUrls((current) =>
-                          current.filter((_, imageIndex) => imageIndex !== index),
-                        );
-                      }}
-                      className="absolute right-2 top-2 rounded-full bg-black/75 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100"
-                    >
-                      Remove
-                    </button>
-
-                    <span className="absolute bottom-2 left-2 rounded-md bg-black/70 px-2 py-1 text-[10px] uppercase tracking-wide text-white">
-                      Existing
-                    </span>
-                  </div>
+                    {item.name}
+                  </option>
                 ))}
+              </select>
+            </label>
 
-                {imagePreviews.map((preview, index) => (
-                  <div
-                    key={preview.id}
-                    className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+            {/* Category */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Category
+              </span>
+
+              <select
+                required
+                className={inputClass}
+                value={form.categorySlug}
+                onChange={(event) =>
+                  update(
+                    "categorySlug",
+                    event.target.value,
+                  )
+                }
+              >
+                {categories.map((item) => (
+                  <option
+                    key={item.id}
+                    value={item.slug}
                   >
-                    <img
-                      src={preview.url}
-                      alt={preview.name}
-                      className="h-full w-full object-cover"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageFiles((current) =>
-                          current.filter((_, fileIndex) => fileIndex !== index),
-                        );
-
-                        setImagePreviews((current) => {
-                          const removed = current[index];
-
-                          if (removed?.url) {
-                            URL.revokeObjectURL(removed.url);
-                          }
-
-                          return current.filter(
-                            (_, previewIndex) => previewIndex !== index,
-                          );
-                        });
-                      }}
-                      className="absolute right-2 top-2 rounded-full bg-black/75 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100"
-                    >
-                      Remove
-                    </button>
-
-                    <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded-md bg-black/70 px-2 py-1 text-[10px] text-white">
-                      {preview.name}
-                    </span>
-                  </div>
+                    {item.name}
+                  </option>
                 ))}
+              </select>
+            </label>
+
+            {/* Description */}
+            <label className="sm:col-span-2">
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Description
+              </span>
+
+              <textarea
+                required
+                rows={6}
+                className={`${inputClass} h-auto py-3`}
+                value={form.description}
+                onChange={(event) =>
+                  update(
+                    "description",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* RIGHT */}
+        <div className="space-y-5">
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            {/* Price */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Price (₹)
+              </span>
+
+              <input
+                required
+                type="number"
+                min="1"
+                className={inputClass}
+                value={form.price}
+                onChange={(event) =>
+                  update(
+                    "price",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
+
+            {/* Stock */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Stock per variant
+              </span>
+
+              <input
+                type="number"
+                min="0"
+                className={inputClass}
+                value={form.stockPerVariant}
+                onChange={(event) =>
+                  update(
+                    "stockPerVariant",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
+
+            {/* Sizes */}
+            <label>
+              <span className="mb-1.5 block text-xs font-medium text-slate-500">
+                Sizes
+              </span>
+
+              <input
+                className={inputClass}
+                value={form.sizes}
+                onChange={(event) =>
+                  update(
+                    "sizes",
+                    event.target.value,
+                  )
+                }
+              />
+            </label>
+
+            {/* Product images */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700">
+                  Product images
+                </span>
+
+                <span className="text-xs text-slate-500">
+                  {form.imageUrls.length} /{" "}
+                  {MAX_PRODUCT_IMAGES}
+                </span>
               </div>
-            ) : (
-              <div className="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
-                No product images selected
-              </div>
-            )}
-            <div className="flex flex-wrap gap-4 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={form.isNew} onChange={(event) => update("isNew", event.target.checked)} />New arrival</label><label className="flex items-center gap-2"><input type="checkbox" checked={form.isTrending} onChange={(event) => update("isTrending", event.target.checked)} />Trending</label></div>
+
+              {!cloudinaryConfig ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                  Loading image uploader...
+                </div>
+              ) : !cloudinaryConfig.configured ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
+                  Cloudinary is not configured.
+                </div>
+              ) : (
+                <AdminCloudinaryUpload
+                  imageUrls={form.imageUrls}
+                  onChange={handleImagesChange}
+                  cloudinaryConfig={
+                    productCloudinaryConfig
+                  }
+                />
+              )}
+
+              <p className="mt-2 text-xs text-slate-500">
+                Upload up to {MAX_PRODUCT_IMAGES} images
+                from your device or use a public image
+                URL.
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Images upload directly to Cloudinary.
+                They do not pass through the Next.js
+                Server Action.
+              </p>
+            </div>
+
+            {/* Product flags */}
+            <div className="flex flex-wrap gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.isNew}
+                  onChange={(event) =>
+                    update(
+                      "isNew",
+                      event.target.checked,
+                    )
+                  }
+                />
+
+                New arrival
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.isTrending}
+                  onChange={(event) =>
+                    update(
+                      "isTrending",
+                      event.target.checked,
+                    )
+                  }
+                />
+
+                Trending
+              </label>
+            </div>
           </section>
-          {error ? <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
-          <div className="flex flex-wrap gap-3"><button disabled={saving} className={buttonClass}>{saving ? "Saving…" : mode === "edit" ? "Save changes" : "Create product"}</button>{mode === "edit" ? <button type="button" onClick={remove} disabled={saving} className="h-10 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50">Delete product</button> : null}</div>
+
+          {/* Error */}
+          {error ? (
+            <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+              {error}
+            </p>
+          ) : null}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-3">
+            <LoadingButton
+              type="submit"
+              loading={saving}
+              className={buttonClass}
+            >
+              {mode === "edit"
+                ? "Save changes"
+                : "Create product"}
+            </LoadingButton>
+
+            {mode === "edit" ? (
+              <button
+                type="button"
+                onClick={remove}
+                disabled={saving}
+                className="h-10 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50"
+              >
+                Delete product
+              </button>
+            ) : null}
+          </div>
         </div>
       </form>
-    );
-  }
+    </>
+  );
+}

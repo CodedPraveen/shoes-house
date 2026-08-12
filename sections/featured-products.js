@@ -10,7 +10,7 @@
    
     return (
       <SectionReveal className="px-0 py-1 sm:px-8 lg:py-10">
-        <div className="mx-auto w-full max-w-[1400px] space-y-10">
+        <div className="mx-auto w-full max-w-350 space-y-10">
           <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-2">
             <div className="space-y-3">
               <p className="text-xs uppercase tracking-[0.25em] text-black/45">

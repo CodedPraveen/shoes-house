@@ -347,7 +347,7 @@ export default function GoogleLocationPicker({
               </button>
             </header>
 
-            <div className="relative h-[52dvh] min-h-80 w-full bg-zinc-100 sm:h-[480px]">
+            <div className="relative h-[52dvh] min-h-80 w-full bg-zinc-100 sm:h-120">
               <div ref={mapElementRef} className="h-full w-full" />
               {mapLoading ? (
                 <div className="absolute inset-0 grid place-items-center bg-zinc-100 text-sm text-black/60">
