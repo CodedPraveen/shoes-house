@@ -10,64 +10,46 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const HERO_SLIDES = [
   {
     id: "hero-1",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786548727/WhatsApp_Image_2026-08-07_at_11.01.54_AM.jpg",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548727/WhatsApp_Image_2026-08-07_at_11.01.54_AM.jpg",
     alt: "Hero banner 1",
     href: "/shoes/shoes-1",
   },
   {
     id: "hero-2",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786548890/WhatsApp_Image_2026-08-07_at_11.01.55_AM.jpg",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548890/WhatsApp_Image_2026-08-07_at_11.01.55_AM.jpg",
     alt: "Hero banner 2",
     href: "/shoes/shoes-1-1.png",
   },
   {
     id: "hero-3",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786549156/9b4f883c-b625-4369-889d-500e17a1b8fd.png",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786549156/9b4f883c-b625-4369-889d-500e17a1b8fd.png",
     alt: "Hero banner 3",
     href: "/shoes/shoes-1-2.png",
   },
   {
     id: "hero-4",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786550507/288e7ec9-070a-4bc9-b337-1b1789dc7c2b.jpg",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550507/288e7ec9-070a-4bc9-b337-1b1789dc7c2b.jpg",
     alt: "Hero campaign 4",
     href: "/shoes",
   },
   {
     id: "hero-5",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786550529/8fc723d9-fbb1-4751-b82d-05dfbedddfb4.jpg",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550529/8fc723d9-fbb1-4751-b82d-05dfbedddfb4.jpg",
     alt: "Hero campaign 5",
     href: "/shoes",
   },
   {
     id: "hero-6",
-    image: "https://res.cloudinary.com/rwuqhkyf/image/upload/v1786550532/3ecff149-a5eb-4f8a-b6a3-05d92e300fb5.jpg",
+    image:
+      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550532/3ecff149-a5eb-4f8a-b6a3-05d92e300fb5.jpg",
     alt: "Hero campaign 6",
     href: "/shoes",
   },
-  // {
-  //   id: "hero-7",
-  //   image: "PASTE_IMAGE_URL_7_HERE",
-  //   alt: "Hero campaign 7",
-  //   href: "/shoes",
-  // },
-  // {
-  //   id: "hero-8",
-  //   image: "PASTE_IMAGE_URL_8_HERE",
-  //   alt: "Hero campaign 8",
-  //   href: "/shoes",
-  // },
-  // {
-  //   id: "hero-9",
-  //   image: "PASTE_IMAGE_URL_9_HERE",
-  //   alt: "Hero campaign 9",
-  //   href: "/shoes",
-  // },
-  // {
-  //   id: "hero-10",
-  //   image: "PASTE_IMAGE_URL_10_HERE",
-  //   alt: "Hero campaign 10",
-  //   href: "/shoes",
-  // },
 ];
 
 const AUTOPLAY_DELAY = 5000;
