@@ -15,7 +15,10 @@ async function revalidateProductPaths(slug) {
   revalidateTag("search-catalog", "max");
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
-  if (slug) revalidatePath(`/product/${slug}`);
+  if (slug) {
+    revalidatePath(`/shoes/product/${slug}`);
+    revalidatePath(`/jewellery/product/${slug}`);
+  }
 }
 
 export async function getAdminCategoriesAction() {

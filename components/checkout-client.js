@@ -241,7 +241,7 @@ export default function CheckoutClient() {
     return (
       <p className="text-sm text-black/60">
         Your cart is empty.{" "}
-        <a href="/products" className="underline">
+        <a href="/shoes/products" className="underline">
           Continue shopping
         </a>
       </p>

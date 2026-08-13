@@ -11,6 +11,7 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import SafeImage from "./ui/safe-image";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
+import { getProductPath } from "@/lib/product-routes";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -24,14 +25,14 @@ function ProductCard({
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
 
-  const productUrl = `${process.env.NEXT_PUBLIC_APP_URL}/product/${product.slug}`;
+  const productPath = getProductPath(product);
 
   const requireAuth = (e, action) => {
     e.preventDefault();
     e.stopPropagation();
     if (hasClerk && !isSignedIn) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.id}`)}`,
+        `/sign-in?redirect_url=${encodeURIComponent(productPath)}`,
       );
       return;
     }
@@ -56,7 +57,7 @@ function ProductCard({
   const optimizedImage = optimizeCloudinaryImage(product.image);
 
   return (
-    <Link href={`/product/${product.slug}`} className="block">
+    <Link href={productPath} className="block">
       <article className="group no54123-0 sm:no54123-3xl border border-black/5 bg-white  shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
         <div
           className="relative overflow-hidden sm:no54123-2xl bg-zinc-100"

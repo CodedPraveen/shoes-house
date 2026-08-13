@@ -45,7 +45,7 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3">{p.stock ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/product/${p.slug}`}
+                    href={`/${p.collection.toLowerCase()}/product/${p.slug}`}
                     className="mr-3 text-black/60 hover:text-black"
                   >
                     View

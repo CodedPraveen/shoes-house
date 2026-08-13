@@ -21,7 +21,7 @@
               </h2>
             </div>
             <Link
-              href="/products"
+              href="/shoes/products"
               className="no54123-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white"
             >
               View All Shoes

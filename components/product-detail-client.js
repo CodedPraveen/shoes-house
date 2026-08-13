@@ -10,6 +10,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
+import { getProductPath } from "@/lib/product-routes";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -27,7 +28,7 @@ export default function ProductDetailClient({ product }) {
   const requireAuth = (action) => {
     if (hasClerk && !isSignedIn) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.slug}`)}`,
+        `/sign-in?redirect_url=${encodeURIComponent(getProductPath(product))}`,
       );
       return false;
     }

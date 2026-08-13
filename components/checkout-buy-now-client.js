@@ -113,7 +113,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     return (
       <p className="text-sm text-black/60">
         Invalid buy-now link.{" "}
-        <a href="/products" className="underline">
+        <a href="/shoes/products" className="underline">
           Browse products
         </a>
       </p>

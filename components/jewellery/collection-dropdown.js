@@ -72,7 +72,7 @@ export default function JewelleryDropdown({
                                         {categories.map((category) => (
                                             <li key={category.id}>
                                                 <Link
-                                                    href={`/category/${category.slug}`}
+                                                    href={`/jewellery?category=${category.slug}`}
                                                     className="text-sm text-black/70 transition hover:text-black"
                                                 >
                                                     {category.name}
