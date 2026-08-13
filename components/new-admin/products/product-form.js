@@ -318,7 +318,7 @@ export default function NewAdminProductForm({
     ? `products/${productId}`
     : form.slug
       ? `products/${form.slug}`
-      : cloudinaryConfig?.folder || "aere/products";
+      : cloudinaryConfig?.folder || "postmart/products";
 
   const productCloudinaryConfig = cloudinaryConfig
     ? {
