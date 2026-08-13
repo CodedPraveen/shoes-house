@@ -357,6 +357,9 @@ export const products = [
     returnPolicy: "30-day returns.",
   },
 ];
+
+// export const products = []; // Empty array for SEED-ONLY usage
+
 export function getProductById(id) {
   return products.find((p) => p.id === id) ?? null;
 }
