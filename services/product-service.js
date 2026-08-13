@@ -41,15 +41,7 @@ async function remember(key, callback, ttl = PRODUCT_CACHE_TTL) {
 export const productService = {
   async getAll({ includeInvalid = false } = {}) {
     const rows = await fetchAllRaw();
-    console.log("[PRODUCT DEBUG] product-service Mapped products:", {
-      count: rows?.length,
-      products: rows?.map((p) => ({
-        id: p.id,
-        name: p.name,
-        image: p.image,
-        images: p.images,
-      })),
-    });
+
     return mapProducts(rows, { includeInvalid });
   },
 
@@ -434,35 +426,8 @@ export const productService = {
           },
         });
 
-        console.log("[PRODUCT DEBUG] product-service RAW products:", {
-          count: rows.length,
-          products: rows.map((p) => ({
-            id: p.id,
-            name: p.name,
-            images: p.images?.map((image) => ({
-              url: image.url,
-              isHover: image.isHover,
-            })),
-          })),
-        });
-
         const products = mapProducts(rows, {
           includeInvalid: true,
-        });
-
-        console.log("[PRODUCT DEBUG] product-service MAPPED products:", {
-          count: products.length,
-          invalidCount: products.filter(
-            (product) => !product.imageValidation.isValid,
-          ).length,
-          products: products.map((p) => ({
-            id: p.id,
-            name: p.name,
-            image: p.image,
-            hoverImage: p.hoverImage,
-            images: p.images,
-            imageValidation: p.imageValidation,
-          })),
         });
 
         return products;

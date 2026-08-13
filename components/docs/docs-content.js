@@ -88,7 +88,7 @@ const sections = [
     id: "cloudinary",
     title: "7. Product Images & Cloudinary",
     summary: "Both admin product experiences use the same server-side Cloudinary service.",
-    code: "Device JPG/PNG/WEBP\n  → uploadNewAdminProductImageAction\n  → imageUploadService.uploadFile/uploadBuffer\n  → CLOUDINARY_UPLOAD_FOLDER (fallback: aere/products)\n  → secure_url + public_id\n  → createProductAction/updateProductAction\n  → ProductImage(url, sortOrder, isHover)",
+    code: "Device JPG/PNG/WEBP\n  → uploadNewAdminProductImageAction\n  → imageUploadService.uploadFile/uploadBuffer\n  → CLOUDINARY_UPLOAD_FOLDER (fallback: postmart/products)\n  → secure_url + public_id\n  → createProductAction/updateProductAction\n  → ProductImage(url, sortOrder, isHover)",
     items: [
       "Cloudinary credentials are configured only in services/upload/image-upload-service.js; API secrets are never sent to the browser.",
       "New-admin accepts local JPG, PNG, and WEBP files up to 10 MB each and uploads them in selection order.",

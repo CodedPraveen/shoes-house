@@ -31,11 +31,11 @@ export const imageUploadService = {
     return {
       cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
         process.env.CLOUDINARY_CLOUD_NAME,
-      folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products",
+      folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products",
     };
   },
 
-  async uploadBuffer(buffer, { folder = "aere/products", fileName = "upload" } = {}) {
+  async uploadBuffer(buffer, { folder = "postmart/products", fileName = "upload" } = {}) {
     const cld = getCloudinary();
     return new Promise((resolve, reject) => {
       const stream = cld.uploader.upload_stream(

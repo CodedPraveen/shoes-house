@@ -68,7 +68,7 @@ export async function uploadProductImageAction(formData) {
 
   const file = formData.get("file");
   const result = await imageUploadService.uploadFile(file, {
-    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products",
+    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products",
   });
 
   if (!result.ok) {
@@ -91,7 +91,7 @@ export async function uploadNewAdminProductImageAction(formData) {
     return { ok: false, error: "Each product image must be 10 MB or smaller." };
   }
   const result = await imageUploadService.uploadFile(file, {
-    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products",
+    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products",
   });
 
   if (!result.ok) {
@@ -103,7 +103,7 @@ export async function uploadNewAdminProductImageAction(formData) {
 
 export async function discardProductImageUploadsAction(publicIds) {
   await requireAdmin();
-  const folder = (process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products").replace(/^\/+|\/+$/g, "");
+  const folder = (process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products").replace(/^\/+|\/+$/g, "");
   const ids = Array.from(publicIds || [])
     .filter((value) => typeof value === "string" && value.startsWith(`${folder}/`))
     .slice(0, 40);

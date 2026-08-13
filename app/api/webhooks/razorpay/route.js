@@ -5,7 +5,6 @@ export async function POST(request) {
   const signature = request.headers.get("x-razorpay-signature");
   const webhookEventId = request.headers.get("x-razorpay-event-id");
   const rawBody = await request.text();
-  console.log("Razorpay Webhook Hit");
 
   try {
     const result = await webhookService.handleRazorpayEvent(

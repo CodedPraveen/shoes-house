@@ -83,7 +83,7 @@ function ProductCard({
             height={320}
             quality={80}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="h-[320px] w-full object-cover transition duration-500 group-hover:scale-105 group-hover:opacity-0"
+            className="h-80 w-full object-cover transition duration-500 group-hover:scale-105 group-hover:opacity-0"
             loading="lazy"
           />
         
