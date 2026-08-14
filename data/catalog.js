@@ -6,6 +6,15 @@
 const img = (id, w = 1200) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
 
+const cloudinaryImages = [
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548727/WhatsApp_Image_2026-08-07_at_11.01.54_AM.jpg",
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548890/WhatsApp_Image_2026-08-07_at_11.01.55_AM.jpg",
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786549156/9b4f883c-b625-4369-889d-500e17a1b8fd.png",
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550507/288e7ec9-070a-4bc9-b337-1b1789dc7c2b.jpg",
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550529/8fc723d9-fbb1-4751-b82d-05dfbedddfb4.jpg",
+  "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550532/3ecff149-a5eb-4f8a-b6a3-05d92e300fb5.jpg",
+];
+
 export const products = [
   {
     id: "aero-one",
@@ -17,13 +26,13 @@ export const products = [
     price: 6499,
     compareAtPrice: 7999,
     discount: 19,
-    image: img("1608231387042-66d1773070a5"),
-    hoverImage: img("1560769629-975ec94e6a86"),
+    image: cloudinaryImages[0],
+    hoverImage: cloudinaryImages[1],
     images: [
-      img("1608231387042-66d1773070a5"),
-      img("1560769629-975ec94e6a86"),
-      img("1542291026-7eec264c27ff"),
-      img("1463100099107-aa0980c362e6"),
+      cloudinaryImages[0],
+      cloudinaryImages[1],
+      cloudinaryImages[2],
+      cloudinaryImages[3],
     ],
     colors: [
       { id: "black", label: "Black", hex: "#111111" },
@@ -43,6 +52,7 @@ export const products = [
     shipping: "Free express shipping on orders above ₹2999.",
     returnPolicy: "30-day hassle-free returns on unworn pairs.",
   },
+
   {
     id: "vertex-pro",
     name: "Vertex Pro",
@@ -53,12 +63,12 @@ export const products = [
     price: 7299,
     compareAtPrice: 8999,
     discount: 19,
-    image: img("1549298916-b41d501d3772"),
-    hoverImage: img("1491553895911-0055eca6402d"),
+    image: cloudinaryImages[1],
+    hoverImage: cloudinaryImages[2],
     images: [
-      img("1549298916-b41d501d3772"),
-      img("1491553895911-0055eca6402d"),
-      img("1597045566677-8cf032ed6634"),
+      cloudinaryImages[1],
+      cloudinaryImages[2],
+      cloudinaryImages[3],
     ],
     colors: [
       { id: "black", label: "Black", hex: "#111111" },
@@ -78,6 +88,7 @@ export const products = [
     shipping: "Delivered in 2-4 business days.",
     returnPolicy: "30-day returns with original packaging.",
   },
+
   {
     id: "drift-mono",
     name: "Drift Mono",
@@ -88,9 +99,12 @@ export const products = [
     price: 4999,
     compareAtPrice: 5999,
     discount: 17,
-    image: img("1600185365926-3a2ce3cdb9eb"),
-    hoverImage: img("1465453869711-7e174808ace9"),
-    images: [img("1600185365926-3a2ce3cdb9eb"), img("1465453869711-7e174808ace9")],
+    image: cloudinaryImages[2],
+    hoverImage: cloudinaryImages[3],
+    images: [
+      cloudinaryImages[2],
+      cloudinaryImages[3],
+    ],
     colors: [
       { id: "white", label: "White", hex: "#f5f5f5" },
       { id: "black", label: "Black", hex: "#111111" },
@@ -107,6 +121,7 @@ export const products = [
     shipping: "Standard shipping 3-5 days.",
     returnPolicy: "Exchange within 15 days.",
   },
+
   {
     id: "pulse-knit",
     name: "Pulse Knit",
@@ -115,9 +130,12 @@ export const products = [
     description:
       "Lightweight running profile with breathable knit and adaptive fit system.",
     price: 5899,
-    image: img("1463100099107-aa0980c362e6"),
-    hoverImage: img("1552346154-21d32810aba3"),
-    images: [img("1463100099107-aa0980c362e6"), img("1552346154-21d32810aba3")],
+    image: cloudinaryImages[3],
+    hoverImage: cloudinaryImages[4],
+    images: [
+      cloudinaryImages[3],
+      cloudinaryImages[4],
+    ],
     colors: [
       { id: "green", label: "Green", hex: "#166534" },
       { id: "black", label: "Black", hex: "#111111" },
@@ -135,6 +153,7 @@ export const products = [
     shipping: "Free shipping nationwide.",
     returnPolicy: "30-day return window.",
   },
+
   {
     id: "form-legacy",
     name: "Form Legacy",
@@ -145,11 +164,11 @@ export const products = [
     price: 8999,
     compareAtPrice: 10999,
     discount: 18,
-    image: img("1515955656352-a1fa3ffcd111"),
-    hoverImage: img("1612181346599-a6bfbd67be86"),
+    image: cloudinaryImages[4],
+    hoverImage: cloudinaryImages[5],
     images: [
-      img("1515955656352-a1fa3ffcd111"),
-      img("1612181346599-a6bfbd67be86"),
+      cloudinaryImages[4],
+      cloudinaryImages[5],
     ],
     colors: [
       { id: "brown", label: "Brown", hex: "#78350f" },
@@ -167,6 +186,7 @@ export const products = [
     shipping: "Priority delivery available.",
     returnPolicy: "Premium returns within 30 days.",
   },
+
   {
     id: "cloud-axis",
     name: "Cloud Axis",
@@ -175,9 +195,12 @@ export const products = [
     description:
       "Everyday essential with cloud-soft cushioning and understated branding.",
     price: 4599,
-    image: img("1525966222134-fcfa99b8ae77"),
-    hoverImage: img("1529810313688-44ea1c2d81d3"),
-    images: [img("1525966222134-fcfa99b8ae77"), img("1529810313688-44ea1c2d81d3")],
+    image: cloudinaryImages[5],
+    hoverImage: cloudinaryImages[0],
+    images: [
+      cloudinaryImages[5],
+      cloudinaryImages[0],
+    ],
     colors: [
       { id: "gray", label: "Gray", hex: "#9ca3af" },
       { id: "blue", label: "Blue", hex: "#1e3a8a" },
@@ -194,6 +217,7 @@ export const products = [
     shipping: "Ships within 24 hours.",
     returnPolicy: "15-day exchange policy.",
   },
+
   {
     id: "junior-sprint",
     name: "Junior Sprint",
@@ -202,9 +226,12 @@ export const products = [
     description:
       "Lightweight boys trainer with durable outsole and flexible forefoot.",
     price: 2999,
-    image: img("1511556532299-8f662fc26c06"),
-    hoverImage: img("1556906781-9a412961c28c"),
-    images: [img("1511556532299-8f662fc26c06"), img("1556906781-9a412961c28c")],
+    image: cloudinaryImages[0],
+    hoverImage: cloudinaryImages[1],
+    images: [
+      cloudinaryImages[0],
+      cloudinaryImages[1],
+    ],
     colors: [
       { id: "red", label: "Red", hex: "#c41e3a" },
       { id: "blue", label: "Blue", hex: "#1e3a8a" },
@@ -221,6 +248,7 @@ export const products = [
     shipping: "Free shipping for kids collection.",
     returnPolicy: "30-day size exchange.",
   },
+
   {
     id: "court-youth",
     name: "Court Youth",
@@ -229,9 +257,12 @@ export const products = [
     description:
       "Classic court style scaled for younger athletes with premium comfort.",
     price: 3499,
-    image: img("1597045566677-8cf032ed6634"),
-    hoverImage: img("1549298916-b41d501d3772"),
-    images: [img("1597045566677-8cf032ed6634")],
+    image: cloudinaryImages[1],
+    hoverImage: cloudinaryImages[2],
+    images: [
+      cloudinaryImages[1],
+      cloudinaryImages[2],
+    ],
     colors: [
       { id: "white", label: "White", hex: "#f5f5f5" },
       { id: "black", label: "Black", hex: "#111111" },
@@ -248,6 +279,7 @@ export const products = [
     shipping: "2-3 day delivery.",
     returnPolicy: "Easy returns within 20 days.",
   },
+
   {
     id: "studio-low",
     name: "Studio Low",
@@ -256,9 +288,12 @@ export const products = [
     description:
       "Low-profile luxury sneaker with tonal paneling and refined silhouette.",
     price: 9499,
-    image: img("1543163521-1bf539c55dd2"),
-    hoverImage: img("1514989940723-e8e51635b782"),
-    images: [img("1543163521-1bf539c55dd2"), img("1514989940723-e8e51635b782")],
+    image: cloudinaryImages[2],
+    hoverImage: cloudinaryImages[3],
+    images: [
+      cloudinaryImages[2],
+      cloudinaryImages[3],
+    ],
     colors: [
       { id: "black", label: "Black", hex: "#111111" },
       { id: "brown", label: "Brown", hex: "#78350f" },
@@ -275,6 +310,7 @@ export const products = [
     shipping: "White-glove delivery in select cities.",
     returnPolicy: "30-day premium return.",
   },
+
   {
     id: "terra-glide",
     name: "Terra Glide",
@@ -283,9 +319,12 @@ export const products = [
     description:
       "Outdoor-inspired tread with urban refinement for versatile daily wear.",
     price: 5599,
-    image: img("1605348532760-6753d2c43329"),
-    hoverImage: img("1600185365926-3a2ce3cdb9eb"),
-    images: [img("1605348532760-6753d2c43329")],
+    image: cloudinaryImages[3],
+    hoverImage: cloudinaryImages[4],
+    images: [
+      cloudinaryImages[3],
+      cloudinaryImages[4],
+    ],
     colors: [
       { id: "green", label: "Green", hex: "#166534" },
       { id: "brown", label: "Brown", hex: "#78350f" },
@@ -302,6 +341,7 @@ export const products = [
     shipping: "Standard 4-6 day shipping.",
     returnPolicy: "30-day returns.",
   },
+
   {
     id: "essence-90",
     name: "Essence 90",
@@ -310,9 +350,12 @@ export const products = [
     description:
       "Retro runner reborn with modern cushioning and archival design lines.",
     price: 1899,
-    image: img("1542291026-7eec264c27ff"),
-    hoverImage: img("1608231387042-66d1773070a5"),
-    images: [img("1542291026-7eec264c27ff")],
+    image: cloudinaryImages[4],
+    hoverImage: cloudinaryImages[5],
+    images: [
+      cloudinaryImages[4],
+      cloudinaryImages[5],
+    ],
     colors: [
       { id: "white", label: "White", hex: "#f5f5f5" },
       { id: "red", label: "Red", hex: "#c41e3a" },
@@ -329,6 +372,7 @@ export const products = [
     shipping: "Economy shipping available.",
     returnPolicy: "15-day returns.",
   },
+
   {
     id: "night-runner",
     name: "Night Runner",
@@ -337,9 +381,12 @@ export const products = [
     description:
       "Reflective details and bold profile for after-hours city movement.",
     price: 6799,
-    image: img("1552346154-21d32810aba3"),
-    hoverImage: img("1463100099107-aa0980c362e6"),
-    images: [img("1552346154-21d32810aba3")],
+    image: cloudinaryImages[5],
+    hoverImage: cloudinaryImages[0],
+    images: [
+      cloudinaryImages[5],
+      cloudinaryImages[0],
+    ],
     colors: [
       { id: "black", label: "Black", hex: "#111111" },
       { id: "gray", label: "Gray", hex: "#9ca3af" },
