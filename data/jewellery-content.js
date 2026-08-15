@@ -22,7 +22,7 @@ export const JEWELLERY_COLLECTIONS = {
     description:
       "For the moments that last a lifetime. Our bridal collection blends ancestral craftsmanship with a modern aesthetic, ensuring every piece tells a story of love and heritage.",
     ctaLabel: "Shop Wedding",
-    href: "/products",
+    href: "/jewellery/products",
     imageAlt: "Editorial bridal jewellery collection",
     tone: "from-[#f7e7ce]/80 to-[#fdfcfb]",
   },
@@ -34,7 +34,7 @@ export const JEWELLERY_COLLECTIONS = {
     description:
       "Understated elegance for the modern professional. Minimal silhouettes, refined finishes, and pieces that transition effortlessly from boardroom to evening.",
     ctaLabel: "Shop Office",
-    href: "/products",
+    href: "/jewellery/products",
     imageAlt: "Minimal office-ready jewellery styling",
     tone: "from-[#f0edee] to-[#eae7e8]",
   },
@@ -46,7 +46,7 @@ export const JEWELLERY_COLLECTIONS = {
     description:
       "Curated treasures for every celebration. Thoughtfully packaged pieces designed to make gifting as memorable as the moment itself.",
     ctaLabel: "Shop Gifts",
-    href: "/products",
+    href: "/jewellery/products",
     imageAlt: "Luxury jewellery gift collection",
     tone: "from-[#fff2f2] to-[#f7e7ce]/60",
   },

@@ -34,21 +34,21 @@ const MENU_DATA = {
             price: "₹3,999",
             image:
                 "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-            href: "/product/aere-velocity",
+            href: "/shoes/product/aere-velocity",
         },
         {
             title: "AERÉ Phantom",
             price: "₹4,499",
             image:
                 "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=800&q=80",
-            href: "/product/aere-phantom",
+            href: "/shoes/product/aere-phantom",
         },
         {
             title: "AERÉ Motion",
             price: "₹5,299",
             image:
                 "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&q=80",
-            href: "/product/aere-motion",
+            href: "/shoes/product/aere-motion",
         },
     ],
 };
@@ -102,7 +102,7 @@ export default function ShoesDropdown({
                                         {categories.map((category) => (
                                             <li key={category.id}>
                                                 <Link
-                                                    href={`/category/${category.slug}`}
+                                                    href={`/shoes?category=${category.slug}`}
                                                     className="text-sm text-black/70 transition hover:text-black"
                                                 >
                                                     {category.name}

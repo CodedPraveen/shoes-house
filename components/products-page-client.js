@@ -9,7 +9,8 @@ import SortSelect from "@/components/sort-select";
 import { usePagination } from "@/hooks/use-pagination";
 import { useProductFilters } from "@/hooks/use-product-filters";
 
-export default function ProductsPageClient({ initialProducts = [] }) {
+export default function ProductsPageClient({ initialProducts = [], collection }) {
+  const collectionLabel = collection === "JEWELLERY" ? "Jewellery" : "Shoes";
   const {
     products: filtered,
     sortBy,
@@ -32,8 +33,8 @@ export default function ProductsPageClient({ initialProducts = [] }) {
     <main className="pt-20">
       <PageHeader
         eyebrow="Shop"
-        title="All Shoes"
-        description={`Browse the full Post Mart collection — ${total} pairs available.`}
+        title={`All ${collectionLabel}`}
+        description={`Browse the full Post Mart ${collectionLabel.toLowerCase()} collection — ${total} products available.`}
       >
         <SortSelect value={sortBy} onChange={setSortBy} />
       </PageHeader>

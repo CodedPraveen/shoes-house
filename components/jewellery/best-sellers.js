@@ -18,7 +18,7 @@ export default function BestSellers({ products }) {
         <SectionHeader
           title="Best Sellers"
           subtitle="Customer favourites"
-          href="/products"
+          href="/jewellery/products"
           italic
         />
         {/* <ProductGrid products={visibleProducts} /> */}

@@ -4,7 +4,8 @@ export const PUBLIC_ROUTES = [
   "/",
   "/new-arrivals",
   "/trending",
-  "/products",
+  "/shoes/products",
+  "/jewellery/products",
   "/search",
   "/category/shoes",
   "/category/boys",
@@ -35,7 +36,7 @@ export const ADMIN_ROUTES = ["/admin"];
 export const FOOTER_LINKS = {
   shop: [
     { label: "New Arrivals", href: "/new-arrivals" },
-    { label: "All Shoes", href: "/products" },
+    { label: "All Shoes", href: "/shoes/products" },
     { label: "Trending", href: "/trending" },
     { label: "Categories", href: "/#categories" },
   ],

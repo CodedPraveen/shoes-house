@@ -53,10 +53,10 @@ export const productService = {
     return row ? mapCustomerProduct(row) : null;
   },
 
-  async getBySlug(slug) {
-    return remember(`product:slug:${slug}`, async () => {
+  async getBySlug(slug, collection) {
+    return remember(`product:slug:${collection ?? "all"}:${slug}`, async () => {
       const row = await prisma.product.findFirst({
-        where: { slug, ...notDeleted },
+        where: { slug, ...notDeleted, ...(collection && { collection }) },
         include: productInclude,
       });
 
@@ -257,6 +257,7 @@ export const productService = {
       where: activeProductWhere,
       select: {
         id: true,
+        collection: true,
         name: true,
         slug: true,
         price: true,
@@ -286,6 +287,7 @@ export const productService = {
       const imageValidation = validateProductImages(p.images);
       return {
         id: p.id,
+        collection: p.collection,
         slug: p.slug,
         name: p.name,
         brand: p.brand,
