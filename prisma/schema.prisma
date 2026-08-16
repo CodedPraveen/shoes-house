@@ -21,9 +21,9 @@ model User {
   cart               Cart?
   checkoutSessions   CheckoutSession[]
   orders             Order[]
+  orderStatusHistory OrderStatusHistory[]
   reviews            Review[]
   wishlist           Wishlist[]
-  orderStatusHistory OrderStatusHistory[]
 
   @@index([email])
   @@index([role])
@@ -44,10 +44,10 @@ model Category {
   parentId        String?
   parent          Category?               @relation("CategoryTree", fields: [parentId], references: [id])
   children        Category[]              @relation("CategoryTree")
-  products        Product[]
-  storefrontItems StorefrontSectionItem[]
   heroSlides      HeroSlide[]
   navbarItems     NavbarItem[]
+  products        Product[]
+  storefrontItems StorefrontSectionItem[]
 
   @@index([collection])
   @@index([slug])
@@ -79,6 +79,8 @@ model Product {
   deletedAt       DateTime?
   collection      ProductCollection
   cartItems       CartItem[]
+  heroSlides      HeroSlide[]
+  navbarItems     NavbarItem[]
   orderItems      OrderItem[]
   category        Category                @relation(fields: [categoryId], references: [id])
   colors          ProductColor[]
@@ -86,10 +88,8 @@ model Product {
   sizes           ProductSize[]
   variants        ProductVariant[]
   reviews         Review[]
-  wishlist        Wishlist[]
   storefrontItems StorefrontSectionItem[]
-  heroSlides      HeroSlide[]
-  navbarItems     NavbarItem[]
+  wishlist        Wishlist[]
 
   @@index([slug])
   @@index([name])
@@ -296,12 +296,12 @@ model CheckoutSessionItem {
 }
 
 model Order {
-  id                  String      @id @default(cuid())
-  orderNumber         String      @unique
+  id                  String               @id @default(cuid())
+  orderNumber         String               @unique
   userId              String
-  status              OrderStatus @default(PENDING)
+  status              OrderStatus          @default(PENDING)
   subtotal            Int
-  shippingCost        Int         @default(0)
+  shippingCost        Int                  @default(0)
   total               Int
   shipFullName        String
   shipPhone           String
@@ -309,10 +309,10 @@ model Order {
   shipLine2           String?
   shipCity            String
   shipState           String
-  shipCountry         String      @default("India")
+  shipCountry         String               @default("India")
   shipPincode         String
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   deletedAt           DateTime?
   refundReason        String?
   aftershipTrackingId String?
@@ -320,20 +320,18 @@ model Order {
   lastTrackingSync    DateTime?
   shippedAt           DateTime?
   trackingNumber      String?
-  trackingStatus      String?     @default("PENDING")
+  trackingStatus      String?              @default("PENDING")
   trackingUrl         String?
   shipLandmark        String?
-
-  confirmedByCall Boolean   @default(false)
-  confirmedAt     DateTime?
-
-  checkoutSession    CheckoutSession?
-  inventoryMovements InventoryMovement[]
-  user               User                 @relation(fields: [userId], references: [id])
-  items              OrderItem[]
-  payments           Payment[]
-  checkpoints        TrackingCheckpoint[]
-  statusHistory      OrderStatusHistory[]
+  confirmedByCall     Boolean              @default(false)
+  confirmedAt         DateTime?
+  checkoutSession     CheckoutSession?
+  inventoryMovements  InventoryMovement[]
+  user                User                 @relation(fields: [userId], references: [id])
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  payments            Payment[]
+  checkpoints         TrackingCheckpoint[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -355,8 +353,8 @@ model OrderStatusHistory {
   actorType       String       @default("ADMIN")
   note            String?
   createdAt       DateTime     @default(now())
-  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   changedByUser   User?        @relation(fields: [changedByUserId], references: [id])
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
   @@index([changedBy])
@@ -404,10 +402,10 @@ model StorefrontSectionItem {
   mediaAssetId String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+  category     Category?         @relation(fields: [categoryId], references: [id])
+  mediaAsset   MediaAsset?       @relation(fields: [mediaAssetId], references: [id])
+  product      Product?          @relation(fields: [productId], references: [id])
   section      StorefrontSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  category     Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  product      Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
-  mediaAsset   MediaAsset?       @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
 
   @@index([sectionId, enabled, sortOrder])
   @@index([categoryId])
@@ -427,9 +425,9 @@ model HeroSlide {
   customHref   String?
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
-  mediaAsset   MediaAsset           @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
-  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  product      Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  category     Category?            @relation(fields: [categoryId], references: [id])
+  mediaAsset   MediaAsset           @relation(fields: [mediaAssetId], references: [id])
+  product      Product?             @relation(fields: [productId], references: [id])
 
   @@index([collection, enabled, sortOrder])
 }
@@ -446,8 +444,8 @@ model NavbarItem {
   customHref String?
   createdAt  DateTime             @default(now())
   updatedAt  DateTime             @updatedAt
-  category   Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  product    Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  category   Category?            @relation(fields: [categoryId], references: [id])
+  product    Product?             @relation(fields: [productId], references: [id])
 
   @@index([collection, enabled, sortOrder])
 }
@@ -581,12 +579,12 @@ enum ProductCollection {
 
 enum OrderStatus {
   PENDING
-  CONFIRMED
   PROCESSING
-  READY_TO_SEND
   SHIPPED
   DELIVERED
   CANCELLED
+  CONFIRMED
+  READY_TO_SEND
 }
 
 enum StorefrontTargetType {
