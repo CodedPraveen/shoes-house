@@ -7,11 +7,12 @@ import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { saveShippingAddressForUser } from "@/services/address-service";
+import { decrementStockForSale } from "@/services/inventory-service";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
-async function buildLineFromProductVariant(product, variant, color, size, quantity) {
-  const images = product.images || [].map(optimizeCloudinaryImage);
+function buildLineFromProduct(product, variant, size, quantity) {
+  const images = (product.images || []).map(optimizeCloudinaryImage);
   const primary = images.find((i) => !i.isHover)?.url ?? images[0]?.url ?? "";
 
   return {
@@ -20,14 +21,14 @@ async function buildLineFromProductVariant(product, variant, color, size, quanti
     productName: product.name,
     productImage: primary,
     productSku: variant.sku,
-    color,
+    color: "",
     size: Number(size),
     quantity,
-    priceAtPurchase: variant.price ?? product.price,
+    priceAtPurchase: product.price,
   };
 }
 
-/** Batch-fetch products + variants — avoids N+1 per cart line */
+/** Batch-fetch products + compatibility variants — avoids N+1 per cart line. */
 async function buildSessionLineItems(cartItems) {
   if (!cartItems.length) return [];
 
@@ -48,9 +49,9 @@ async function buildSessionLineItems(cartItems) {
       where: {
         productId: { in: productIds },
         ...notDeleted,
+        isActive: true,
         OR: cartItems.map((item) => ({
           productId: item.productId,
-          colorKey: item.color,
           size: Number(item.size),
         })),
       },
@@ -64,19 +65,20 @@ async function buildSessionLineItems(cartItems) {
     const product = productMap.get(item.productId);
     if (!product) throw new Error(`Product unavailable: ${item.name}`);
 
-    const variant = variants.find(
+    const matchingVariants = variants.filter(
       (v) =>
         v.productId === item.productId &&
-        v.colorKey === item.color &&
         v.size === Number(item.size),
     );
+    const variant =
+      matchingVariants.find((candidate) => candidate.colorKey === "") ??
+      matchingVariants[0];
     if (!variant) throw new Error(`Variant unavailable for ${item.name}`);
 
     lines.push(
-      await buildLineFromProductVariant(
+      buildLineFromProduct(
         product,
         variant,
-        item.color,
         item.size,
         item.quantity,
       ),
@@ -87,27 +89,86 @@ async function buildSessionLineItems(cartItems) {
 }
 
 async function validateLinesStock(lines) {
-  const variantIds = lines.map((l) => l.variantId).filter(Boolean);
-  if (!variantIds.length) return;
+  const requestedByProduct = new Map();
+  for (const line of lines) {
+    requestedByProduct.set(
+      line.productId,
+      (requestedByProduct.get(line.productId) ?? 0) + line.quantity,
+    );
+  }
 
-  const variants = await prisma.productVariant.findMany({
-    where: { id: { in: variantIds }, ...notDeleted, isActive: true },
-    select: { id: true, stock: true, sku: true },
+  const products = await prisma.product.findMany({
+    where: { id: { in: [...requestedByProduct.keys()] }, ...notDeleted },
+    select: { id: true, name: true, stock: true },
   });
-  const stockMap = new Map(variants.map((v) => [v.id, v]));
+  const stockMap = new Map(products.map((product) => [product.id, product]));
 
   const errors = [];
-  for (const line of lines) {
-    const variant = stockMap.get(line.variantId);
-    if (!variant) {
-      errors.push(`${line.productName}: variant unavailable`);
+  for (const [productId, requested] of requestedByProduct) {
+    const product = stockMap.get(productId);
+    if (!product) {
+      errors.push("Product unavailable");
       continue;
     }
-    if (variant.stock < line.quantity) {
-      errors.push(`${line.productName}: only ${variant.stock} left`);
+    if (product.stock < requested) {
+      errors.push(`${product.name}: only ${product.stock} left`);
     }
   }
   if (errors.length) throw new Error(errors.join("; "));
+}
+
+async function acquireProductLocks(productIds, ttl) {
+  const locks = [];
+  const uniqueIds = [...new Set(productIds)].sort();
+
+  try {
+    for (const productId of uniqueIds) {
+      const key = `product:${productId}`;
+      const ok = await acquireLock(key, ttl);
+      if (!ok) throw new Error("Another checkout is already processing.");
+      locks.push(key);
+    }
+    return locks;
+  } catch (error) {
+    await Promise.all(locks.map(releaseLock));
+    throw error;
+  }
+}
+
+async function getProductSelection(productId, size) {
+  const sizeNumber = Number(size);
+  const productQuery = prisma.product.findFirst({
+    where: {
+      id: productId,
+      ...notDeleted,
+      sizes: { some: { size: sizeNumber } },
+    },
+    include: {
+      images: {
+        where: { deletedAt: null },
+        orderBy: { sortOrder: "asc" },
+        take: 2,
+      },
+    },
+  });
+  const compatibilityVariant = prisma.productVariant.findFirst({
+    where: {
+      productId,
+      size: sizeNumber,
+      ...notDeleted,
+      isActive: true,
+    },
+    orderBy: [{ colorKey: "asc" }, { createdAt: "asc" }],
+  });
+
+  const [product, variant] = await Promise.all([
+    productQuery,
+    compatibilityVariant,
+  ]);
+  if (!product) throw new Error("Product or selected size unavailable");
+  if (!variant) throw new Error("Selected size unavailable");
+
+  return { product, variant };
 }
 
 async function createSessionWithRazorpay(userId, address, lines, mode) {
@@ -179,20 +240,12 @@ export const checkoutService = {
       throw new Error("Cart is empty");
     }
 
-    const locks = [];
-
+    let locks = [];
     try {
-      for (const item of cartItems) {
-        const key = `variant:${item.productId}:${item.color}:${item.size}`;
-
-        const ok = await acquireLock(key, 15);
-
-        if (!ok) {
-          throw new Error("Another checkout is already processing.");
-        }
-
-        locks.push(key);
-      }
+      locks = await acquireProductLocks(
+        cartItems.map((item) => item.productId),
+        15,
+      );
 
       const lines = await buildSessionLineItems(cartItems);
 
@@ -226,43 +279,23 @@ export const checkoutService = {
   async createBuyNowPaymentSession(
     userId,
     address,
-    { productId, color, size, quantity = 1 },
+    { productId, size, quantity = 1 },
   ) {
     return withPerf("checkout.create.buy_now", async () => {
-      const [product, variant] = await Promise.all([
-        prisma.product.findFirst({
-          where: { id: productId, ...notDeleted },
-          include: {
-            images: {
-              where: { deletedAt: null },
-              orderBy: { sortOrder: "asc" },
-              take: 2,
-            },
-          },
-        }),
-        prisma.productVariant.findFirst({
-          where: {
-            productId,
-            colorKey: color,
-            size: Number(size),
-            ...notDeleted,
-            isActive: true,
-          },
-        }),
-      ]);
-
-      if (!product) throw new Error("Product unavailable");
-      if (!variant) throw new Error("Selected variant unavailable");
-      if (variant.stock < quantity) {
-        throw new Error(`Only ${variant.stock} left in stock`);
+      const quantityNumber = Number(quantity);
+      if (!Number.isInteger(quantityNumber) || quantityNumber < 1) {
+        throw new Error("Invalid quantity");
+      }
+      const { product, variant } = await getProductSelection(productId, size);
+      if (product.stock < quantityNumber) {
+        throw new Error(`Only ${product.stock} left in stock`);
       }
 
-      const line = await buildLineFromProductVariant(
+      const line = buildLineFromProduct(
         product,
         variant,
-        color,
         size,
-        quantity,
+        quantityNumber,
       );
 
       return createSessionWithRazorpay(userId, address, [line], "BUY_NOW");
@@ -273,88 +306,85 @@ export const checkoutService = {
   async createBuyNowOrder(
     userId,
     address,
-    { productId, color, size, quantity = 1 },
+    { productId, size, quantity = 1 },
     paymentMethod = "cod",
   ) {
     return withPerf("checkout.create.buy_now.cod", async () => {
-      const [product, variant] = await Promise.all([
-        prisma.product.findFirst({
-          where: { id: productId, ...notDeleted },
-          include: {
-            images: {
-              where: { deletedAt: null },
-              orderBy: { sortOrder: "asc" },
-              take: 2,
-            },
-          },
-        }),
-        prisma.productVariant.findFirst({
-          where: {
-            productId,
-            colorKey: color,
-            size: Number(size),
-            ...notDeleted,
-            isActive: true,
-          },
-        }),
-      ]);
-
-      if (!product) throw new Error("Product unavailable");
-      if (!variant) throw new Error("Selected variant unavailable");
-      if (variant.stock < quantity) {
-        throw new Error(`Only ${variant.stock} left in stock`);
+      const quantityNumber = Number(quantity);
+      if (!Number.isInteger(quantityNumber) || quantityNumber < 1) {
+        throw new Error("Invalid quantity");
       }
+      const locks = await acquireProductLocks([productId], 30);
 
-      const line = await buildLineFromProductVariant(
-        product,
-        variant,
-        color,
-        size,
-        quantity,
-      );
+      try {
+        const { product, variant } = await getProductSelection(productId, size);
+        const line = buildLineFromProduct(
+          product,
+          variant,
+          size,
+          quantityNumber,
+        );
 
-      const subtotal = line.priceAtPurchase * line.quantity;
-      const shippingCost = calculateShipping(subtotal);
-      const total = subtotal + shippingCost;
+        const subtotal = line.priceAtPurchase * line.quantity;
+        const shippingCost = calculateShipping(subtotal);
+        const total = subtotal + shippingCost;
 
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-      const order = await prisma.$transaction(async (tx) => {
-        const created = await tx.order.create({
-          data: {
-            orderNumber,
-            userId,
-            subtotal,
-            shippingCost,
-            total,
-            status: "PENDING",
-            shipFullName: address.fullName,
-            shipPhone: address.phone,
-            shipLine1: address.line1,
-            shipLandmark: address.landmark || null,
-            shipLine2: address.line2 || null,
-            shipCity: address.city,
-            shipState: address.state,
-            shipCountry: address.country || "India",
-            shipPincode: address.pincode,
-            items: { create: [line] },
-            payments: {
-              create: {
-                paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
-                status: "PENDING",
-                amount: total,
-                currency: "INR",
+        const order = await prisma.$transaction(async (tx) => {
+          const created = await tx.order.create({
+            data: {
+              orderNumber,
+              userId,
+              subtotal,
+              shippingCost,
+              total,
+              status: "PENDING",
+              shipFullName: address.fullName,
+              shipPhone: address.phone,
+              shipLine1: address.line1,
+              shipLandmark: address.landmark || null,
+              shipLine2: address.line2 || null,
+              shipCity: address.city,
+              shipState: address.state,
+              shipCountry: address.country || "India",
+              shipPincode: address.pincode,
+              items: { create: [line] },
+              payments: {
+                create: {
+                  paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay",
+                  status: "PENDING",
+                  amount: total,
+                  currency: "INR",
+                },
               },
             },
-          },
-          include: { items: true },
+            include: { items: true },
+          });
+
+          await decrementStockForSale(tx, {
+            productId: line.productId,
+            variantId: line.variantId,
+            quantity: line.quantity,
+            orderId: created.id,
+            reason: `Sale · order ${created.orderNumber}`,
+            sku: line.productSku,
+          });
+          await tx.product.update({
+            where: { id: line.productId },
+            data: { purchaseCount: { increment: line.quantity } },
+          });
+
+          if (address.saveShippingAddress) {
+            await saveShippingAddressForUser(tx, userId, address);
+          }
+          return created;
         });
 
-        if (address.saveShippingAddress) await saveShippingAddressForUser(tx, userId, address);
-        return created;
-      });
-
-      return order;
+        return order;
+      } finally {
+        await Promise.all(locks.map(releaseLock));
+      }
     });
   },
   async createCartOrder(
@@ -417,6 +447,21 @@ export const checkoutService = {
               items: true,
             },
           });
+
+          for (const line of lines) {
+            await decrementStockForSale(tx, {
+              productId: line.productId,
+              variantId: line.variantId,
+              quantity: line.quantity,
+              orderId: created.id,
+              reason: `Sale · order ${created.orderNumber}`,
+              sku: line.productSku,
+            });
+            await tx.product.update({
+              where: { id: line.productId },
+              data: { purchaseCount: { increment: line.quantity } },
+            });
+          }
 
           if (address.saveShippingAddress) await saveShippingAddressForUser(tx, userId, address);
           await cartService.clearCartInTransaction(tx, userId);

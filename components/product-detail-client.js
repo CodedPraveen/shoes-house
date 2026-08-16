@@ -15,7 +15,6 @@ import { getProductPath } from "@/lib/product-routes";
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default function ProductDetailClient({ product }) {
-  const color = product.colors[0]?.id;
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
@@ -38,7 +37,7 @@ export default function ProductDetailClient({ product }) {
 
   const handleAddToCart = () => {
     requireAuth(() => {
-      addItem({ product, color, size, quantity });
+      addItem({ product, size, quantity });
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     });
@@ -52,7 +51,6 @@ export default function ProductDetailClient({ product }) {
     requireAuth(() => {
       const q = new URLSearchParams({
         productId: product.id,
-        color,
         size: String(size),
         quantity: String(quantity),
       });

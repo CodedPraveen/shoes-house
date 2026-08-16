@@ -128,8 +128,9 @@ export async function fulfillPaidCheckout({
 
   try {
 
-    for (const item of session.items) {
-      const key = `variant:${item.variantId}`;
+    const productIds = [...new Set(session.items.map((item) => item.productId))].sort();
+    for (const productId of productIds) {
+      const key = `product:${productId}`;
 
       const ok = await acquireLock(key, 30);
 
@@ -209,6 +210,7 @@ export async function fulfillPaidCheckout({
           }
 
           await decrementStockForSale(tx, {
+            productId: line.productId,
             variantId: line.variantId,
             quantity: line.quantity,
             orderId: order.id,

@@ -13,8 +13,8 @@ import { validateProductImageUrl } from "@/lib/product-image";
  * - No stock per variant.
  * - Product.stock is the source of truth for inventory.
  *
- * The checkout/inventory services will be migrated away from
- * variant.stock in the next step.
+ * Checkout and fulfillment use Product.stock; variants only retain the
+ * size/SKU and relation compatibility required by historical models.
  */
 function buildVariantRows(slug, sizes) {
   return sizes.map((size) => ({
@@ -343,10 +343,9 @@ export const productAdminService = {
      * which made the updateMany pointless.
      *
      * This version:
-     * - deletes old size variants
-     * - deletes old colors
-     * - creates fresh size records
-     * - creates fresh compatibility variants
+     * - preserves historical variants and colors
+     * - refreshes size records
+     * - activates one colorless compatibility variant per current size
      * - updates product stock directly
      *
      * with a longer transaction timeout.
@@ -436,16 +435,11 @@ export const productAdminService = {
          * OLD COLORS
          * ----------------------------------------------------
          *
-         * New product system no longer creates colors.
-         *
-         * We remove existing ProductColor records when
-         * editing an existing product.
+         * New product system no longer creates colors. Existing rows are
+         * retained for historical compatibility.
          */
-        await tx.productColor.deleteMany({
-          where: {
-            productId: id,
-          },
-        });
+        // Historical color rows remain available for old variants and orders.
+        // The active product form does not create or expose new colors.
 
         /*
          * ----------------------------------------------------
@@ -464,19 +458,41 @@ export const productAdminService = {
          * OLD COMPATIBILITY VARIANTS
          * ----------------------------------------------------
          *
-         * We remove them completely instead of:
-         *
-         * deleteMany()
-         * +
-         * updateMany()
-         *
-         * because that old sequence was incorrect.
+         * Historical variants may be referenced by orders and inventory
+         * movements, so they are retained and made inactive. Current sizes
+         * receive one active colorless compatibility variant each.
          */
-        await tx.productVariant.deleteMany({
+        await tx.productVariant.updateMany({
           where: {
             productId: id,
           },
+          data: {
+            isActive: false,
+            deletedAt: new Date(),
+          },
         });
+
+        for (const variant of variantRows) {
+          await tx.productVariant.upsert({
+            where: {
+              productId_colorKey_size: {
+                productId: id,
+                colorKey: "",
+                size: variant.size,
+              },
+            },
+            create: {
+              productId: id,
+              ...variant,
+            },
+            update: {
+              sku: variant.sku,
+              stock: 0,
+              isActive: true,
+              deletedAt: null,
+            },
+          });
+        }
 
         /*
          * ----------------------------------------------------
@@ -559,9 +575,6 @@ export const productAdminService = {
              * Temporary size-only compatibility
              * variants. Variant stock remains 0.
              */
-            variants: {
-              create: variantRows,
-            },
           },
         });
       },

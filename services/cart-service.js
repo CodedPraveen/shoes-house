@@ -14,11 +14,10 @@ function mapCartItemRow(item) {
     productId: item.product.id,
     name: item.product.name,
     image: primary,
-    price: item.variant?.price ?? item.product.price,
-    color: item.color,
+    price: item.product.price,
+    stock: item.product.stock,
     size: item.size,
     quantity: item.quantity,
-    variantId: item.variantId,
   };
 }
 
@@ -65,26 +64,42 @@ export const cartService = {
     return items;
   },
 
-  async addItem(userId, { productId, color, size, quantity = 1 }) {
+  async addItem(userId, { productId, size, quantity = 1 }) {
     const cartId = await getCartId(userId);
     const sizeNum = Number(size);
+    const quantityNum = Number(quantity);
 
-    const [variant, existing] = await Promise.all([
+    if (
+      !Number.isInteger(sizeNum) ||
+      !Number.isInteger(quantityNum) ||
+      quantityNum < 1
+    ) {
+      throw new Error("Invalid cart selection");
+    }
+
+    const [product, variant, existing] = await Promise.all([
+      prisma.product.findFirst({
+        where: {
+          id: productId,
+          ...notDeleted,
+          sizes: { some: { size: sizeNum } },
+        },
+        select: { stock: true },
+      }),
       prisma.productVariant.findFirst({
         where: {
           productId,
-          colorKey: color,
           size: sizeNum,
           ...notDeleted,
           isActive: true,
         },
+        orderBy: [{ colorKey: "asc" }, { createdAt: "asc" }],
         select: { id: true },
       }),
       prisma.cartItem.findFirst({
         where: {
           cartId,
           productId,
-          color,
           size: sizeNum,
           ...notDeleted,
         },
@@ -92,10 +107,19 @@ export const cartService = {
       }),
     ]);
 
+    if (!product || !variant) {
+      throw new Error("Selected size is unavailable");
+    }
+
+    const nextQuantity = (existing?.quantity ?? 0) + quantityNum;
+    if (product.stock < nextQuantity) {
+      throw new Error(`Only ${product.stock} left in stock`);
+    }
+
     if (existing) {
       await prisma.cartItem.update({
         where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
+        data: { quantity: nextQuantity, variantId: variant.id, color: "" },
       });
     } else {
       await prisma.cartItem.create({
@@ -103,9 +127,9 @@ export const cartService = {
           cartId,
           productId,
           variantId: variant?.id ?? null,
-          color,
+          color: "",
           size: sizeNum,
-          quantity,
+          quantity: quantityNum,
         },
       });
     }
@@ -116,7 +140,23 @@ export const cartService = {
   },
 
   async updateQuantity(userId, lineId, quantity) {
-    if (quantity < 1) {
+    const quantityNum = Number(quantity);
+    if (!Number.isInteger(quantityNum)) {
+      throw new Error("Invalid quantity");
+    }
+
+    if (quantityNum > 0) {
+      const line = await prisma.cartItem.findFirst({
+        where: { id: lineId, cart: { userId }, deletedAt: null },
+        select: { product: { select: { stock: true } } },
+      });
+      if (!line) throw new Error("Cart item not found");
+      if (line.product.stock < quantityNum) {
+        throw new Error(`Only ${line.product.stock} left in stock`);
+      }
+    }
+
+    if (quantityNum < 1) {
       await prisma.cartItem.updateMany({
         where: { id: lineId, cart: { userId }, deletedAt: null },
         data: { deletedAt: new Date() },
@@ -124,7 +164,7 @@ export const cartService = {
     } else {
       await prisma.cartItem.updateMany({
         where: { id: lineId, cart: { userId }, deletedAt: null },
-        data: { quantity },
+        data: { quantity: quantityNum },
       });
     }
     await deleteCache(`cart:${userId}`);
