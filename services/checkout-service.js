@@ -5,15 +5,17 @@ import { cartService } from "@/services/cart-service";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
-import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { saveShippingAddressForUser } from "@/services/address-service";
 import { decrementStockForSale } from "@/services/inventory-service";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
 function buildLineFromProduct(product, variant, size, quantity) {
-  const images = (product.images || []).map(optimizeCloudinaryImage);
-  const primary = images.find((i) => !i.isHover)?.url ?? images[0]?.url ?? "";
+  const images = product.images || [];
+  const primary =
+    images.find((i) => !i.isHover)?.url ??
+    images[0]?.url ??
+    "";
 
   return {
     productId: product.id,
@@ -457,16 +459,27 @@ export const checkoutService = {
               reason: `Sale · order ${created.orderNumber}`,
               sku: line.productSku,
             });
+
             await tx.product.update({
               where: { id: line.productId },
-              data: { purchaseCount: { increment: line.quantity } },
+              data: {
+                purchaseCount: {
+                  increment: line.quantity,
+                },
+              },
             });
           }
 
-          if (address.saveShippingAddress) await saveShippingAddressForUser(tx, userId, address);
           await cartService.clearCartInTransaction(tx, userId);
+
           return created;
         });
+
+        // Save the address AFTER the order transaction.
+        // Address saving must not keep the order transaction open.
+        if (address.saveShippingAddress) {
+          await saveShippingAddressForUser(prisma, userId, address);
+        }
 
         await cartService.invalidateCartCache(userId);
 
