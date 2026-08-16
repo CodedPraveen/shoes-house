@@ -43,6 +43,13 @@ function normalizeImages(imageUrls = [], allowedExistingUrls = new Set()) {
 }
 
 export const productAdminService = {
+  async getUploadCategory(collection, categorySlug) {
+    if (!["SHOES", "JEWELLERY"].includes(collection) || !/^[a-z0-9-]+$/.test(categorySlug)) return null;
+    return prisma.category.findFirst({
+      where: { collection, slug: categorySlug, deletedAt: null },
+      select: { id: true, slug: true, collection: true },
+    });
+  },
   // Legacy - remove after admin fully switches to Collection + Sub Category
   // async listCategories() {
   //   return prisma.category.findMany({

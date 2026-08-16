@@ -39,6 +39,16 @@ async function remember(key, callback, ttl = PRODUCT_CACHE_TTL) {
 }
 
 export const productService = {
+  async getByIds(ids = []) {
+    const uniqueIds = [...new Set(ids)].slice(0, 24);
+    if (!uniqueIds.length) return [];
+    const rows = await prisma.product.findMany({
+      where: { id: { in: uniqueIds }, ...activeProductWhere },
+      include: productInclude,
+    });
+    const order = new Map(uniqueIds.map((id, index) => [id, index]));
+    return mapProducts(rows, { includeInvalid: false }).sort((a, b) => order.get(a.id) - order.get(b.id));
+  },
   async getAll({ includeInvalid = false } = {}) {
     const rows = await fetchAllRaw();
 

@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format-price";
 import { Download, Truck, Hash, PackageCheck, FileText } from "lucide-react";
 import CustomerTrackingCard from "@/components/customer-tracking-card";
 import SafeImage from "@/components/ui/safe-image";
+import { getOrderStatusConfig } from "@/lib/order-status";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -199,7 +200,7 @@ export default function OrderDetailPage() {
                 <div className="space-y-2 border-t border-black/10 pt-4 text-sm">
                   <div className="flex justify-between">
                     <span className="text-black/60">Status</span>
-                    <span className="capitalize font-medium">{order.status}</span>
+                    <span className="font-medium">{getOrderStatusConfig(order.status).customerLabel}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-black/60">Payment</span>

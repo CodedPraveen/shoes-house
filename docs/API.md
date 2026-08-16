@@ -30,6 +30,10 @@ Every exported sensitive action calls `requireAdmin()`.
 
 ## New-admin order actions
 
+The new-admin action boundary now enforces sequential order transitions, rejects stale administrator actions, records the Clerk-derived actor, and keeps COD payment state separate from fulfilment state.
+
+`actions/storefront-admin-actions.js` owns authenticated product-section, hero, navbar, and storefront-media mutations.
+
 `actions/new-admin-order-actions.js` provides:
 
 - COD confirmation by call.

@@ -36,6 +36,7 @@ export async function createBuyNowCheckoutSessionAction(input) {
   try {
     await assertRateLimit({ prefix: "checkout-buy-now", limit: 8, windowMs: 60_000 });
     const shipping = await resolveShippingAddress(user.id, input);
+    shipping.saveShippingAddress = Boolean(input.saveShippingAddress && !input.addressId);
     const { productId, color, size, quantity = 1, paymentMethod = "razorpay" } = input;
 
     if (!productId || !color || !size) {
@@ -74,6 +75,7 @@ export async function createCheckoutSessionAction(input) {
     });
 
     const shipping = await resolveShippingAddress(user.id, input);
+    shipping.saveShippingAddress = Boolean(input.saveShippingAddress && !input.addressId);
 
     const { paymentMethod = "razorpay" } = input;
 

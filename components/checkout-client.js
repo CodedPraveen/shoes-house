@@ -81,6 +81,7 @@ export default function CheckoutClient() {
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [saveAddress, setSaveAddress] = useState(false);
   const touchedFieldsRef = useRef(new Set());
 
   useEffect(() => {
@@ -166,6 +167,7 @@ export default function CheckoutClient() {
       const result = await createCheckoutSessionAction({
         ...payload,
         paymentMethod,
+        saveShippingAddress: addressMode === "new" && saveAddress,
       });
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
@@ -332,6 +334,10 @@ export default function CheckoutClient() {
               errors={fieldErrors}
               onChange={updateField}
             />
+            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+              <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
+              Save this address for future orders
+            </label>
           </div>
         )}
 

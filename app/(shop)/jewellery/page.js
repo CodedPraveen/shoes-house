@@ -13,6 +13,8 @@ import TrustStrip from "@/components/jewellery/trust-strip";
 import { JEWELLERY_COLLECTIONS } from "@/data/jewellery-content";
 import { productService } from "@/services/product-service";
 import ProductGrid from "@/components/product-grid";
+import HeroSection from "@/sections/hero-section";
+import { getConfiguredProducts, getHomepageProductSections, getStorefrontConfig } from "@/services/storefront-service";
 
 export default async function JewelleryPage({
   searchParams,
@@ -26,6 +28,7 @@ export default async function JewelleryPage({
     trendingProducts,
     newArrivals,
     bestSellers,
+    storefront,
   ] = await Promise.all([
     productService.getProducts({
       collection: "JEWELLERY",
@@ -36,11 +39,23 @@ export default async function JewelleryPage({
     productService.getNewArrivals(8, "JEWELLERY"),
 
     productService.getBestSellers(8, "JEWELLERY"),
+    getStorefrontConfig("JEWELLERY"),
   ]);
+
+  const sections = new Map(storefront.sections.map((section) => [section.key, section]));
+  const heroSection = sections.get("HERO");
+  const productSections = getHomepageProductSections(storefront.sections, "JEWELLERY");
+  const configuredSections = await Promise.all(productSections.map(async (section) => ({
+    ...section,
+    products: await getConfiguredProducts(
+      section,
+      section.key === "TRENDING" ? trendingProducts : section.key === "NEW_ARRIVALS" ? newArrivals : [],
+    ),
+  })));
 
   return (
     <main>
-      <JewelleryHero />
+      {heroSection?.enabled === false ? null : storefront.slides.length ? <HeroSection slides={storefront.slides} /> : <JewelleryHero />}
       <TrustStrip />
       <CategorySection />
 
@@ -48,31 +63,19 @@ export default async function JewelleryPage({
         <ProductGrid products={products} />
       )}
 
-      <Suspense
-        fallback={
-          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16">
-            <ProductGridSkeleton count={6} />
-          </div>
-        }
-      >
-        <TrendingProducts products={trendingProducts.slice(0, 8)} />
-      </Suspense>
+      {configuredSections.filter((section) => section.enabled).map((section) => (
+        <Suspense key={section.key} fallback={<div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16"><ProductGridSkeleton count={6} /></div>}>
+          {section.key === "NEW_ARRIVALS"
+            ? <NewArrivals products={section.products} title={section.title} subtitle={section.subtitle || "Fresh designs for the season"} />
+            : <TrendingProducts products={section.products.slice(0, 8)} title={section.title} subtitle={section.subtitle || "Most loved this season"} />}
+        </Suspense>
+      ))}
 
       <CollectionSection {...JEWELLERY_COLLECTIONS.wedding} />
       <CollectionSection {...JEWELLERY_COLLECTIONS.office} reverse />
       <CollectionSection {...JEWELLERY_COLLECTIONS.gift} />
 
       <ShopTheLook />
-
-      <Suspense
-        fallback={
-          <div className="mx-auto max-w-[1280px] px-4 py-16 md:px-16">
-            <ProductGridSkeleton count={4} />
-          </div>
-        }
-      >
-        <NewArrivals products={newArrivals} />
-      </Suspense>
 
       <Suspense
         fallback={

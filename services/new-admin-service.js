@@ -66,8 +66,11 @@ function workflowWhere(workflow) {
     case "confirm":
       return { status: "PENDING", confirmedByCall: false };
     case "confirmed":
+      return { status: "CONFIRMED" };
+    case "processing":
+      return { status: "PROCESSING" };
     case "ready_to_send":
-      return { status: "PROCESSING", trackingNumber: null };
+      return { status: "READY_TO_SEND", trackingNumber: null };
     case "sending":
       return { status: "SHIPPED" };
     case "in_transit":
@@ -179,22 +182,86 @@ export async function getOrderKpis(params = {}) {
 export async function getAttentionCounts() {
   const staleBefore = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const base = { deletedAt: null };
-  const [waitingConfirmation, missingTracking, inTransit, staleTracking, codOutstanding] =
-    await Promise.all([
-      prisma.order.count({ where: { ...base, status: "PENDING", confirmedByCall: false } }),
-      prisma.order.count({ where: { ...base, status: "PROCESSING", trackingNumber: null } }),
-      prisma.order.count({ where: { ...base, trackingStatus: { in: ["IN_TRANSIT", "OUT_FOR_DELIVERY"] } } }),
-      prisma.order.count({
-        where: {
-          ...base,
-          status: "SHIPPED",
-          trackingNumber: { not: null },
-          OR: [{ lastTrackingSync: null }, { lastTrackingSync: { lt: staleBefore } }],
+
+  const [
+    waitingConfirmation,
+    processing,
+    missingTracking,
+    inTransit,
+    staleTracking,
+    codOutstanding,
+  ] = await Promise.all([
+    prisma.order.count({
+      where: {
+        ...base,
+        status: "PENDING",
+        confirmedByCall: false,
+      },
+    }),
+
+    prisma.order.count({
+      where: {
+        ...base,
+        status: "PROCESSING",
+      },
+    }),
+
+    prisma.order.count({
+      where: {
+        ...base,
+        status: "READY_TO_SEND",
+        trackingNumber: null,
+      },
+    }),
+
+    prisma.order.count({
+      where: {
+        ...base,
+        trackingStatus: {
+          in: ["IN_TRANSIT", "OUT_FOR_DELIVERY"],
         },
-      }),
-      prisma.order.count({ where: { ...base, ...COD_ORDER_MATCH, status: { notIn: ["DELIVERED", "CANCELLED"] } } }),
-    ]);
-  return { waitingConfirmation, missingTracking, inTransit, staleTracking, codOutstanding };
+      },
+    }),
+
+    prisma.order.count({
+      where: {
+        ...base,
+        status: "SHIPPED",
+        trackingNumber: {
+          not: null,
+        },
+        OR: [
+          {
+            lastTrackingSync: null,
+          },
+          {
+            lastTrackingSync: {
+              lt: staleBefore,
+            },
+          },
+        ],
+      },
+    }),
+
+    prisma.order.count({
+      where: {
+        ...base,
+        ...COD_ORDER_MATCH,
+        status: {
+          notIn: ["DELIVERED", "CANCELLED"],
+        },
+      },
+    }),
+  ]);
+
+  return {
+    waitingConfirmation,
+    processing,
+    missingTracking,
+    inTransit,
+    staleTracking,
+    codOutstanding,
+  };
 }
 
 export async function getOrdersPage(params = {}) {
@@ -229,6 +296,7 @@ export async function getOrderDetail(id) {
       items: { where: { deletedAt: null }, include: { product: { select: { slug: true } } } },
       payments: { where: { deletedAt: null }, orderBy: { createdAt: "desc" } },
       checkpoints: { orderBy: { checkpointTime: "desc" } },
+      statusHistory: { orderBy: { createdAt: "asc" } },
     },
   });
   return order ? serializeOrder(order) : null;

@@ -9,20 +9,21 @@ datasource db {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  name             String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  clerkId          String            @unique
-  deletedAt        DateTime?
-  email            String            @unique
-  role             String            @default("customer")
-  addresses        Address[]
-  cart             Cart?
-  checkoutSessions CheckoutSession[]
-  orders           Order[]
-  reviews          Review[]
-  wishlist         Wishlist[]
+  id                 String               @id @default(cuid())
+  name               String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  clerkId            String               @unique
+  deletedAt          DateTime?
+  email              String               @unique
+  role               String               @default("customer")
+  addresses          Address[]
+  cart               Cart?
+  checkoutSessions   CheckoutSession[]
+  orders             Order[]
+  reviews            Review[]
+  wishlist           Wishlist[]
+  orderStatusHistory OrderStatusHistory[]
 
   @@index([email])
   @@index([role])
@@ -31,19 +32,22 @@ model User {
 }
 
 model Category {
-  id         String            @id @default(cuid())
-  name       String
-  slug       String            @unique
-  imageUrl   String?
-  sortOrder  Int               @default(0)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  deletedAt  DateTime?
-  collection ProductCollection
-  parentId   String?
-  parent     Category?         @relation("CategoryTree", fields: [parentId], references: [id])
-  children   Category[]        @relation("CategoryTree")
-  products   Product[]
+  id              String                  @id @default(cuid())
+  name            String
+  slug            String                  @unique
+  imageUrl        String?
+  sortOrder       Int                     @default(0)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  deletedAt       DateTime?
+  collection      ProductCollection
+  parentId        String?
+  parent          Category?               @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[]              @relation("CategoryTree")
+  products        Product[]
+  storefrontItems StorefrontSectionItem[]
+  heroSlides      HeroSlide[]
+  navbarItems     NavbarItem[]
 
   @@index([collection])
   @@index([slug])
@@ -52,37 +56,40 @@ model Category {
 }
 
 model Product {
-  id             String            @id @default(cuid())
-  name           String
-  brand          String            @default("Post Mart")
-  slug           String            @unique
-  description    String
-  price          Int
-  compareAtPrice Int?
-  discount       Int?
-  stock          Int               @default(0)
-  isNew          Boolean           @default(false)
-  isTrending     Boolean           @default(false)
-  purchaseCount  Int               @default(0)
-  rank           Int?
-  materials      String?
-  shippingInfo   String?
-  returnPolicy   String?
-  tags           String[]          @default([])
-  categoryId     String
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  deletedAt      DateTime?
-  collection     ProductCollection
-  cartItems      CartItem[]
-  orderItems     OrderItem[]
-  category       Category          @relation(fields: [categoryId], references: [id])
-  colors         ProductColor[]
-  images         ProductImage[]
-  sizes          ProductSize[]
-  variants       ProductVariant[]
-  reviews        Review[]
-  wishlist       Wishlist[]
+  id              String                  @id @default(cuid())
+  name            String
+  brand           String                  @default("Post Mart")
+  slug            String                  @unique
+  description     String
+  price           Int
+  compareAtPrice  Int?
+  discount        Int?
+  stock           Int                     @default(0)
+  isNew           Boolean                 @default(false)
+  isTrending      Boolean                 @default(false)
+  purchaseCount   Int                     @default(0)
+  rank            Int?
+  materials       String?
+  shippingInfo    String?
+  returnPolicy    String?
+  tags            String[]                @default([])
+  categoryId      String
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  deletedAt       DateTime?
+  collection      ProductCollection
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+  category        Category                @relation(fields: [categoryId], references: [id])
+  colors          ProductColor[]
+  images          ProductImage[]
+  sizes           ProductSize[]
+  variants        ProductVariant[]
+  reviews         Review[]
+  wishlist        Wishlist[]
+  storefrontItems StorefrontSectionItem[]
+  heroSlides      HeroSlide[]
+  navbarItems     NavbarItem[]
 
   @@index([slug])
   @@index([name])
@@ -235,32 +242,33 @@ model Address {
 }
 
 model CheckoutSession {
-  id               String                @id @default(cuid())
-  userId           String
-  razorpayOrderId  String?               @unique
-  subtotal         Int
-  shippingCost     Int                   @default(0)
-  total            Int
-  currency         String                @default("INR")
-  status           CheckoutSessionStatus @default(PENDING)
-  shipFullName     String
-  shipPhone        String
-  shipLine1        String
-  shipLine2        String?
-  shipCity         String
-  shipState        String
-  shipCountry      String                @default("India")
-  shipPincode      String
-  expiresAt        DateTime
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  orderId          String?               @unique
-  mode             CheckoutSessionMode   @default(CART)
-  shipAddressLabel String?
-  shipLandmark     String?
-  order            Order?                @relation(fields: [orderId], references: [id])
-  user             User                  @relation(fields: [userId], references: [id])
-  items            CheckoutSessionItem[]
+  id                  String                @id @default(cuid())
+  userId              String
+  razorpayOrderId     String?               @unique
+  subtotal            Int
+  shippingCost        Int                   @default(0)
+  total               Int
+  currency            String                @default("INR")
+  status              CheckoutSessionStatus @default(PENDING)
+  shipFullName        String
+  shipPhone           String
+  shipLine1           String
+  shipLine2           String?
+  shipCity            String
+  shipState           String
+  shipCountry         String                @default("India")
+  shipPincode         String
+  expiresAt           DateTime
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  orderId             String?               @unique
+  mode                CheckoutSessionMode   @default(CART)
+  shipAddressLabel    String?
+  shipLandmark        String?
+  saveShippingAddress Boolean               @default(false)
+  order               Order?                @relation(fields: [orderId], references: [id])
+  user                User                  @relation(fields: [userId], references: [id])
+  items               CheckoutSessionItem[]
 
   @@index([userId])
   @@index([status])
@@ -325,6 +333,7 @@ model Order {
   items              OrderItem[]
   payments           Payment[]
   checkpoints        TrackingCheckpoint[]
+  statusHistory      OrderStatusHistory[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -334,6 +343,113 @@ model Order {
   @@index([userId, status])
   @@index([userId, createdAt])
   @@index([confirmedByCall, status])
+}
+
+model OrderStatusHistory {
+  id              String       @id @default(cuid())
+  orderId         String
+  previousStatus  OrderStatus?
+  newStatus       OrderStatus
+  changedBy       String
+  changedByUserId String?
+  actorType       String       @default("ADMIN")
+  note            String?
+  createdAt       DateTime     @default(now())
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedByUser   User?        @relation(fields: [changedByUserId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([changedBy])
+}
+
+model MediaAsset {
+  id           String                  @id @default(cuid())
+  url          String
+  publicId     String?                 @unique
+  resourceType String                  @default("image")
+  folder       String
+  alt          String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  heroSlides   HeroSlide[]
+  sectionItems StorefrontSectionItem[]
+
+  @@index([folder])
+}
+
+model StorefrontSection {
+  id         String                  @id @default(cuid())
+  collection ProductCollection
+  key        String
+  enabled    Boolean                 @default(true)
+  title      String
+  subtitle   String?
+  sortOrder  Int                     @default(0)
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+  items      StorefrontSectionItem[]
+
+  @@unique([collection, key])
+  @@index([collection, enabled, sortOrder])
+}
+
+model StorefrontSectionItem {
+  id           String            @id @default(cuid())
+  sectionId    String
+  label        String?
+  enabled      Boolean           @default(true)
+  sortOrder    Int               @default(0)
+  categoryId   String?
+  productId    String?
+  mediaAssetId String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  section      StorefrontSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  category     Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product      Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  mediaAsset   MediaAsset?       @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+
+  @@index([sectionId, enabled, sortOrder])
+  @@index([categoryId])
+  @@index([productId])
+}
+
+model HeroSlide {
+  id           String               @id @default(cuid())
+  collection   ProductCollection
+  mediaAssetId String
+  alt          String
+  enabled      Boolean              @default(true)
+  sortOrder    Int                  @default(0)
+  targetType   StorefrontTargetType @default(COLLECTION)
+  categoryId   String?
+  productId    String?
+  customHref   String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  mediaAsset   MediaAsset           @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product      Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([collection, enabled, sortOrder])
+}
+
+model NavbarItem {
+  id         String               @id @default(cuid())
+  collection ProductCollection
+  label      String
+  enabled    Boolean              @default(true)
+  sortOrder  Int                  @default(0)
+  targetType StorefrontTargetType
+  categoryId String?
+  productId  String?
+  customHref String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  category   Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product    Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([collection, enabled, sortOrder])
 }
 
 model TrackingCheckpoint {
@@ -465,10 +581,19 @@ enum ProductCollection {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
+  READY_TO_SEND
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum StorefrontTargetType {
+  COLLECTION
+  CATEGORY
+  PRODUCT
+  CUSTOM
 }
 
 enum PaymentStatus {

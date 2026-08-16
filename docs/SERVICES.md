@@ -22,6 +22,11 @@ Services contain reusable business and data-access logic. Search this directory 
 
 ## Orders and operations
 
+New production-safe operational services:
+
+- `order-workflow-service.js` validates conditional transitions and writes status-history audit records.
+- `storefront-service.js` builds ordered product-section, hero, selected-product, and navbar read models; legacy non-product section rows are retained but excluded from product-section rendering.
+
 - `order-service.js` — order reads, tracking attachment, refresh, and tracking synchronization.
 - `new-admin-service.js` — dashboards, filtered orders, exports, products, inventory, customers, and newsletter read models.
 - `invoice-service.js` — invoice data and HTML generation.

@@ -16,6 +16,10 @@ Status reflects source code inspected on 2026-08-10.
 - [x] Orders, immutable order items, order history, and HTML invoices.
 - [x] Paid-order atomic inventory decrement and inventory movement audit.
 - [x] Cash on Delivery order creation and new-admin call-confirmation workflow.
+- [x] Validated seven-state new-admin order workflow with stale-action protection and administrator audit history.
+- [x] Admin-managed storefront hero, sections, lifestyle content, selected products, and navbar destinations.
+- [x] Server-derived Cloudinary folders for new-admin catalog and storefront uploads.
+- [x] Explicit checkout consent before a new shipping address is saved.
 - [x] Existing `/admin` system.
 - [x] Protected `/new-admin` operations system.
 - [x] Server-side Cloudinary device uploads for new-admin product images.

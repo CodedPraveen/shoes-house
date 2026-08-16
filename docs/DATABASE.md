@@ -7,7 +7,7 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 ### Identity and customer data
 
 - `User` has unique `clerkId` and `email`, a string `role`, timestamps, soft deletion, and relations to addresses, cart, wishlist, checkout sessions, orders, and reviews.
-- `Address` stores named Indian shipping addresses and indexes user, default state, deletion state, and pincode.
+- `Address` stores reusable Indian shipping addresses. Checkout no longer asks customers to name an address; the compatible `label` field retains its default.
 - `NewsletterSubscriber` stores a unique email and soft-deletion state.
 
 ### Catalog
@@ -29,7 +29,9 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 
 - `CheckoutSession` snapshots totals, mode, shipping information, expiry, Razorpay order, and resulting order.
 - `CheckoutSessionItem` snapshots product and variant details for checkout.
-- `Order` stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, and checkpoints.
+- `Order` stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, checkpoints, and status history.
+- `OrderStatusHistory` records each operational status transition, its previous/new state, a server-derived actor identifier, timestamp, and optional note.
+- `MediaAsset`, `HeroSlide`, `StorefrontSection`, `StorefrontSectionItem`, and `NavbarItem` provide the lightweight storefront CMS without changing product-image ownership.
 - `OrderItem` snapshots name, image, SKU, price, color, size, and quantity so catalog edits do not rewrite order history.
 - `Payment` stores Razorpay identifiers, signature, webhook ID, amount, status, method, raw payload, refund time, and soft deletion.
 
@@ -47,7 +49,7 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 
 ```text
 ProductCollection: SHOES, JEWELLERY
-OrderStatus: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+OrderStatus: PENDING, CONFIRMED, PROCESSING, READY_TO_SEND, SHIPPED, DELIVERED, CANCELLED
 PaymentStatus: PENDING, PAID, FAILED, REFUNDED
 CheckoutSessionStatus: PENDING, COMPLETED, EXPIRED, FAILED
 CheckoutSessionMode: CART, BUY_NOW
