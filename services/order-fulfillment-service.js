@@ -128,8 +128,9 @@ export async function fulfillPaidCheckout({
 
   try {
 
-    for (const item of session.items) {
-      const key = `variant:${item.variantId}`;
+    const productIds = [...new Set(session.items.map((item) => item.productId))].sort();
+    for (const productId of productIds) {
+      const key = `product:${productId}`;
 
       const ok = await acquireLock(key, 30);
 
@@ -140,129 +141,136 @@ export async function fulfillPaidCheckout({
       redisLocks.push(key);
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const locked = await tx.checkoutSession.updateMany({
-        where: {
-          id: session.id,
-          status: { in: ["PENDING", "FAILED", "EXPIRED"] },
-        },
-        data: { updatedAt: new Date() },
-      });
-
-      if (locked.count === 0) {
-        const completed = await tx.checkoutSession.findUnique({
-          where: { id: session.id },
-          select: { orderId: true, status: true },
-        });
-        if (completed?.status === "COMPLETED" && completed.orderId) {
-          return { duplicate: true, orderId: completed.orderId };
-        }
-        throw new Error("Checkout session is not available for fulfillment");
-      }
-
-      const paidAgain = await tx.payment.findFirst({
-        where: { razorpayPaymentId, status: "PAID", deletedAt: null },
-      });
-
-      if (paidAgain) {
-        return { duplicate: true, orderId: paidAgain.orderId };
-      }
-
-      const order = await tx.order.create({
-        data: {
-          orderNumber,
-          userId: session.userId,
-          status: "PROCESSING",
-          subtotal: session.subtotal,
-          shippingCost: session.shippingCost,
-          total: session.total,
-          shipFullName: session.shipFullName,
-          shipPhone: session.shipPhone,
-          shipLine1: session.shipLine1,
-          shipLandmark: session.shipLandmark,
-          shipLine2: session.shipLine2,
-          shipState: session.shipState,
-          shipCity: session.shipCity,
-          shipCountry: session.shipCountry,
-          shipPincode: session.shipPincode,
-          items: {
-            create: session.items.map((line) => ({
-              productId: line.productId,
-              variantId: line.variantId,
-              productName: line.productName,
-              productImage: line.productImage,
-              productSku: line.productSku,
-              priceAtPurchase: line.priceAtPurchase,
-              color: line.color,
-              size: line.size,
-              quantity: line.quantity,
-            })),
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const locked = await tx.checkoutSession.updateMany({
+          where: {
+            id: session.id,
+            status: { in: ["PENDING", "FAILED", "EXPIRED"] },
           },
-        },
-      });
+          data: { updatedAt: new Date() },
+        });
 
-      for (const line of session.items) {
-
-        if (!line.variantId) {
-          throw new Error(`Missing variant for ${line.productSku}`);
+        if (locked.count === 0) {
+          const completed = await tx.checkoutSession.findUnique({
+            where: { id: session.id },
+            select: { orderId: true, status: true },
+          });
+          if (completed?.status === "COMPLETED" && completed.orderId) {
+            return { duplicate: true, orderId: completed.orderId };
+          }
+          throw new Error("Checkout session is not available for fulfillment");
         }
 
-        await decrementStockForSale(tx, {
-          variantId: line.variantId,
-          quantity: line.quantity,
-          orderId: order.id,
-          reason: `Sale · order ${order.orderNumber}`,
-          sku: line.productSku,
+        const paidAgain = await tx.payment.findFirst({
+          where: { razorpayPaymentId, status: "PAID", deletedAt: null },
         });
-      }
 
-      await tx.payment.create({
-        data: {
-          orderId: order.id,
-          razorpayOrderId,
-          razorpayPaymentId,
-          razorpaySignature,
-          amount: session.total,
-          currency: "INR",
-          status: "PAID",
-          paymentMethod: "Razorpay",
-          rawPayload: rawPayload ?? undefined,
-          webhookEventId: webhookEventId ?? undefined,
-        },
-      });
+        if (paidAgain) {
+          return { duplicate: true, orderId: paidAgain.orderId };
+        }
 
-      if (session.saveShippingAddress) await saveShippingAddressForUser(tx, session.userId, {
-        label: session.shipAddressLabel || "Home",
-        fullName: session.shipFullName,
-        phone: session.shipPhone,
-        line1: session.shipLine1,
-        landmark: session.shipLandmark,
-        line2: session.shipLine2,
-        city: session.shipCity,
-        state: session.shipState,
-        country: session.shipCountry,
-        pincode: session.shipPincode,
-      });
-
-      if (session.mode !== "BUY_NOW") {
-        await cartService.clearCartInTransaction(tx, session.userId);
-      }
-
-      await tx.checkoutSession.update({
-        where: { id: session.id },
-        data: { status: "COMPLETED", orderId: order.id },
-      });
-
-      for (const line of session.items) {
-        await tx.product.update({
-          where: { id: line.productId },
-          data: { purchaseCount: { increment: line.quantity } },
+        const order = await tx.order.create({
+          data: {
+            orderNumber,
+            userId: session.userId,
+            status: "PROCESSING",
+            subtotal: session.subtotal,
+            shippingCost: session.shippingCost,
+            total: session.total,
+            shipFullName: session.shipFullName,
+            shipPhone: session.shipPhone,
+            shipLine1: session.shipLine1,
+            shipLandmark: session.shipLandmark,
+            shipLine2: session.shipLine2,
+            shipState: session.shipState,
+            shipCity: session.shipCity,
+            shipCountry: session.shipCountry,
+            shipPincode: session.shipPincode,
+            items: {
+              create: session.items.map((line) => ({
+                productId: line.productId,
+                variantId: line.variantId,
+                productName: line.productName,
+                productImage: line.productImage,
+                productSku: line.productSku,
+                priceAtPurchase: line.priceAtPurchase,
+                color: line.color,
+                size: line.size,
+                quantity: line.quantity,
+              })),
+            },
+          },
         });
+
+        for (const line of session.items) {
+
+          if (!line.variantId) {
+            throw new Error(`Missing variant for ${line.productSku}`);
+          }
+
+          await decrementStockForSale(tx, {
+            productId: line.productId,
+            variantId: line.variantId,
+            quantity: line.quantity,
+            orderId: order.id,
+            reason: `Sale · order ${order.orderNumber}`,
+            sku: line.productSku,
+          });
+        }
+
+        await tx.payment.create({
+          data: {
+            orderId: order.id,
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature,
+            amount: session.total,
+            currency: "INR",
+            status: "PAID",
+            paymentMethod: "Razorpay",
+            rawPayload: rawPayload ?? undefined,
+            webhookEventId: webhookEventId ?? undefined,
+          },
+        });
+
+        if (session.saveShippingAddress) await saveShippingAddressForUser(tx, session.userId, {
+          label: session.shipAddressLabel || "Home",
+          fullName: session.shipFullName,
+          phone: session.shipPhone,
+          line1: session.shipLine1,
+          landmark: session.shipLandmark,
+          line2: session.shipLine2,
+          city: session.shipCity,
+          state: session.shipState,
+          country: session.shipCountry,
+          pincode: session.shipPincode,
+        });
+
+        if (session.mode !== "BUY_NOW") {
+          await cartService.clearCartInTransaction(tx, session.userId);
+        }
+
+        await tx.checkoutSession.update({
+          where: { id: session.id },
+          data: { status: "COMPLETED", orderId: order.id },
+        });
+
+        for (const line of session.items) {
+          await tx.product.update({
+            where: { id: line.productId },
+            data: { purchaseCount: { increment: line.quantity } },
+          });
+        }
+
+        return { duplicate: false, order };
+
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
       }
-
-      return { duplicate: false, order };
-
-    });
+    );
 
     if (result.duplicate) {
       logDuplicatePayment({

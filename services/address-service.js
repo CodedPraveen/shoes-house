@@ -64,104 +64,127 @@ export const addressService = {
   },
 
   async setDefault(userId, addressId) {
-    return prisma.$transaction(async (tx) => {
-      const existing = await tx.address.findFirst({
-        where: { id: addressId, userId, ...notDeleted },
-      });
-      if (!existing) return null;
+    return prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.address.findFirst({
+          where: { id: addressId, userId, ...notDeleted },
+        });
+        if (!existing) return null;
 
-      await tx.address.updateMany({
-        where: { userId, ...notDeleted },
-        data: { isDefault: false },
-      });
+        await tx.address.updateMany({
+          where: { userId, ...notDeleted },
+          data: { isDefault: false },
+        });
 
-      return tx.address.update({
-        where: { id: addressId },
-        data: { isDefault: true },
-      });
-    });
+        return tx.address.update({
+          where: { id: addressId },
+          data: { isDefault: true },
+        });
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      }
+    );
   },
 
   async create(userId, data) {
     const address = validatedAddress(data);
 
-    return prisma.$transaction(async (tx) => {
-      const activeCount = await tx.address.count({
-        where: { userId, ...notDeleted },
-      });
-      const shouldBeDefault = Boolean(data.isDefault) || activeCount === 0;
-
-      if (shouldBeDefault) {
-        await tx.address.updateMany({
+    return prisma.$transaction(
+      async (tx) => {
+        const activeCount = await tx.address.count({
           where: { userId, ...notDeleted },
-          data: { isDefault: false },
         });
-      }
+        const shouldBeDefault = Boolean(data.isDefault) || activeCount === 0;
 
-      return tx.address.create({
-        data: {
-          userId,
-          ...addressData(address),
-          isDefault: shouldBeDefault,
-        },
-      });
-    });
+        if (shouldBeDefault) {
+          await tx.address.updateMany({
+            where: { userId, ...notDeleted },
+            data: { isDefault: false },
+          });
+        }
+
+        return tx.address.create({
+          data: {
+            userId,
+            ...addressData(address),
+            isDefault: shouldBeDefault,
+          },
+        });
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      }
+    );
   },
 
   async update(userId, addressId, data) {
     const address = validatedAddress(data);
 
-    return prisma.$transaction(async (tx) => {
-      const existing = await tx.address.findFirst({
-        where: { id: addressId, userId, ...notDeleted },
-      });
-      if (!existing) return null;
-
-      if (data.isDefault) {
-        await tx.address.updateMany({
-          where: { userId, ...notDeleted },
-          data: { isDefault: false },
+    return prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.address.findFirst({
+          where: { id: addressId, userId, ...notDeleted },
         });
-      }
+        if (!existing) return null;
 
-      return tx.address.update({
-        where: { id: addressId },
-        data: {
-          ...addressData(address),
-          isDefault: data.isDefault ?? existing.isDefault,
-        },
-      });
-    });
+        if (data.isDefault) {
+          await tx.address.updateMany({
+            where: { userId, ...notDeleted },
+            data: { isDefault: false },
+          });
+        }
+
+        return tx.address.update({
+          where: { id: addressId },
+          data: {
+            ...addressData(address),
+            isDefault: data.isDefault ?? existing.isDefault,
+          },
+        });
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      }
+    );
   },
 
   async remove(userId, addressId) {
-    return prisma.$transaction(async (tx) => {
-      const existing = await tx.address.findFirst({
-        where: { id: addressId, userId, ...notDeleted },
-      });
-      if (!existing) return { count: 0 };
-
-      const removed = await tx.address.updateMany({
-        where: { id: addressId, userId, ...notDeleted },
-        data: { deletedAt: new Date(), isDefault: false },
-      });
-
-      if (existing.isDefault) {
-        const next = await tx.address.findFirst({
-          where: { userId, ...notDeleted },
-          orderBy: { createdAt: "desc" },
-          select: { id: true },
+    return prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.address.findFirst({
+          where: { id: addressId, userId, ...notDeleted },
         });
-        if (next) {
-          await tx.address.update({
-            where: { id: next.id },
-            data: { isDefault: true },
-          });
-        }
-      }
+        if (!existing) return { count: 0 };
 
-      return removed;
-    });
+        const removed = await tx.address.updateMany({
+          where: { id: addressId, userId, ...notDeleted },
+          data: { deletedAt: new Date(), isDefault: false },
+        });
+
+        if (existing.isDefault) {
+          const next = await tx.address.findFirst({
+            where: { userId, ...notDeleted },
+            orderBy: { createdAt: "desc" },
+            select: { id: true },
+          });
+          if (next) {
+            await tx.address.update({
+              where: { id: next.id },
+              data: { isDefault: true },
+            });
+          }
+        }
+        return removed;
+      },
+      {
+        maxWait: 10000,
+        timeout: 30000,
+      }
+    );
   },
 };
 

@@ -3,7 +3,7 @@
  * Schema: Payment.refundedAt, Payment.status REFUNDED, Order.refundReason.
  */
 import { prisma } from "@/lib/db";
-import { incrementStock } from "@/services/inventory-service";
+import { incrementProductStock } from "@/services/inventory-service";
 
 export const refundService = {
   /**
@@ -30,7 +30,8 @@ export const refundService = {
 
       for (const item of order.items) {
         if (!item.variantId) continue;
-        await incrementStock(tx, {
+        await incrementProductStock(tx, {
+          productId: item.productId,
           variantId: item.variantId,
           quantity: item.quantity,
           type: "REFUND",

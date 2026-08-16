@@ -2,20 +2,20 @@ import { notDeleted } from "@/lib/prisma-helpers";
 import { InsufficientStockError } from "@/lib/inventory-errors";
 
 /**
- * Atomic stock decrement + InventoryMovement (SALE).
+ * Atomic product stock decrement + InventoryMovement (SALE).
  * quantity must be positive; movement is recorded as negative.
  */
 export async function decrementStockForSale(
   tx,
-  { variantId, quantity, orderId, reason, sku },
+  { productId, variantId, quantity, orderId, reason, sku },
 ) {
   if (quantity < 1) {
     throw new Error("Sale quantity must be at least 1");
   }
 
-  const updated = await tx.productVariant.updateMany({
+  const updated = await tx.product.updateMany({
     where: {
-      id: variantId,
+      id: productId,
       ...notDeleted,
       stock: { gte: quantity },
     },
@@ -25,7 +25,7 @@ export async function decrementStockForSale(
   if (updated.count !== 1) {
     throw new InsufficientStockError(
       sku ? `Insufficient stock for SKU ${sku}` : "Insufficient stock",
-      { variantId, quantity, sku },
+      { productId, variantId, quantity, sku },
     );
   }
 
@@ -40,8 +40,36 @@ export async function decrementStockForSale(
   });
 }
 
+/** Restore product-level stock while retaining the compatibility variant link. */
+export async function incrementProductStock(
+  tx,
+  { productId, variantId, quantity, type, reason, orderId },
+) {
+  if (quantity < 1) {
+    throw new Error("Increment quantity must be at least 1");
+  }
+
+  const updated = await tx.product.updateMany({
+    where: { id: productId, ...notDeleted },
+    data: { stock: { increment: quantity } },
+  });
+  if (updated.count !== 1) {
+    throw new Error(`Product not found: ${productId}`);
+  }
+
+  await tx.inventoryMovement.create({
+    data: {
+      variantId,
+      quantity,
+      type,
+      reason: reason ?? type,
+      orderId: orderId ?? null,
+    },
+  });
+}
+
 /**
- * Increase stock + movement (RESTOCK, REFUND, ADMIN_ADJUSTMENT).
+ * Legacy variant-level increase used by the unmigrated inventory admin.
  */
 export async function incrementStock(
   tx,

@@ -37,9 +37,9 @@ export async function createBuyNowCheckoutSessionAction(input) {
     await assertRateLimit({ prefix: "checkout-buy-now", limit: 8, windowMs: 60_000 });
     const shipping = await resolveShippingAddress(user.id, input);
     shipping.saveShippingAddress = Boolean(input.saveShippingAddress && !input.addressId);
-    const { productId, color, size, quantity = 1, paymentMethod = "razorpay" } = input;
+    const { productId, size, quantity = 1, paymentMethod = "razorpay" } = input;
 
-    if (!productId || !color || !size) {
+    if (!productId || !size) {
       return { ok: false, error: "Missing product selection" };
     }
 
@@ -47,7 +47,7 @@ export async function createBuyNowCheckoutSessionAction(input) {
       const order = await checkoutService.createBuyNowOrder(
         user.id,
         { ...shipping, email: user.email },
-        { productId, color, size, quantity: Number(quantity) || 1 },
+        { productId, size, quantity: Number(quantity) || 1 },
         paymentMethod,
       );
       return { ok: true, orderId: order.id };
@@ -56,7 +56,7 @@ export async function createBuyNowCheckoutSessionAction(input) {
     const session = await checkoutService.createBuyNowPaymentSession(
       user.id,
       { ...shipping, email: user.email },
-      { productId, color, size, quantity: Number(quantity) || 1 },
+      { productId, size, quantity: Number(quantity) || 1 },
     );
     return { ok: true, ...session };
   } catch (err) {

@@ -59,7 +59,7 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback(
     async (payload) => {
-      const { product, color, size, quantity = 1 } = payload;
+      const { product, size, quantity = 1 } = payload;
 
       if (isSignedIn) {
         const previous = items;
@@ -68,7 +68,6 @@ export function CartProvider({ children }) {
         try {
           const data = await addToCartAction({
             productId: product.id,
-            color,
             size,
             quantity,
           });

@@ -17,7 +17,6 @@ export default function CartPage() {
   const handleBuyNow = (item) => {
     const q = new URLSearchParams({
       productId: item.productId,
-      color: item.color,
       size: String(item.size),
       quantity: String(item.quantity),
     });
@@ -68,7 +67,7 @@ export default function CartPage() {
                       <div className="flex flex-col gap-2">
                         <h3 className="font-medium">{item.name}</h3>
                         <p className="mt-1 text-sm text-black/60">
-                          Color: {item.color} · Size: {item.size}
+                          Size: {item.size}
                         </p>
                         <p className="mt-2 text-sm font-medium">
                           {formatPrice(item.price)}

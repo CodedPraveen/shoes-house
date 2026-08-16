@@ -15,16 +15,9 @@ import {
 import AdminCloudinaryUpload from "@/components/admin/admin-cloudinary-upload";
 import LoadingButton from "@/components/ui/loading-button";
 import { buttonClass, inputClass } from "@/components/new-admin/ui";
-import { COLOR_FILTERS } from "@/lib/constants";
 import { slugify } from "@/lib/slugify-text";
 
 const MAX_PRODUCT_IMAGES = 8;
-
-const defaultColors = COLOR_FILTERS.slice(0, 3).map((color) => ({
-  colorKey: color.id,
-  label: color.label,
-  hex: color.hex,
-}));
 
 export default function NewAdminProductForm({
   mode = "create",
@@ -46,7 +39,11 @@ export default function NewAdminProductForm({
     description: initial?.description ?? "",
     brand: initial?.brand ?? "Post Mart",
     price: initial?.price ?? "",
-    stockPerVariant: initial?.variantRecords?.[0]?.stock ?? 0,
+
+    // Product-level stock.
+    // This is the single inventory value for the product.
+    stock: initial?.stock ?? 0,
+
     sizes: initial?.sizes?.join(", ") ?? "38, 40, 42, 44",
 
     collection:
@@ -63,14 +60,6 @@ export default function NewAdminProductForm({
     isTrending: initial?.isTrending ?? false,
 
     imageUrls: initial?.images ?? [],
-
-    colors: initial?.colorRecords?.length
-      ? initial.colorRecords.map((color) => ({
-        colorKey: color.colorKey,
-        label: color.label,
-        hex: color.hex,
-      }))
-      : defaultColors,
   });
 
   /*
@@ -218,6 +207,13 @@ export default function NewAdminProductForm({
       return;
     }
 
+    const stock = Number(form.stock);
+
+    if (!Number.isFinite(stock) || stock < 0) {
+      setError("Stock must be a valid number greater than or equal to 0.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -226,8 +222,8 @@ export default function NewAdminProductForm({
 
         price: Number(form.price),
 
-        stockPerVariant:
-          Number(form.stockPerVariant) || 0,
+        // Product-level stock.
+        stock: Math.floor(stock),
 
         imageUrls: form.imageUrls,
 
@@ -499,24 +495,29 @@ export default function NewAdminProductForm({
               />
             </label>
 
-            {/* Stock */}
+            {/* Product stock */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Stock per variant
+                Stock
               </span>
 
               <input
                 type="number"
                 min="0"
+                step="1"
                 className={inputClass}
-                value={form.stockPerVariant}
+                value={form.stock}
                 onChange={(event) =>
                   update(
-                    "stockPerVariant",
+                    "stock",
                     event.target.value,
                   )
                 }
               />
+
+              <p className="mt-1 text-xs text-slate-500">
+                Total stock available for this product.
+              </p>
             </label>
 
             {/* Sizes */}
@@ -535,6 +536,10 @@ export default function NewAdminProductForm({
                   )
                 }
               />
+
+              <p className="mt-1 text-xs text-slate-500">
+                Enter sizes separated by commas.
+              </p>
             </label>
 
             {/* Product images */}
@@ -565,7 +570,10 @@ export default function NewAdminProductForm({
                   cloudinaryConfig={
                     productCloudinaryConfig
                   }
-                  uploadContext={{ collection: form.collection, categorySlug: form.categorySlug }}
+                  uploadContext={{
+                    collection: form.collection,
+                    categorySlug: form.categorySlug,
+                  }}
                 />
               )}
 
@@ -576,7 +584,9 @@ export default function NewAdminProductForm({
               </p>
 
               <p className="mt-1 text-xs text-slate-500">
-                The server validates the selected collection and category, then chooses the Cloudinary folder.
+                The server validates the selected collection
+                and category, then chooses the Cloudinary
+                folder.
               </p>
             </div>
 
