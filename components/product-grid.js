@@ -13,7 +13,7 @@ export default function ProductGrid({ products, showRank = false, showNewBadge =
 
   return (
     // <div className="grid gap-5 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3  bg-green">
-    <div className="grid grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 ">
+    <div className="grid auto-rows-fr grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
       {validProducts.map((product) => (
         <ProductCard
           key={product.id}

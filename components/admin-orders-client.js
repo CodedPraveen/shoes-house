@@ -25,6 +25,9 @@ export default function AdminOrdersClient({ initialOrders }) {
       case "PROCESSING":
         return "bg-yellow-100 text-yellow-700";
 
+      case "READY_TO_SEND":
+        return "bg-violet-100 text-violet-700";
+
       case "SHIPPED":
         return "bg-blue-100 text-blue-700";
 

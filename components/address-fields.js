@@ -47,7 +47,7 @@ function AddressField({
   );
 }
 
-export default function AddressFields({ form, errors = {}, onChange, showLabel = true }) {
+export default function AddressFields({ form, errors = {}, onChange, showLabel = false }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {showLabel ? (
@@ -96,19 +96,9 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
         autoComplete="address-line1"
       />
       <AddressField
-        field="landmark"
-        label="House / Flat / Building / Landmark"
-        placeholder="Enter only if known"
-        value={form.landmark}
-        onChange={onChange}
-        error={errors.landmark}
-        className="sm:col-span-2"
-        autoComplete="off"
-      />
-      <AddressField
         field="line2"
-        label="Address 2 / Area / Locality"
-        placeholder="Area, colony, or locality"
+        label="Area / Locality"
+        placeholder="Area or locality"
         value={form.line2}
         onChange={onChange}
         error={errors.line2}

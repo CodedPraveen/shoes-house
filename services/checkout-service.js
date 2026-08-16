@@ -129,6 +129,7 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
       shipPhone: address.phone,
       shipLine1: address.line1,
       shipLandmark: address.landmark || null,
+      saveShippingAddress: Boolean(address.saveShippingAddress),
       shipLine2: address.line2 || null,
       shipCity: address.city,
       shipState: address.state,
@@ -349,7 +350,7 @@ export const checkoutService = {
           include: { items: true },
         });
 
-        await saveShippingAddressForUser(tx, userId, address);
+        if (address.saveShippingAddress) await saveShippingAddressForUser(tx, userId, address);
         return created;
       });
 
@@ -417,7 +418,7 @@ export const checkoutService = {
             },
           });
 
-          await saveShippingAddressForUser(tx, userId, address);
+          if (address.saveShippingAddress) await saveShippingAddressForUser(tx, userId, address);
           await cartService.clearCartInTransaction(tx, userId);
           return created;
         });

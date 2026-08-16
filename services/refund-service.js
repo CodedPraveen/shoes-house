@@ -55,6 +55,19 @@ export const refundService = {
         },
       });
 
+      if (order.status !== "CANCELLED") {
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId,
+            previousStatus: order.status,
+            newStatus: "CANCELLED",
+            changedBy: "refund-service",
+            actorType: "SYSTEM",
+            note: reason ?? "Order cancelled during refund processing",
+          },
+        });
+      }
+
       return { ok: true, orderId };
     });
   },

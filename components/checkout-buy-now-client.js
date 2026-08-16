@@ -88,6 +88,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [saveAddress, setSaveAddress] = useState(false);
   const touchedFieldsRef = useRef(new Set());
 
   useEffect(() => {
@@ -150,6 +151,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         size,
         quantity,
         paymentMethod,
+        saveShippingAddress: addressMode === "new" && saveAddress,
       });
 
       if (!result.ok) {
@@ -341,11 +343,17 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           </div>
         )}
         {(addressMode === "new" || savedAddresses.length === 0) && (
-          <AddressFields
-            form={{ ...form, fullName: form.fullName || customerName }}
-            errors={fieldErrors}
-            onChange={updateField}
-          />
+          <div className="space-y-3">
+            <AddressFields
+              form={{ ...form, fullName: form.fullName || customerName }}
+              errors={fieldErrors}
+              onChange={updateField}
+            />
+            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+              <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
+              Save this address for future orders
+            </label>
+          </div>
         )}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>

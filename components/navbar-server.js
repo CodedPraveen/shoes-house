@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import Navbar from "@/components/navbar";
 import { categoryService } from "@/services/category-service";
 import { CartProvider } from "@/context/cart-context";
+import { getNavbarItems } from "@/services/storefront-service";
 
 export default async function NavbarServer({ collection }) {
     const headersList = await headers();
@@ -20,10 +21,12 @@ export default async function NavbarServer({ collection }) {
             ? "/jewellery"
             : "/shoes";
 
-    const categories =
+    const [categories, navItems] = await Promise.all([
         activeCollection === "JEWELLERY"
-            ? await categoryService.getSubCategoriesBySlug("jewellery")
-            : await categoryService.getSubCategoriesBySlug("shoes");
+            ? categoryService.getSubCategoriesBySlug("jewellery")
+            : categoryService.getSubCategoriesBySlug("shoes"),
+        getNavbarItems(activeCollection),
+    ]);
 
     return (
         <CartProvider>
@@ -31,6 +34,7 @@ export default async function NavbarServer({ collection }) {
                 categories={categories}
                 collection={activeCollection}
                 homeHref={homeHref}
+                managedNavItems={navItems}
             />
         </CartProvider>
     );

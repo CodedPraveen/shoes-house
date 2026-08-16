@@ -130,7 +130,7 @@ const sections = [
     summary: "Orders preserve prices, product data, shipping data, payment links, and fulfilment state.",
     items: [
       "Order numbers use an ORD timestamp/random suffix format and are unique.",
-      "Statuses are PENDING, PROCESSING, SHIPPED, DELIVERED, and CANCELLED.",
+      "Statuses are PENDING, CONFIRMED, PROCESSING, READY_TO_SEND, SHIPPED, DELIVERED, and CANCELLED.",
       "OrderItem snapshots name, image, SKU, price, color, size, and quantity so later catalog edits do not rewrite history.",
       "Invoices are generated as HTML by invoice-service and are available only to the order owner or an admin.",
       "New-admin supports COD confirmation by call, cancellation before tracking, attaching tracking, and refreshing shipment status.",

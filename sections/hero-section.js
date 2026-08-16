@@ -6,59 +6,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Replace these values to add, remove, or reorder homepage hero slides.
-const HERO_SLIDES = [
-  {
-    id: "hero-1",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548727/WhatsApp_Image_2026-08-07_at_11.01.54_AM.jpg",
-    alt: "Hero banner 1",
-    href: "/shoes/shoes-1",
-  },
-  {
-    id: "hero-2",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786548890/WhatsApp_Image_2026-08-07_at_11.01.55_AM.jpg",
-    alt: "Hero banner 2",
-    href: "/shoes/shoes-1-1.png",
-  },
-  {
-    id: "hero-3",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786549156/9b4f883c-b625-4369-889d-500e17a1b8fd.png",
-    alt: "Hero banner 3",
-    href: "/shoes/shoes-1-2.png",
-  },
-  {
-    id: "hero-4",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550507/288e7ec9-070a-4bc9-b337-1b1789dc7c2b.jpg",
-    alt: "Hero campaign 4",
-    href: "/shoes",
-  },
-  {
-    id: "hero-5",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550529/8fc723d9-fbb1-4751-b82d-05dfbedddfb4.jpg",
-    alt: "Hero campaign 5",
-    href: "/shoes",
-  },
-  {
-    id: "hero-6",
-    image:
-      "https://res.cloudinary.com/rwuqhkyf/image/upload/f_auto/v1786550532/3ecff149-a5eb-4f8a-b6a3-05d92e300fb5.jpg",
-    alt: "Hero campaign 6",
-    href: "/shoes",
-  },
-];
-
 const AUTOPLAY_DELAY = 5000;
 const isPlaceholder = (src) => src.startsWith("PASTE_IMAGE_URL_");
 const passthroughLoader = ({ src }) => src;
 
-export default function HeroSection() {
+export default function HeroSection({ slides = [] }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: HERO_SLIDES.length > 1,
+    loop: slides.length > 1,
     align: "start",
     duration: 28,
     skipSnaps: false,
@@ -122,7 +76,7 @@ export default function HeroSection() {
       isPaused ||
       !isPageVisible ||
       prefersReducedMotion ||
-      HERO_SLIDES.length < 2
+      slides.length < 2
     ) {
       return;
     }
@@ -132,7 +86,7 @@ export default function HeroSection() {
     }, AUTOPLAY_DELAY);
 
     return () => window.clearTimeout(autoplayTimer);
-  }, [emblaApi, isPageVisible, isPaused, prefersReducedMotion, selectedIndex]);
+  }, [emblaApi, isPageVisible, isPaused, prefersReducedMotion, selectedIndex, slides.length]);
 
   useEffect(
     () => () => {
@@ -205,7 +159,7 @@ export default function HeroSection() {
         className="overflow-hidden touch-pan-y select-none"
       >
         <div className="flex gap-2 lg:gap-2.5">
-          {HERO_SLIDES.map((slide, index) => {
+          {slides.map((slide, index) => {
             const content = (
               <div className="relative aspect-[2/3] w-full overflow-hidden bg-neutral-100">
                 {isPlaceholder(slide.image) ? (
@@ -215,7 +169,7 @@ export default function HeroSection() {
                         Campaign image
                       </p>
                       <p className="mt-3 text-xs font-light leading-relaxed text-neutral-700 sm:text-sm">
-                        Replace {slide.image} in HERO_SLIDES
+                        Upload this campaign image in new-admin.
                       </p>
                     </div>
                   </div>
@@ -239,7 +193,7 @@ export default function HeroSection() {
               <div
                 key={slide.id}
                 // aria-roledescription=""
-                aria-label={`${index + 1} of ${HERO_SLIDES.length}`}
+                aria-label={`${index + 1} of ${slides.length}`}
                 className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_60%] lg:flex-[0_0_40%]"
               >
                 {slide.href ? (
@@ -261,7 +215,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {HERO_SLIDES.length > 1 ? (
+      {slides.length > 1 ? (
         <>
           <button
             type="button"
@@ -285,26 +239,26 @@ export default function HeroSection() {
               role="progressbar"
               aria-label="Hero carousel progress"
               aria-valuemin={1}
-              aria-valuemax={HERO_SLIDES.length}
+              aria-valuemax={slides.length}
               aria-valuenow={selectedIndex + 1}
               className="h-px w-24 overflow-hidden bg-white/45 shadow-[0_1px_2px_rgba(0,0,0,0.25)] sm:w-28"
             >
               <span
                 className="block h-full origin-left bg-white transition-transform duration-500 ease-out motion-reduce:transition-none"
                 style={{
-                  transform: `scaleX(${(selectedIndex + 1) / HERO_SLIDES.length})`,
+                  transform: `scaleX(${(selectedIndex + 1) / slides.length})`,
                 }}
               />
             </div>
             <span className="min-w-11 text-[0.6rem] font-medium tabular-nums tracking-[0.14em] text-white drop-shadow-sm">
-              {String(selectedIndex + 1).padStart(2, "0")} / {HERO_SLIDES.length}
+              {String(selectedIndex + 1).padStart(2, "0")} / {slides.length}
             </span>
           </div>
         </>
       ) : null}
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
-        Slide {selectedIndex + 1} of {HERO_SLIDES.length}
+        Slide {selectedIndex + 1} of {slides.length}
       </p>
     </section>
   );

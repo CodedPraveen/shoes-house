@@ -20,15 +20,23 @@ export default function ProductsPageClient({ initialProducts = [], collection })
     toggleArrayFilter,
     resetFilters,
   } = useProductFilters({ initialProducts });
-
+  
   const { data, page, totalPages, setPage, resetPage, total } = usePagination(
     filtered,
   );
-
+  
   useEffect(() => {
     resetPage();
   }, [filters, sortBy, resetPage]);
-
+  
+  console.log("PAGINATION DEBUG", {
+    initialProducts: initialProducts.length,
+    filtered: filtered.length,
+    page,
+    total,
+    totalPages,
+    data: data.length,
+  });
   return (
     <main className="pt-20">
       <PageHeader

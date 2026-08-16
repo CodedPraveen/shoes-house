@@ -8,43 +8,45 @@ import ProductGridSkeleton from "@/components/product-grid-skeleton";
 import { productService } from "@/services/product-service";
 import { categoryService } from "@/services/category-service";
 import dynamic from "next/dynamic";
+import { getConfiguredProducts, getHomepageProductSections, getStorefrontConfig } from "@/services/storefront-service";
 
 const TrendingGrid = dynamic(
   () => import("@/sections/trending-grid")
 );
 
-export default async function ShoesPage({ searchParams, }) {
-  const params = await searchParams;
-
-  const category = params.category;
-
-  const [products, featuredProducts, trendingProducts, shoeCategories,] =
+export default async function ShoesPage() {
+  const [featuredFallback, trendingFallback, shoeCategories, storefront] =
     await Promise.all([
-      productService.getProducts({
-        collection: "SHOES",
-        category,
-      }),
-
       productService.getBestSellers(6, "SHOES"),
 
       productService.getTrending(8, "SHOES"),
 
       categoryService.getSubCategoriesBySlug("shoes"),
+      getStorefrontConfig("SHOES"),
     ]);
+
+  const sections = new Map(storefront.sections.map((section) => [section.key, section]));
+  const heroSection = sections.get("HERO");
+  const productSections = getHomepageProductSections(storefront.sections, "SHOES");
+  const configuredSections = await Promise.all(productSections.map(async (section) => ({
+    ...section,
+    products: await getConfiguredProducts(
+      section,
+      section.key === "FEATURED" ? featuredFallback : section.key === "TRENDING" ? trendingFallback : [],
+    ),
+  })));
 
   return (
     <main>
-      <HeroSection />
-      <Suspense fallback={<ProductGridSkeleton count={6} />}>
-        {/* <FeaturedProducts products={products}/> */}
-        <FeaturedProducts products={featuredProducts} />
-      </Suspense>
-      <Suspense fallback={<ProductGridSkeleton count={6} />}>
-
-        <TrendingGrid products={trendingProducts} />
-
-        {/* <TrendingGrid /> */}
-      </Suspense>
+      {heroSection?.enabled === false ? null : <HeroSection slides={storefront.slides} />}
+      {configuredSections.filter((section) => section.enabled).map((section) => (
+        <Suspense key={section.key} fallback={<ProductGridSkeleton count={6} />}>
+          {section.key === "FEATURED"
+            ? <FeaturedProducts products={section.products} title={section.title} subtitle={section.subtitle || "Featured Products"} />
+            : <TrendingGrid products={section.products} title={section.title} subtitle={section.subtitle} />}
+        </Suspense>
+      ))}
+      {/* Existing category content stays fixed and is not part of CMS ordering. */}
       <CategoriesSection categories={shoeCategories} />
       <NewsletterSection />
     </main>

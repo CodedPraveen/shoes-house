@@ -15,6 +15,8 @@ The webhook uses Svix verification before user synchronization.
 
 ## Cloudinary
 
+New-admin product uploads validate the selected collection/category and use `postmart/<collection>/<category>`. Storefront assets use approved folders such as `postmart/storefront/hero` and `postmart/storefront/lifestyle`. Legacy admin uploads retain their existing configured folder.
+
 Purpose: product image storage and delivery.
 
 Server implementation: `services/upload/image-upload-service.js`.

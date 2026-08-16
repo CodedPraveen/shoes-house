@@ -565,6 +565,7 @@ export default function NewAdminProductForm({
                   cloudinaryConfig={
                     productCloudinaryConfig
                   }
+                  uploadContext={{ collection: form.collection, categorySlug: form.categorySlug }}
                 />
               )}
 
@@ -575,9 +576,7 @@ export default function NewAdminProductForm({
               </p>
 
               <p className="mt-1 text-xs text-slate-500">
-                Images upload directly to Cloudinary.
-                They do not pass through the Next.js
-                Server Action.
+                The server validates the selected collection and category, then chooses the Cloudinary folder.
               </p>
             </div>
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Menu, Search, ShoppingBag, X } from "lucide-react";
 
 import AuthNav from "@/components/auth-nav";
 
@@ -27,6 +27,7 @@ export default function Navbar({
   categories,
   collection = "SHOES",
   homeHref,
+  managedNavItems = null,
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,8 +51,10 @@ export default function Navbar({
     };
   }, []);
 
-  const navLinks =
-    collection === "JEWELLERY"
+  const hasManagedNavigation = Array.isArray(managedNavItems);
+  const navLinks = hasManagedNavigation
+    ? managedNavItems
+    : collection === "JEWELLERY"
       ? JEWELLERY_NAV_LINKS
       : SHOES_NAV_LINKS;
 
@@ -59,7 +62,7 @@ export default function Navbar({
     return href === "/new-arrivals" || href === "/trending";
   };
 
-  const Logo = ({ mobile = false }) => {
+  const renderLogo = ({ mobile = false } = {}) => {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -170,7 +173,7 @@ export default function Navbar({
                 justify-center
               "
             >
-              <Logo mobile />
+              {renderLogo({ mobile: true })}
             </Link>
 
             {/* RIGHT — SEARCH + CART */}
@@ -260,7 +263,7 @@ export default function Navbar({
                 aria-label="Post Mart home"
                 className="flex items-center"
               >
-                <Logo />
+                {renderLogo()}
               </Link>
             </div>
 
@@ -286,7 +289,7 @@ export default function Navbar({
                   </li>
                 ))}
 
-                {collection === "JEWELLERY" ? (
+                {hasManagedNavigation ? null : collection === "JEWELLERY" ? (
                   <>
                     <JewelleryCategoriesDropdown
                       open={categoriesOpen}
@@ -408,7 +411,9 @@ export default function Navbar({
           MOBILE DRAWER
           ========================================================= */}
 
-      {collection === "JEWELLERY" ? (
+      {hasManagedNavigation ? (
+        menuOpen ? <div className="fixed inset-0 z-[60] lg:hidden"><button type="button" aria-label="Close navigation" className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} /><aside className="absolute inset-y-0 left-0 w-[min(22rem,88vw)] bg-white p-6 shadow-2xl"><div className="flex items-center justify-between"><p className="font-semibold">Shop Post Mart</p><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="rounded-full p-2 hover:bg-black/5"><X size={20} /></button></div><nav className="mt-8 space-y-1">{managedNavItems.map((item) => <Link key={item.id} href={item.href} onClick={() => setMenuOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-medium hover:bg-black/5">{item.label}</Link>)}</nav></aside></div> : null
+      ) : collection === "JEWELLERY" ? (
         <JewelleryMobileMenuDrawer
           categories={categories}
           open={menuOpen}

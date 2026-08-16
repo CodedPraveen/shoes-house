@@ -7,7 +7,8 @@ Administrator selects local JPG/PNG/WEBP files
   → imageFiles in the new-admin form
   → uploadNewAdminProductImageAction
   → shared imageUploadService
-  → Cloudinary folder from CLOUDINARY_UPLOAD_FOLDER
+  → server validates collection/category
+  → Cloudinary folder postmart/<collection>/<category>
   → secure URLs in original selection order
   → createProductAction
   → product-admin-service
@@ -53,13 +54,21 @@ The Razorpay webhook is also authoritative and uses the same idempotent fulfillm
 
 ## Cash on Delivery
 
+The operational order sequence is `PENDING -> CONFIRMED -> PROCESSING -> READY_TO_SEND -> SHIPPED -> DELIVERED`, with cancellation only while the order is still cancellable. Each transition uses a conditional database update and records a server-derived actor. COD payment remains a separate pending payment record and is not automatically changed to PAID on delivery.
+
+## Storefront configuration
+
+`/new-admin/storefront` manages ordered product sections, hero slides, and navbar items per collection. Homepage section edits preserve their stored order; new product sections append and only explicit Move Up/Move Down actions rewrite section `sortOrder`. Legacy non-product section rows remain intact but are not selectable or rendered as managed product sections.
+
 ```text
 Authenticated customer
   → validate product/cart stock
   → create Order(PENDING)
   → create Payment(PENDING, Cash on Delivery)
   → new-admin confirms by call
+  → CONFIRMED
   → PROCESSING
+  → READY_TO_SEND
   → tracking added
   → SHIPPED
   → AfterShip reports delivery

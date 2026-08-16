@@ -93,8 +93,13 @@ export async function uploadNewAdminProductImageAction(formData) {
   if (file.size > 10 * 1024 * 1024) {
     return { ok: false, error: "Each product image must be 10 MB or smaller." };
   }
+  const collection = String(formData.get("collection") ?? "");
+  const categorySlug = String(formData.get("categorySlug") ?? "");
+  const category = await productAdminService.getUploadCategory(collection, categorySlug);
+  if (!category) return { ok: false, error: "Choose a valid collection and category before uploading." };
+  const folder = `postmart/${category.collection.toLowerCase()}/${category.slug.toLowerCase()}`;
   const result = await imageUploadService.uploadFile(file, {
-    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products",
+    folder,
   });
 
   if (!result.ok) {
@@ -106,9 +111,8 @@ export async function uploadNewAdminProductImageAction(formData) {
 
 export async function discardProductImageUploadsAction(publicIds) {
   await requireAdmin();
-  const folder = (process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products").replace(/^\/+|\/+$/g, "");
   const ids = Array.from(publicIds || [])
-    .filter((value) => typeof value === "string" && value.startsWith(`${folder}/`))
+    .filter((value) => typeof value === "string" && /^postmart\/[a-z0-9-]+\/[a-z0-9-]+\/[a-zA-Z0-9_-]+$/.test(value))
     .slice(0, 40);
   await Promise.allSettled(ids.map((publicId) => imageUploadService.delete(publicId)));
   return { ok: true };

@@ -90,6 +90,7 @@ export const orderService = {
 export async function attachTrackingToOrder({
   orderId,
   trackingNumber,
+  expectedStatus,
 }) {
   const order = await prisma.order.findFirst({
     where: {
@@ -132,9 +133,11 @@ export async function attachTrackingToOrder({
       error.response?.data?.data?.id ?? null;
   }
 
-  return prisma.order.update({
+  const result = await prisma.order.updateMany({
     where: {
       id: orderId,
+      trackingNumber: null,
+      ...(expectedStatus ? { status: expectedStatus } : {}),
     },
     data: {
       trackingNumber,
@@ -145,6 +148,10 @@ export async function attachTrackingToOrder({
       aftershipTrackingId,
     },
   });
+  if (result.count !== 1) {
+    throw new Error("This order changed before tracking could be attached. Refresh and try again.");
+  }
+  return prisma.order.findUnique({ where: { id: orderId } });
 }
 
 export async function refreshTrackingStatus(orderId) {

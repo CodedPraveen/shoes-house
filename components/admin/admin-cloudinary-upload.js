@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { uploadProductImageAction } from "@/actions/admin-product-actions";
+import { uploadNewAdminProductImageAction, uploadProductImageAction } from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import SafeImage from "@/components/ui/safe-image";
 import { validateProductImageUrl } from "@/lib/product-image";
 
-export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig }) {
+export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig, uploadContext }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -29,7 +29,13 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const result = await uploadProductImageAction(fd);
+      if (uploadContext) {
+        fd.append("collection", uploadContext.collection);
+        fd.append("categorySlug", uploadContext.categorySlug);
+      }
+      const result = uploadContext
+        ? await uploadNewAdminProductImageAction(fd)
+        : await uploadProductImageAction(fd);
       if (!result.ok) {
         setError(result.error || "Upload failed");
         return;
@@ -90,7 +96,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         >
           Upload image
         </LoadingButton>
-        {cloudinaryConfig?.configured ? (
+        {cloudinaryConfig?.configured && !uploadContext ? (
           <button
             type="button"
             onClick={openWidget}

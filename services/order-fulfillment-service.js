@@ -231,7 +231,7 @@ export async function fulfillPaidCheckout({
         },
       });
 
-      await saveShippingAddressForUser(tx, session.userId, {
+      if (session.saveShippingAddress) await saveShippingAddressForUser(tx, session.userId, {
         label: session.shipAddressLabel || "Home",
         fullName: session.shipFullName,
         phone: session.shipPhone,

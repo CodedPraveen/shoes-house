@@ -11,15 +11,15 @@ export const revalidate = 300;
   // const products = (await productService.getNewArrivals()).slice(0, 6);
 
   // const products = await productService.getNewArrivals(8);
-export default function NewArrivals({ products }) {
+export default function NewArrivals({ products, title = "New Arrivals", subtitle = "Fresh designs for the season" }) {
   if (!products.length) return null;
 
   return (
     <SectionReveal className="py-16 sm:py-10">
       <JewelleryContainer>
         <SectionHeader
-          title="New Arrivals"
-          subtitle="Fresh designs for the season"
+          title={title}
+          subtitle={subtitle}
           href="/new-arrivals"
           italic
         />

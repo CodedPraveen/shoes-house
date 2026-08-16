@@ -8,7 +8,9 @@ import { getMyOrdersAction } from "@/actions/order-actions";
 
 const statusStyles = {
   PENDING: "bg-amber-100 text-amber-800",
+  CONFIRMED: "bg-indigo-100 text-indigo-800",
   PROCESSING: "bg-blue-100 text-blue-800",
+  READY_TO_SEND: "bg-violet-100 text-violet-800",
   SHIPPED: "bg-indigo-100 text-indigo-800",
   DELIVERED: "bg-green-100 text-green-800",
   CANCELLED: "bg-zinc-200 text-zinc-700",
@@ -78,7 +80,7 @@ export default function OrdersClient() {
             <span
               className={`no54123-full px-3 py-1 text-xs capitalize ${statusStyles[order.status]}`}
             >
-              {order.status}
+              {order.statusLabel}
             </span>
             <p className="text-sm font-medium">{formatPrice(order.total)}</p>
             <div className="flex gap-2">
