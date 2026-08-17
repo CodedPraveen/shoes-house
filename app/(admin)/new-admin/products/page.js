@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format-price";
 import { EmptyState, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";
 import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
+import LoadingButton from "@/components/ui/loading-button";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
