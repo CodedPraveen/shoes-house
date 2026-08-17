@@ -22,30 +22,103 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
   }
 
   async function handleFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
     setError("");
+
+    const remainingSlots = 8 - imageUrls.length;
+
+    if (remainingSlots <= 0) {
+      setError("Maximum 8 product images are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    const selectedFiles = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      setError(
+        `Only ${remainingSlots} more image${remainingSlots === 1 ? "" : "s"
+        } can be added. Maximum is 8.`,
+      );
+    }
+
     setUploading(true);
+
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      if (uploadContext) {
-        fd.append("collection", uploadContext.collection);
-        fd.append("categorySlug", uploadContext.categorySlug);
+      const uploadResults = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const fd = new FormData();
+
+          fd.append("file", file);
+
+          if (uploadContext) {
+            fd.append(
+              "collection",
+              uploadContext.collection,
+            );
+
+            fd.append(
+              "categorySlug",
+              uploadContext.categorySlug,
+            );
+          }
+
+          const result = uploadContext
+            ? await uploadNewAdminProductImageAction(fd)
+            : await uploadProductImageAction(fd);
+
+          return result;
+        }),
+      );
+
+      const successfulUrls = uploadResults
+        .filter((result) => result?.ok && result?.url)
+        .map((result) => {
+          const validation = validateProductImageUrl(
+            result.url,
+          );
+
+          return validation.isValid
+            ? validation.url
+            : null;
+        })
+        .filter(Boolean);
+
+      const failedUploads = uploadResults.filter(
+        (result) => !result?.ok,
+      );
+
+      if (successfulUrls.length) {
+        onChange([
+          ...imageUrls,
+          ...successfulUrls,
+        ]);
       }
-      const result = uploadContext
-        ? await uploadNewAdminProductImageAction(fd)
-        : await uploadProductImageAction(fd);
-      if (!result.ok) {
-        setError(result.error || "Upload failed");
-        return;
+
+      if (failedUploads.length) {
+        setError(
+          `${failedUploads.length} image${failedUploads.length === 1 ? "" : "s"
+          } failed to upload.`,
+        );
       }
-      appendCloudinaryUrl(result.url);
     } catch (err) {
-      setError(err.message || "Upload failed");
+      console.error(
+        "[admin-cloudinary-upload] multiple upload failed:",
+        err,
+      );
+
+      setError(
+        err?.message || "One or more images failed to upload.",
+      );
     } finally {
       setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
+
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
     }
   }
 
@@ -92,7 +165,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           type="button"
           loading={uploading}
           onClick={() => fileRef.current?.click()}
-          className="no54123-full border border-black/15 px-4 py-2 text-xs"
+          className="rounded-xl border border-black/15 px-4 py-2 text-xs"
         >
           Upload image
         </LoadingButton>
@@ -100,7 +173,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           <button
             type="button"
             onClick={openWidget}
-            className="no54123-full border border-black/15 px-4 py-2 text-xs"
+            className="rounded-xl border border-black/15 px-4 py-2 text-xs"
           >
             Cloudinary widget
           </button>
@@ -111,6 +184,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           accept="image/*"
           className="hidden"
           onChange={handleFile}
+          multiple={true}
         />
       </div>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
