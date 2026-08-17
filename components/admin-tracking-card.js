@@ -67,10 +67,10 @@ export default function AdminTrackingCard({ previousState, order }) {
                             value={order.id}
                         />
 
-                        <button disabled={refreshPending}
+                        <LoadingButton disabled={refreshPending}
                             className="rounded-xs bg-black px-5 py-3 text-white">
                             {refreshPending ? "Refreshing..." : "Refresh Status"}
-                        </button>
+                        </LoadingButton>
                     </form>
                     <div>
                         <p className="text-xs text-black/45">

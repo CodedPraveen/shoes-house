@@ -15,7 +15,7 @@ export default function LoadingButton({
     >
       {loading ? (
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black"
+          className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-gray-700"
           aria-hidden
         />
       ) : null}

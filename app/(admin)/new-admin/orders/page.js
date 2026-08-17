@@ -11,6 +11,7 @@ import {
 import OrderList from "@/components/new-admin/orders/order-list";
 import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
+import LoadingButton from "@/components/ui/loading-button";
 
 export const metadata = { title: "Orders" };
 export const dynamic = "force-dynamic";
@@ -275,9 +276,9 @@ export default async function NewAdminOrdersPage({ searchParams }) {
           <option value="100">100 per page</option>
         </select>
 
-        <button className="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white hover:bg-indigo-500">
+        <LoadingButton className="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white hover:bg-indigo-500">
           Apply
-        </button>
+        </LoadingButton>
       </form>
 
       {data.orders.length ? (
