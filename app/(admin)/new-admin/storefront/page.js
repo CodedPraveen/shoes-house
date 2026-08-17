@@ -98,7 +98,7 @@ export default async function StorefrontAdminPage({ searchParams }) {
               <input name="alt" defaultValue={slide.alt} className={inputClass} placeholder="Alt text" required />
               <input type="number" name="sortOrder" defaultValue={slide.sortOrder} className={inputClass} aria-label="Slide order" />
               <TargetFields categories={data.categories} products={data.products} item={slide} />
-              <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" />
+              <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" multiple={true} />
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={slide.enabled} />Enabled</label>
               <button className={buttonClass}>Save slide</button>
               <p className="text-xs text-slate-500 sm:col-span-2">Destination: {targetHref(slide, collection)}</p>
@@ -110,7 +110,7 @@ export default async function StorefrontAdminPage({ searchParams }) {
             <input name="alt" className={inputClass} placeholder="Descriptive alt text" required />
             <input type="number" name="sortOrder" defaultValue={data.slides.length} className={inputClass} aria-label="Slide order" />
             <TargetFields categories={data.categories} products={data.products} />
-            <input type="file" name="image" required accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" />
+            <input type="file" name="image" required accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" multiple={true} />
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label>
             <button className={buttonClass}>Add slide</button>
           </form>

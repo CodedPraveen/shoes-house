@@ -44,7 +44,7 @@ export default function NewAdminProductForm({
     // This is the single inventory value for the product.
     stock: initial?.stock ?? 0,
 
-    sizes: initial?.sizes?.join(", ") ?? "38, 40, 42, 44",
+    sizes: initial?.sizes?.join(", ") ?? "",
 
     collection:
       initial?.collection ??
@@ -529,6 +529,7 @@ export default function NewAdminProductForm({
               <input
                 className={inputClass}
                 value={form.sizes}
+                placeholder="8, 9, 10, 11"
                 onChange={(event) =>
                   update(
                     "sizes",
