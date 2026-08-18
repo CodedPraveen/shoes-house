@@ -13,6 +13,7 @@ import { getAddressesAction } from "@/actions/address-actions";
 import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
 import AddressFields from "@/components/address-fields";
+import LoadingButton from "@/components/ui/loading-button";
 import {
   firstAddressError,
   mergeGeocodedAddress,
@@ -201,22 +202,25 @@ export default function CheckoutClient() {
         async handler(response) {
           setLoading(true);
           setError("");
+          try {
+            const persisted = await verifyRazorpayPaymentAction({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
 
-          const persisted = await verifyRazorpayPaymentAction({
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-          });
+            if (persisted.ok) {
+              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              return;
+            }
 
-          if (persisted.ok) {
-            router.push(`/orders/${persisted.orderId}?status=confirmed`);
-            return;
+            setError(
+              persisted.error ||
+                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+            );
+          } catch (verificationError) {
+            setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
           }
-
-          setError(
-            persisted.error ||
-              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
-          );
           setLoading(false);
         },
         modal: {
@@ -234,7 +238,6 @@ export default function CheckoutClient() {
       rzp.open();
     } catch (err) {
       setError(err.message || "Checkout error");
-    } finally {
       setLoading(false);
     }
   }
@@ -405,19 +408,13 @@ export default function CheckoutClient() {
             <span>Cash on Delivery</span>
           </label>
         </div>
-        <button
+        <LoadingButton
           type="submit"
-          disabled={loading}
+          loading={loading}
           className="w-full no54123-full bg-black py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
         >
-          {loading
-            ? paymentMethod === "cod"
-              ? "Placing Order..."
-              : "Opening Razorpay..."
-            : paymentMethod === "cod"
-              ? "Place Order"
-              : "Pay with Razorpay"}
-        </button>
+          {paymentMethod === "cod" ? "Place Order" : "Pay with Razorpay"}
+        </LoadingButton>
       </section>
     </form>
   );

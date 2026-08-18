@@ -6,10 +6,15 @@ import LoadingButton from "@/components/ui/loading-button";
 import SafeImage from "@/components/ui/safe-image";
 import { validateProductImageUrl } from "@/lib/product-image";
 
-export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig, uploadContext }) {
+export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig, uploadContext, onUploadingChange }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  function setUploadState(value) {
+    setUploading(value);
+    onUploadingChange?.(value);
+  }
 
   function appendCloudinaryUrl(url) {
     const validation = validateProductImageUrl(url);
@@ -45,7 +50,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       );
     }
 
-    setUploading(true);
+    setUploadState(true);
 
     try {
       const uploadResults = await Promise.all(
@@ -114,7 +119,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         err?.message || "One or more images failed to upload.",
       );
     } finally {
-      setUploading(false);
+      setUploadState(false);
 
       if (fileRef.current) {
         fileRef.current.value = "";
@@ -144,13 +149,18 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       (err, result) => {
         if (err) {
           setError("Upload cancelled or failed");
+          setUploadState(false);
           return;
         }
         if (result?.event === "success") {
           appendCloudinaryUrl(result.info.secure_url);
         }
+        if (["abort", "close", "queues-end"].includes(result?.event)) {
+          setUploadState(false);
+        }
       },
     );
+    setUploadState(true);
     widget.open();
   }
 
@@ -170,13 +180,14 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           Upload image
         </LoadingButton>
         {cloudinaryConfig?.configured && !uploadContext ? (
-          <button
+          <LoadingButton
             type="button"
             onClick={openWidget}
+            loading={uploading}
             className="rounded-xl border border-black/15 px-4 py-2 text-xs"
           >
             Cloudinary widget
-          </button>
+          </LoadingButton>
         ) : null}
         <input
           ref={fileRef}
@@ -187,7 +198,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           multiple={true}
         />
       </div>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-600" role="alert">{error}</p> : null}
       <ul className="flex flex-wrap gap-2">
         {imageUrls.map((url) => (
           <li key={url} className="relative">

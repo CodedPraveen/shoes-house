@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format-price";
 import { EmptyState, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";
 import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
+import LoadingButton from "@/components/ui/loading-button";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
         <select name="collection" defaultValue={params.collection ?? ""} className={inputClass}><option value="">All collections</option><option value="SHOES">Shoes</option><option value="JEWELLERY">Jewellery</option></select>
         <select name="category" defaultValue={params.category ?? ""} className={inputClass}><option value="">All categories</option>{data.categories.map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}</select>
         <select name="stock" defaultValue={params.stock ?? ""} className={inputClass}><option value="">All stock</option><option value="in">In stock</option><option value="low">Low stock</option><option value="out">Out of stock</option></select>
-        <button className="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white">Apply</button>
+        <LoadingButton className="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white">Apply</LoadingButton>
       </form>
 
       {data.failedProducts.length ? (

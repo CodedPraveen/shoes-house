@@ -29,6 +29,8 @@ export default function NewAdminProductForm({
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
   const [categories, setCategories] = useState(subCategories ?? []);
@@ -207,6 +209,17 @@ export default function NewAdminProductForm({
       return;
     }
 
+    const price = Number(form.price);
+    if (!Number.isFinite(price) || price <= 0) {
+      setError("Price must be a valid number greater than 0.");
+      return;
+    }
+
+    if (uploading) {
+      setError("Wait for the image upload to finish before saving.");
+      return;
+    }
+
     const stock = Number(form.stock);
 
     if (!Number.isFinite(stock) || stock < 0) {
@@ -214,6 +227,7 @@ export default function NewAdminProductForm({
       return;
     }
 
+    if (saving) return;
     setSaving(true);
 
     try {
@@ -275,7 +289,8 @@ export default function NewAdminProductForm({
       return;
     }
 
-    setSaving(true);
+    if (deleting) return;
+    setDeleting(true);
     setError("");
 
     try {
@@ -293,8 +308,8 @@ export default function NewAdminProductForm({
         deleteError?.message ||
         "Unable to delete product.",
       );
-
-      setSaving(false);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -340,7 +355,7 @@ export default function NewAdminProductForm({
             {/* Product name */}
             <label className="sm:col-span-2">
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Product name
+                Product name <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <input
@@ -359,7 +374,7 @@ export default function NewAdminProductForm({
             {/* Slug */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Slug
+                Slug <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <input
@@ -378,7 +393,7 @@ export default function NewAdminProductForm({
             {/* Brand */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Brand
+                Brand <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <input
@@ -424,7 +439,7 @@ export default function NewAdminProductForm({
             {/* Category */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Category
+                Category <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <select
@@ -452,7 +467,7 @@ export default function NewAdminProductForm({
             {/* Description */}
             <label className="sm:col-span-2">
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Description
+                Description <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <textarea
@@ -477,7 +492,7 @@ export default function NewAdminProductForm({
             {/* Price */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Price (₹)
+                Price (₹) <span className="text-rose-600" aria-hidden="true">*</span>
               </span>
 
               <input
@@ -547,7 +562,7 @@ export default function NewAdminProductForm({
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">
-                  Product images
+                  Product images <span className="text-rose-600" aria-hidden="true">*</span>
                 </span>
 
                 <span className="text-xs text-slate-500">
@@ -571,6 +586,7 @@ export default function NewAdminProductForm({
                   cloudinaryConfig={
                     productCloudinaryConfig
                   }
+                  onUploadingChange={setUploading}
                   uploadContext={{
                     collection: form.collection,
                     categorySlug: form.categorySlug,
@@ -627,7 +643,7 @@ export default function NewAdminProductForm({
 
           {/* Error */}
           {error ? (
-            <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+            <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700" role="alert">
               {error}
             </p>
           ) : null}
@@ -637,6 +653,7 @@ export default function NewAdminProductForm({
             <LoadingButton
               type="submit"
               loading={saving}
+              disabled={deleting || uploading}
               className={buttonClass}
             >
               {mode === "edit"
@@ -645,14 +662,15 @@ export default function NewAdminProductForm({
             </LoadingButton>
 
             {mode === "edit" ? (
-              <button
+              <LoadingButton
                 type="button"
                 onClick={remove}
-                disabled={saving}
+                loading={deleting}
+                disabled={saving || uploading}
                 className="h-10 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50"
               >
                 Delete product
-              </button>
+              </LoadingButton>
             ) : null}
           </div>
         </div>

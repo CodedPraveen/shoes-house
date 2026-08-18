@@ -36,13 +36,21 @@ export default function SearchModal() {
 
   useEffect(() => {
     if (!isOpen || loaded) return;
-    setLoading(true);
-    getSearchCatalogAction()
-      .then((items) => {
-        setCatalog(items);
-        setLoaded(true);
-      })
-      .finally(() => setLoading(false));
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setLoading(true);
+      getSearchCatalogAction()
+        .then((items) => {
+          if (!active) return;
+          setCatalog(items);
+          setLoaded(true);
+        })
+        .finally(() => { if (active) setLoading(false); });
+    });
+    return () => {
+      active = false;
+    };
   }, [isOpen, loaded]);
 
   const results = useMemo(() => {

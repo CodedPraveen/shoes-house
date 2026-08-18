@@ -8,6 +8,7 @@ import {
   setDefaultAddressAction,
 } from "@/actions/address-actions";
 import AddressFields from "@/components/address-fields";
+import LoadingButton from "@/components/ui/loading-button";
 import {
   firstAddressError,
   validateAddressInput,
@@ -34,6 +35,8 @@ export default function AddressManager() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [defaultingId, setDefaultingId] = useState(null);
 
   async function load() {
     try {
@@ -88,11 +91,13 @@ export default function AddressManager() {
   }
 
   async function handleDelete(id) {
+    if (deletingId === id) return;
     if (!window.confirm("Remove this saved address? Existing orders will keep their shipping address.")) {
       return;
     }
 
     setError("");
+    setDeletingId(id);
     try {
       await deleteAddressAction(id);
       if (editingId === id) {
@@ -102,16 +107,22 @@ export default function AddressManager() {
       await load();
     } catch (deleteError) {
       setError(deleteError?.message || "Could not remove this address.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
   async function handleSetDefault(id) {
+    if (defaultingId === id) return;
     setError("");
+    setDefaultingId(id);
     try {
       await setDefaultAddressAction(id);
       await load();
     } catch (defaultError) {
       setError(defaultError?.message || "Could not update the default address.");
+    } finally {
+      setDefaultingId(null);
     }
   }
 
@@ -173,13 +184,14 @@ export default function AddressManager() {
             </div>
             <div className="flex flex-wrap gap-2">
               {!a.isDefault ? (
-                <button
+                <LoadingButton
                   type="button"
                   onClick={() => handleSetDefault(a.id)}
+                  loading={defaultingId === a.id}
                   className="text-xs underline"
                 >
                   Set default
-                </button>
+                </LoadingButton>
               ) : null}
               <button
                 type="button"
@@ -188,13 +200,14 @@ export default function AddressManager() {
               >
                 Edit
               </button>
-              <button
+              <LoadingButton
                 type="button"
                 onClick={() => handleDelete(a.id)}
+                loading={deletingId === a.id}
                 className="text-xs text-red-600"
               >
                 Remove
-              </button>
+              </LoadingButton>
             </div>
           </li>
         ))}
@@ -211,13 +224,13 @@ export default function AddressManager() {
           />
           Set as default address
         </label>
-        <button
+        <LoadingButton
           type="submit"
-          disabled={saving}
+          loading={saving}
           className="w-full no54123-full bg-black py-2.5 text-sm text-white disabled:opacity-60"
         >
-          {saving ? "Saving…" : editingId ? "Update address" : "Add address"}
-        </button>
+          {editingId ? "Update address" : "Add address"}
+        </LoadingButton>
         {editingId ? (
           <button
             type="button"

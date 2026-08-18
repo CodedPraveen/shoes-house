@@ -114,28 +114,19 @@ export const productAdminService = {
 
     return {
       ...mapProduct(row),
-
       dbId: row.id,
       categoryId: row.categoryId,
-
       description: row.description,
       compareAtPrice: row.compareAtPrice,
       discount: row.discount,
-
       isNew: row.isNew,
       isTrending: row.isTrending,
-
       tags: row.tags,
       materials: row.materials,
       shippingInfo: row.shippingInfo,
       returnPolicy: row.returnPolicy,
-
       imageRecords: row.images,
-
-      // Kept in response for compatibility with the existing
-      // admin form/mappers. New products will no longer create colors.
       colorRecords: row.colors,
-
       sizeRecords: row.sizes,
       variantRecords: row.variants,
     };

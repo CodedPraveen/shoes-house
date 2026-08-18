@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import { reverseGeocodeAction } from "@/actions/geocode-actions";
+import LoadingButton from "@/components/ui/loading-button";
 
 const DEFAULT_CENTER = { lat: 22.9734, lng: 78.6569 };
 const MAX_AUTOMATIC_ACCURACY_METERS = 1000;
@@ -369,15 +370,16 @@ export default function GoogleLocationPicker({
               ) : null}
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button
+                <LoadingButton
                   type="button"
                   onClick={requestCurrentLocation}
                   disabled={mapLoading || locating || confirming || !mapReady}
+                  loading={locating}
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-black/15 px-4 py-2.5 text-sm font-medium transition hover:border-black/40 disabled:opacity-50"
                 >
                   <LocateFixed aria-hidden="true" size={16} />
-                  {locating ? "Finding your location…" : "Use my location"}
-                </button>
+                  Use my location
+                </LoadingButton>
 
                 <div className="grid grid-cols-2 gap-3 sm:flex">
                   <button
@@ -388,14 +390,15 @@ export default function GoogleLocationPicker({
                   >
                     Cancel
                   </button>
-                  <button
+                  <LoadingButton
                     type="button"
                     onClick={confirmLocation}
                     disabled={mapLoading || confirming || !selectedCoordinates || !mapReady}
+                    loading={confirming}
                     className="rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
                   >
-                    {confirming ? "Finding address…" : "Confirm this location"}
-                  </button>
+                    Confirm this location
+                  </LoadingButton>
                 </div>
               </div>
             </div>

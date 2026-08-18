@@ -17,7 +17,7 @@ export default function JewelleryCategoriesDropdown({
         >
             <button
                 type="button"
-                className="text-black/75 transition hover:text-black"
+                className="text-[13px] font-semibold tracking-[-0.01em] text-black/75 transition hover:text-black"
                 aria-expanded={open}
             >
                 Categories
