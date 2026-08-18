@@ -34,7 +34,7 @@ export default function ProductGallery({ images, name }) {
 
   if (!activeImage) {
     return (
-      <div className="w-full aspect-[2/3] overflow-hidden rounded border border-black/5 bg-zinc-100 sm:rounded-2xl lg:rounded-3xl">
+      <div className="aspect-[2/3] w-full overflow-hidden rounded border border-black/5 bg-zinc-100 sm:rounded-2xl lg:rounded-3xl">
         <div className="flex h-full w-full items-center justify-center text-sm text-black/40">
           No product image
         </div>
@@ -45,22 +45,24 @@ export default function ProductGallery({ images, name }) {
   return (
     <div className="w-full space-y-3 sm:space-y-4">
       {/* =========================
-          MAIN IMAGE
-      ========================== */}
+        MAIN IMAGE
+    ========================== */}
       <div
         className="
-          group
-          relative
-          w-full
-          aspect-[2/3]
-          overflow-hidden
-          rounded
-          border
-          border-black/5
-          bg-zinc-100
-          sm:rounded-2xl
-          lg:rounded-3xl
-        "
+        group
+        relative
+        w-full
+        aspect-[2/3]
+        overflow-hidden
+        rounded
+        border
+        border-black/5
+        bg-zinc-100
+        sm:rounded-2xl
+        lg:mx-auto
+        lg:max-w-[520px]
+        lg:rounded-3xl
+      "
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
       >
@@ -70,57 +72,42 @@ export default function ProductGallery({ images, name }) {
           src={activeImage}
           alt={name}
           priority
-          className={`
-            absolute
-            inset-0
-            h-full
-            w-full
-            object-contain
-            object-center
-            p-0
-            transition-transform
-            duration-500
-            ease-out
-            sm:p-0
-            ${zoom
-              ? "scale-105"
-              : "scale-100"
-            }
-          `}
+          className={`absolute inset-0 h-full w-full object-contain object-center p-0 transition-transform duration-500 ease-out ${zoom ? "scale-105" : "scale-100"
+            }`}
         />
 
         {/* =========================
-            PREVIOUS BUTTON
-        ========================== */}
+          PREVIOUS BUTTON
+      ========================== */}
         {validImages.length > 1 && (
           <button
             type="button"
             onClick={handlePrevious}
             className="
-              absolute
-              left-2
-              top-1/2
-              flex
-              h-9
-              w-9
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-black/10
-              bg-white/90
-              text-xl
-              text-black
-              shadow-sm
-              backdrop-blur-sm
-              transition
-              hover:bg-white
-              active:scale-95
-              sm:left-4
-              sm:h-10
-              sm:w-10
-            "
+            absolute
+            left-2
+            top-1/2
+            flex
+            h-9
+            w-9
+            -translate-y-1/2
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-black/10
+            bg-white/90
+            text-xl
+            text-black
+            shadow-sm
+            backdrop-blur-sm
+            transition
+            hover:bg-white
+            active:scale-95
+            sm:left-4
+            sm:h-10
+            sm:w-10
+          "
             aria-label="Previous image"
           >
             ‹
@@ -128,37 +115,37 @@ export default function ProductGallery({ images, name }) {
         )}
 
         {/* =========================
-            NEXT BUTTON
-        ========================== */}
+          NEXT BUTTON
+      ========================== */}
         {validImages.length > 1 && (
           <button
             type="button"
             onClick={handleNext}
             className="
-              absolute
-              right-2
-              top-1/2
-              flex
-              h-9
-              w-9
-              -translate-y-1/2
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-black/10
-              bg-white/90
-              text-xl
-              text-black
-              shadow-sm
-              backdrop-blur-sm
-              transition
-              hover:bg-white
-              active:scale-95
-              sm:right-4
-              sm:h-10
-              sm:w-10
-            "
+            absolute
+            right-2
+            top-1/2
+            flex
+            h-9
+            w-9
+            -translate-y-1/2
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-black/10
+            bg-white/90
+            text-xl
+            text-black
+            shadow-sm
+            backdrop-blur-sm
+            transition
+            hover:bg-white
+            active:scale-95
+            sm:right-4
+            sm:h-10
+            sm:w-10
+          "
             aria-label="Next image"
           >
             ›
@@ -166,8 +153,8 @@ export default function ProductGallery({ images, name }) {
         )}
 
         {/* =========================
-            MOBILE DOTS
-        ========================== */}
+          MOBILE DOTS
+      ========================== */}
         {validImages.length > 1 && (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 sm:hidden">
             {validImages.map((_, index) => (
@@ -177,19 +164,12 @@ export default function ProductGallery({ images, name }) {
                 onClick={() => setActiveIndex(index)}
                 aria-label={`View image ${index + 1}`}
                 aria-current={
-                  activeIndex === index
-                    ? "true"
-                    : undefined
+                  activeIndex === index ? "true" : undefined
                 }
-                className={`
-                  h-1.5
-                  rounded-full
-                  transition-all
-                  ${activeIndex === index
+                className={`h-1.5 rounded-full transition-all ${activeIndex === index
                     ? "w-4 bg-black"
                     : "w-1.5 bg-black/25"
-                  }
-                `}
+                  }`}
               />
             ))}
           </div>
@@ -197,48 +177,34 @@ export default function ProductGallery({ images, name }) {
       </div>
 
       {/* =========================
-          THUMBNAILS
-      ========================== */}
+        THUMBNAILS
+    ========================== */}
       {validImages.length > 1 && (
         <div
           className="
-            flex
-            w-full
-            gap-2
-            overflow-x-auto
-            pb-1
-            scrollbar-none
-            sm:gap-3
-          "
+          flex
+          w-full
+          gap-2
+          overflow-x-auto
+          pb-1
+          scrollbar-none
+          sm:gap-3
+          lg:mx-auto
+          lg:max-w-[520px]
+        "
         >
           {validImages.map((src, index) => (
             <button
               key={`${src}-${index}`}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className={`
-                relative
-                aspect-[2/3]
-                w-16
-                shrink-0
-                overflow-hidden
-                rounded
-                border-2
-                bg-zinc-100
-                transition
-                sm:w-20
-                sm:rounded-xl
-                lg:w-24
-                ${activeIndex === index
+              className={`relative aspect-[2/3] w-16 shrink-0 overflow-hidden rounded border-2 bg-zinc-100 transition sm:w-20 sm:rounded-xl lg:w-24 ${activeIndex === index
                   ? "border-black"
                   : "border-transparent opacity-60 hover:opacity-100"
-                }
-              `}
+                }`}
               aria-label={`View ${name} image ${index + 1}`}
               aria-current={
-                activeIndex === index
-                  ? "true"
-                  : undefined
+                activeIndex === index ? "true" : undefined
               }
             >
               <SafeImage

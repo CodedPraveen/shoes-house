@@ -14,7 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "worker": "node lib/queues/worker.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -26,6 +27,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "axios": "^1.18.1",
+    "bullmq": "^6.0.8",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",

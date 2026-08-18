@@ -14,6 +14,7 @@ import {
 } from "@/actions/storefront-admin-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import StorefrontTargetFields from "@/components/new-admin/storefront-target-fields";
+import StorefrontActionForm from "@/components/new-admin/storefront-action-form";
 
 export const metadata = { title: "Storefront" };
 export const dynamic = "force-dynamic";
@@ -38,38 +39,38 @@ export default async function StorefrontAdminPage({ searchParams }) {
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
           {data.productSections.map((section, index) => (
             <div key={section.key} className="rounded-xl border border-slate-200 p-4">
-              <form action={saveStorefrontSectionAction} className="grid gap-3 sm:grid-cols-2">
+              <StorefrontActionForm action={saveStorefrontSectionAction} className="grid gap-3 sm:grid-cols-2">
                 <HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} />
                 <div className="sm:col-span-2 flex items-center justify-between"><p className="font-semibold">Product section</p><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={section.enabled} />Enabled</label></div>
                 <input name="title" defaultValue={section.title} className={inputClass} aria-label={`${section.key} title`} />
                 <input name="subtitle" defaultValue={section.subtitle || ""} className={inputClass} placeholder="Optional subtitle" />
                 <LoadingButton className={`${buttonClass} sm:col-span-2`}>Save section</LoadingButton>
-              </form>
+              </StorefrontActionForm>
 
               <div className="mt-3 flex gap-2">
-                <form action={moveStorefrontProductSectionAction}><HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} /><input type="hidden" name="direction" value="up" /><LoadingButton disabled={index === 0} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40">Move up</LoadingButton></form>
-                <form action={moveStorefrontProductSectionAction}><HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} /><input type="hidden" name="direction" value="down" /><LoadingButton disabled={index === data.productSections.length - 1} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40">Move down</LoadingButton></form>
+                <StorefrontActionForm action={moveStorefrontProductSectionAction}><HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} /><input type="hidden" name="direction" value="up" /><LoadingButton disabled={index === 0} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40">Move up</LoadingButton></StorefrontActionForm>
+                <StorefrontActionForm action={moveStorefrontProductSectionAction}><HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} /><input type="hidden" name="direction" value="down" /><LoadingButton disabled={index === data.productSections.length - 1} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40">Move down</LoadingButton></StorefrontActionForm>
               </div>
 
               <div className="mt-4 border-t border-slate-100 pt-4">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Selected products</p>
-                <div className="space-y-2">{section.items?.map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm"><span className="min-w-0 flex-1 truncate">{item.product?.name || "Unavailable product"}</span><form action={reorderStorefrontSectionItemAction} className="flex items-center gap-2"><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><input type="number" name="sortOrder" defaultValue={item.sortOrder} className="h-8 w-16 rounded-lg border border-slate-200 px-2 text-xs" aria-label="Product order" /><LoadingButton className="text-xs font-medium text-indigo-600">Save order</LoadingButton></form><form action={disableStorefrontSectionItemAction}><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><LoadingButton className="text-xs font-medium text-rose-600">Remove</LoadingButton></form></div>)}</div>
-                <form action={saveStorefrontSectionItemAction} className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="space-y-2">{section.items?.map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm"><span className="min-w-0 flex-1 truncate">{item.product?.name || "Unavailable product"}</span><StorefrontActionForm action={reorderStorefrontSectionItemAction} className="flex items-center gap-2"><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><input type="number" name="sortOrder" defaultValue={item.sortOrder} className="h-8 w-16 rounded-lg border border-slate-200 px-2 text-xs" aria-label="Product order" /><LoadingButton className="text-xs font-medium text-indigo-600">Save order</LoadingButton></StorefrontActionForm><StorefrontActionForm action={disableStorefrontSectionItemAction}><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><LoadingButton className="text-xs font-medium text-rose-600">Remove</LoadingButton></StorefrontActionForm></div>)}</div>
+                <StorefrontActionForm action={saveStorefrontSectionItemAction} className="mt-3 grid gap-2 sm:grid-cols-2">
                   <HiddenCollection collection={collection} /><input type="hidden" name="key" value={section.key} />
                   <select name="productId" className={`${inputClass} sm:col-span-2`} required><option value="">Choose product</option>{data.products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select>
                   <LoadingButton className={`${buttonClass} sm:col-span-2`}>Add product</LoadingButton>
-                </form>
+                </StorefrontActionForm>
               </div>
             </div>
           ))}
-          <form action={createStorefrontProductSectionAction} className="grid gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2">
+          <StorefrontActionForm action={createStorefrontProductSectionAction} className="grid gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2">
             <HiddenCollection collection={collection} />
             <p className="font-semibold sm:col-span-2">Add product section</p>
             <input name="title" className={inputClass} placeholder="Section title" required />
             <input name="subtitle" className={inputClass} placeholder="Optional subtitle" />
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label>
             <LoadingButton className={buttonClass}>Add section</LoadingButton>
-          </form>
+          </StorefrontActionForm>
         </div>
       </section>
 
@@ -78,28 +79,36 @@ export default async function StorefrontAdminPage({ searchParams }) {
         <p className="mt-1 text-sm text-slate-500">Uploads are routed by the server to postmart/storefront/hero.</p>
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
           {data.slides.map((slide) => (
-            <form key={slide.id} action={saveHeroSlideAction} className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
+            <StorefrontActionForm key={slide.id} action={saveHeroSlideAction} errorMessage="The hero slide could not be saved. Please try again." className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
               <HiddenCollection collection={collection} /><input type="hidden" name="id" value={slide.id} />
               <a href={slide.mediaAsset.url} target="_blank" rel="noreferrer" className="truncate text-xs text-indigo-600 sm:col-span-2">Current image</a>
               <input name="alt" defaultValue={slide.alt} className={inputClass} placeholder="Alt text" required />
               <input type="number" name="sortOrder" defaultValue={slide.sortOrder} className={inputClass} aria-label="Slide order" />
               <StorefrontTargetFields categories={data.categories} products={data.products} item={slide} />
-              <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" multiple={true} />
+              <label htmlFor={`hero-image-${slide.id}`} className="text-xs font-medium text-slate-600 sm:col-span-2">
+                Replacement image <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <input id={`hero-image-${slide.id}`} type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby={`hero-image-help-${slide.id}`} className="text-sm sm:col-span-2" />
+              <p id={`hero-image-help-${slide.id}`} className="text-xs text-slate-500 sm:col-span-2">Choose one JPG, PNG, or WEBP image up to 10 MB. Leave empty to keep the current image.</p>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={slide.enabled} />Enabled</label>
               <LoadingButton className={buttonClass}>Save slide</LoadingButton>
               <p className="text-xs text-slate-500 sm:col-span-2">Destination: {targetHref(slide, collection)}</p>
-            </form>
+            </StorefrontActionForm>
           ))}
-          <form action={saveHeroSlideAction} className="grid gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2">
+          <StorefrontActionForm action={saveHeroSlideAction} errorMessage="The hero slide could not be added. Please check the image and try again." className="grid gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2">
             <HiddenCollection collection={collection} />
             <p className="font-semibold sm:col-span-2">Add hero slide</p>
             <input name="alt" className={inputClass} placeholder="Descriptive alt text" required />
             <input type="number" name="sortOrder" defaultValue={data.slides.length} className={inputClass} aria-label="Slide order" />
             <StorefrontTargetFields categories={data.categories} products={data.products} />
-            <input type="file" name="image" required accept="image/jpeg,image/png,image/webp" className="text-sm sm:col-span-2" multiple={true} />
+            <label htmlFor="new-hero-image" className="text-xs font-medium text-slate-600 sm:col-span-2">
+              Hero image <span className="text-rose-600" aria-hidden="true">*</span>
+            </label>
+            <input id="new-hero-image" type="file" name="image" required accept="image/jpeg,image/png,image/webp" aria-describedby="new-hero-image-help" className="text-sm sm:col-span-2" />
+            <p id="new-hero-image-help" className="text-xs text-slate-500 sm:col-span-2">Choose one JPG, PNG, or WEBP image up to 10 MB.</p>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label>
             <LoadingButton className={buttonClass}>Add slide</LoadingButton>
-          </form>
+          </StorefrontActionForm>
         </div>
       </section>
 
@@ -107,8 +116,8 @@ export default async function StorefrontAdminPage({ searchParams }) {
         <h2 className="text-lg font-semibold">Navbar items</h2>
         <p className="mt-1 text-sm text-slate-500">Entity destinations use current slugs, so category and product links stay valid after edits.</p>
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          {data.navbarItems.map((item) => <form key={item.id} action={saveNavbarItemAction} className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2"><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><input name="label" defaultValue={item.label} className={inputClass} required /><input type="number" name="sortOrder" defaultValue={item.sortOrder} className={inputClass} /><StorefrontTargetFields categories={data.categories} products={data.products} item={item} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={item.enabled} />Enabled</label><LoadingButton className={buttonClass}>Save item</LoadingButton></form>)}
-          <form action={saveNavbarItemAction} className="grid gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2"><HiddenCollection collection={collection} /><p className="font-semibold sm:col-span-2">Add navigation item</p><input name="label" className={inputClass} placeholder="Label" required /><input type="number" name="sortOrder" defaultValue={data.navbarItems.length} className={inputClass} /><StorefrontTargetFields categories={data.categories} products={data.products} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label><LoadingButton className={buttonClass}>Add item</LoadingButton></form>
+          {data.navbarItems.map((item) => <StorefrontActionForm key={item.id} action={saveNavbarItemAction} className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2"><HiddenCollection collection={collection} /><input type="hidden" name="id" value={item.id} /><input name="label" defaultValue={item.label} className={inputClass} required /><input type="number" name="sortOrder" defaultValue={item.sortOrder} className={inputClass} /><StorefrontTargetFields categories={data.categories} products={data.products} item={item} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={item.enabled} />Enabled</label><LoadingButton className={buttonClass}>Save item</LoadingButton></StorefrontActionForm>)}
+          <StorefrontActionForm action={saveNavbarItemAction} className="grid gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/40 p-4 sm:grid-cols-2"><HiddenCollection collection={collection} /><p className="font-semibold sm:col-span-2">Add navigation item</p><input name="label" className={inputClass} placeholder="Label" required /><input type="number" name="sortOrder" defaultValue={data.navbarItems.length} className={inputClass} /><StorefrontTargetFields categories={data.categories} products={data.products} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label><LoadingButton className={buttonClass}>Add item</LoadingButton></StorefrontActionForm>
         </div>
       </section>
     </div>

@@ -2,7 +2,8 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      // Keep room for multipart headers while actions enforce a 10 MB file limit.
+      bodySizeLimit: "11mb",
     },
   },
 

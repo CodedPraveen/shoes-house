@@ -7,7 +7,7 @@ export default function LoadingButton({
   children,
   className = "",
   disabled = false,
-  type = "button",
+  type = "submit",
   ...props
 }) {
   const { pending } = useFormStatus();

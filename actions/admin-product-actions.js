@@ -6,6 +6,7 @@ import { assertRateLimit } from "@/lib/rate-limit";
 import { productAdminService } from "@/services/product-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
 import { clearProductCache } from "@/lib/product-cache";
+import { addProductUploadJob } from "@/lib/queues/product-upload-queue";
 
 console.time("create-product");
 
@@ -35,9 +36,17 @@ export async function createProductAction(input) {
   await requireAdmin();
   await assertRateLimit({ prefix: "admin-product-create", limit: 20, windowMs: 60_000 });
 
-  const product = await productAdminService.create(input);
-  await revalidateProductPaths(product.slug);
-  return { ok: true, product };
+  // const product = await productAdminService.create(input);
+  // await revalidateProductPaths(product.slug);
+  // return { ok: true, product };
+  const job = await addProductUploadJob(input);
+
+  return {
+    ok: true,
+    queued: true,
+    jobId: job.id,
+    message: "Product is being uploaded.",
+  };
 }
 
 export async function updateProductAction(id, input) {
