@@ -6,8 +6,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Products | Admin | Post Mart" };
 
-export default async function AdminProductsPage() {
-  const products = await productService.getAll({ includeInvalid: true });
+export default async function AdminProductsPage({ searchParams }) {
+  const params = await searchParams;
+  const products = await productService.getAll({ includeInvalid: true, includeProcessing: true });
 
   return (
     <div className="space-y-8">
@@ -25,6 +26,11 @@ export default async function AdminProductsPage() {
           Add Product
         </Link>
       </div>
+      {params.created === "processing" ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          Product created — images are processing in the background.
+        </p>
+      ) : null}
       <div className="overflow-x-auto no54123-2xl border border-black/10">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-black/10 bg-zinc-50 text-xs uppercase tracking-wider text-black/45">
@@ -33,6 +39,7 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Price</th>
               <th className="px-4 py-3">Stock</th>
+              <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
@@ -43,13 +50,16 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 capitalize">{p.category}</td>
                 <td className="px-4 py-3">{formatPrice(p.price)}</td>
                 <td className="px-4 py-3">{p.stock ?? "—"}</td>
+                <td className="px-4 py-3 capitalize">{p.processingStatus.toLowerCase()}</td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/${p.collection.toLowerCase()}/product/${p.slug}`}
-                    className="mr-3 text-black/60 hover:text-black"
-                  >
-                    View
-                  </Link>
+                  {p.processingStatus === "READY" ? (
+                    <Link
+                      href={`/${p.collection.toLowerCase()}/product/${p.slug}`}
+                      className="mr-3 text-black/60 hover:text-black"
+                    >
+                      View
+                    </Link>
+                  ) : null}
                   <Link
                     href={`/admin/products/${p.id}/edit`}
                     className="text-black/60 hover:text-black"

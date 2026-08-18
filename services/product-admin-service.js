@@ -4,6 +4,7 @@ import { mapProduct } from "@/lib/mappers/product-mapper";
 import { ensureUniqueProductSlug, slugify } from "@/lib/slugify";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { validateProductImageUrl } from "@/lib/product-image";
+import { productCreationInputSchema } from "@/schemas/product.schema";
 
 /**
  * Variants are kept temporarily for size/SKU compatibility.
@@ -133,6 +134,7 @@ export const productAdminService = {
   },
 
   async create(input) {
+    input = productCreationInputSchema.parse(input);
     const category = await this.getCategoryBySlug(
       input.categorySlug,
     );
@@ -253,7 +255,97 @@ export const productAdminService = {
     return mapProduct(created);
   },
 
+  async createProcessing(input) {
+    input = productCreationInputSchema.parse(input);
+    const category = await this.getCategoryBySlug(input.categorySlug);
+
+    if (!category || category.deletedAt) {
+      throw new Error("Category not found");
+    }
+
+    const slug = await ensureUniqueProductSlug(
+      prisma,
+      input.slug || slugify(input.name),
+    );
+    const sizes = normalizeSizes(input.sizes);
+    const variantRows = buildVariantRows(slug, sizes);
+
+    const created = await prisma.product.create({
+      data: {
+        name: input.name,
+        brand: input.brand || "Post Mart",
+        slug,
+        description: input.description,
+        price: Number(input.price),
+        compareAtPrice: input.compareAtPrice ? Number(input.compareAtPrice) : null,
+        discount: input.discount ? Number(input.discount) : null,
+        stock: normalizeStock(input.stock),
+        isNew: Boolean(input.isNew),
+        isTrending: Boolean(input.isTrending),
+        materials: input.materials || null,
+        shippingInfo: input.shippingInfo || null,
+        returnPolicy: input.returnPolicy || null,
+        tags: input.tags || [],
+        categoryId: category.id,
+        collection: category.collection,
+        processingStatus: "PROCESSING",
+        processingError: null,
+        pendingImageUrls: input.imageUrls,
+        sizes: { create: sizes.map((size) => ({ size })) },
+        variants: { create: variantRows },
+      },
+      include: {
+        ...productInclude,
+        variants: true,
+      },
+    });
+
+    return mapProduct(created);
+  },
+
+  async setProcessingJobId(id, jobId) {
+    return prisma.product.update({
+      where: { id },
+      data: { processingJobId: String(jobId) },
+      select: { id: true, processingStatus: true, processingJobId: true },
+    });
+  },
+
+  async markProcessingFailed(id, message) {
+    return prisma.product.updateMany({
+      where: { id, deletedAt: null, processingStatus: { not: "READY" } },
+      data: {
+        processingStatus: "FAILED",
+        processingError: String(message || "Image processing failed").slice(0, 1000),
+      },
+    });
+  },
+
+  async getProcessingState(id) {
+    return prisma.product.findFirst({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        processingStatus: true,
+        pendingImageUrls: true,
+      },
+    });
+  },
+
+  async markProcessingQueued(id, jobId) {
+    return prisma.product.update({
+      where: { id },
+      data: {
+        processingStatus: "PROCESSING",
+        processingError: null,
+        processingJobId: String(jobId),
+      },
+      select: { id: true, processingStatus: true, processingJobId: true },
+    });
+  },
+
   async update(id, input) {
+    input = productCreationInputSchema.parse(input);
     const existing = await prisma.product.findFirst({
       where: {
         id,

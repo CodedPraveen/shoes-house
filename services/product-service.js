@@ -11,9 +11,11 @@ import { activeProductWhere } from "@/lib/product-where";
 const productWhere = activeProductWhere;
 // const productWhere = { ...notDeleted, category: { deletedAt: null } };
 
-async function fetchAllRaw() {
+async function fetchAllRaw({ includeProcessing = false } = {}) {
   return prisma.product.findMany({
-    where: productWhere,
+    where: includeProcessing
+      ? { ...notDeleted, category: { deletedAt: null } }
+      : productWhere,
     include: productInclude,
     orderBy: { createdAt: "desc" },
   });
@@ -49,15 +51,15 @@ export const productService = {
     const order = new Map(uniqueIds.map((id, index) => [id, index]));
     return mapProducts(rows, { includeInvalid: false }).sort((a, b) => order.get(a.id) - order.get(b.id));
   },
-  async getAll({ includeInvalid = false } = {}) {
-    const rows = await fetchAllRaw();
+  async getAll({ includeInvalid = false, includeProcessing = false } = {}) {
+    const rows = await fetchAllRaw({ includeProcessing });
 
     return mapProducts(rows, { includeInvalid });
   },
 
   async getById(id) {
     const row = await prisma.product.findFirst({
-      where: { id, ...notDeleted },
+      where: { id, ...activeProductWhere },
       include: productInclude,
     });
     return row ? mapCustomerProduct(row) : null;
@@ -66,7 +68,7 @@ export const productService = {
   async getBySlug(slug, collection) {
     return remember(`product:slug:${collection ?? "all"}:${slug}`, async () => {
       const row = await prisma.product.findFirst({
-        where: { slug, ...notDeleted, ...(collection && { collection }) },
+        where: { slug, ...activeProductWhere, ...(collection && { collection }) },
         include: productInclude,
       });
 
@@ -194,7 +196,7 @@ export const productService = {
 
   async getRelated(productId, limit = 4) {
     const current = await prisma.product.findFirst({
-      where: { id: productId, ...notDeleted },
+      where: { id: productId, ...activeProductWhere },
       include: { category: true },
     });
 
@@ -246,7 +248,7 @@ export const productService = {
 
   async getAllSlugs() {
     const rows = await prisma.product.findMany({
-      where: notDeleted,
+      where: activeProductWhere,
       select: {
         slug: true,
         images: {

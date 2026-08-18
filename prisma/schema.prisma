@@ -56,40 +56,45 @@ model Category {
 }
 
 model Product {
-  id              String                  @id @default(cuid())
-  name            String
-  brand           String                  @default("Post Mart")
-  slug            String                  @unique
-  description     String
-  price           Int
-  compareAtPrice  Int?
-  discount        Int?
-  stock           Int                     @default(0)
-  isNew           Boolean                 @default(false)
-  isTrending      Boolean                 @default(false)
-  purchaseCount   Int                     @default(0)
-  rank            Int?
-  materials       String?
-  shippingInfo    String?
-  returnPolicy    String?
-  tags            String[]                @default([])
-  categoryId      String
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  deletedAt       DateTime?
-  collection      ProductCollection
-  cartItems       CartItem[]
-  heroSlides      HeroSlide[]
-  navbarItems     NavbarItem[]
-  orderItems      OrderItem[]
-  category        Category                @relation(fields: [categoryId], references: [id])
-  colors          ProductColor[]
-  images          ProductImage[]
-  sizes           ProductSize[]
-  variants        ProductVariant[]
-  reviews         Review[]
-  storefrontItems StorefrontSectionItem[]
-  wishlist        Wishlist[]
+  id               String                  @id @default(cuid())
+  name             String
+  brand            String                  @default("Post Mart")
+  slug             String                  @unique
+  description      String
+  price            Int
+  compareAtPrice   Int?
+  discount         Int?
+  stock            Int                     @default(0)
+  isNew            Boolean                 @default(false)
+  isTrending       Boolean                 @default(false)
+  purchaseCount    Int                     @default(0)
+  rank             Int?
+  materials        String?
+  shippingInfo     String?
+  returnPolicy     String?
+  tags             String[]                @default([])
+  categoryId       String
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  deletedAt        DateTime?
+  collection       ProductCollection
+  processingStatus ProductProcessingStatus @default(READY)
+  processingError  String?
+  processingJobId  String?
+  processedAt      DateTime?
+  pendingImageUrls String[]                @default([])
+  cartItems        CartItem[]
+  heroSlides       HeroSlide[]
+  navbarItems      NavbarItem[]
+  orderItems       OrderItem[]
+  category         Category                @relation(fields: [categoryId], references: [id])
+  colors           ProductColor[]
+  images           ProductImage[]
+  sizes            ProductSize[]
+  variants         ProductVariant[]
+  reviews          Review[]
+  storefrontItems  StorefrontSectionItem[]
+  wishlist         Wishlist[]
 
   @@index([slug])
   @@index([name])
@@ -101,6 +106,7 @@ model Product {
   @@index([deletedAt])
   @@index([createdAt])
   @@index([categoryId, deletedAt])
+  @@index([processingStatus])
 }
 
 model ProductVariant {
@@ -139,9 +145,11 @@ model ProductImage {
   isHover   Boolean   @default(false)
   createdAt DateTime  @default(now())
   deletedAt DateTime?
+  publicId  String?
   product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+  @@index([publicId])
 }
 
 model ProductColor {
@@ -575,6 +583,12 @@ model NewsletterSubscriber {
 enum ProductCollection {
   SHOES
   JEWELLERY
+}
+
+enum ProductProcessingStatus {
+  PROCESSING
+  READY
+  FAILED
 }
 
 enum OrderStatus {
