@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
 import { Heart, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
@@ -11,6 +11,7 @@ import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { getProductPath } from "@/lib/product-routes";
+import LoadingButton from "@/components/ui/loading-button";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -20,18 +21,41 @@ export default function ProductDetailClient({ product }) {
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
 
-  const [size, setSize] = useState(product.sizes[0] ?? 40);
+  const [size, setSize] = useState(product.sizes[0] ?? null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [pendingActions, setPendingActions] = useState(new Set());
+  const [actionError, setActionError] = useState("");
+  const pendingRef = useRef(new Set());
+
+  const runAction = async (name, action) => {
+    if (pendingRef.current.has(name)) return false;
+
+    pendingRef.current.add(name);
+    setPendingActions(new Set(pendingRef.current));
+    setActionError("");
+
+    try {
+      await action();
+      return true;
+    } catch (error) {
+      setActionError(
+        error?.message ||
+        "Could not complete this action. Please try again.",
+      );
+      return false;
+    } finally {
+      pendingRef.current.delete(name);
+      setPendingActions(new Set(pendingRef.current));
+    }
+  };
 
   const requireAuth = (action) => {
     if (hasClerk && !isSignedIn) {
       router.push(
-        `/ sign -in? redirect_url = ${
-  encodeURIComponent(
-    getProductPath(product),
-  )
-} `,
+        `/sign-in?redirect_url=${encodeURIComponent(
+          getProductPath(product),
+        )}`,
       );
 
       return false;
@@ -42,26 +66,44 @@ export default function ProductDetailClient({ product }) {
   };
 
   const handleAddToCart = () => {
-    requireAuth(() => {
-      addItem({
-        product,
-        size,
-        quantity,
-      });
+    if (!size) {
+      setActionError("Please select a size before continuing.");
+      return;
+    }
 
-      setAdded(true);
+    requireAuth(() =>
+      runAction("cart", () =>
+        addItem({
+          product,
+          size,
+          quantity,
+        }),
+      ).then((success) => {
+        if (success) {
+          setAdded(true);
 
-      setTimeout(() => {
-        setAdded(false);
-      }, 2000);
-    });
+          setTimeout(() => {
+            setAdded(false);
+          }, 2000);
+        }
+      }),
+    );
   };
 
   const handleWishlist = () => {
-    requireAuth(() => toggleWishlist(product.id));
+    requireAuth(() =>
+      runAction("wishlist", () =>
+        toggleWishlist(product.id),
+      ),
+    );
   };
 
   const handleBuyNow = () => {
+    if (!size) {
+      setActionError("Please select a size before continuing.");
+      return;
+    }
+
     requireAuth(() => {
       const q = new URLSearchParams({
         productId: product.id,
@@ -69,7 +111,7 @@ export default function ProductDetailClient({ product }) {
         quantity: String(quantity),
       });
 
-      router.push(`/ checkout / buy - now ? ${ q.toString() } `);
+      router.push(`/checkout/buy-now?${q.toString()}`);
     });
   };
 
@@ -77,7 +119,8 @@ export default function ProductDetailClient({ product }) {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-[1400px] px-4 pb-32 pt-4 sm:space-y-16 sm:px-6 sm:py-14 lg:space-y-20 lg:px-8 lg:py-20">
+      <main className="mx-auto w-full max-w-[1400px] px-3 pb-32 pt-2 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
+        
         {/* =========================
             MOBILE HEADER
         ========================== */}
@@ -95,14 +138,14 @@ export default function ProductDetailClient({ product }) {
             Details
           </h1>
 
-          <button
+          <LoadingButton
             type="button"
             onClick={handleWishlist}
-            className={`flex h - 11 w - 11 items - center justify - center no54123 - full border border - black / 10 transition active: scale - 95 ${
-  wishlistActive
-    ? "bg-black text-white"
-    : "bg-white"
-} `}
+            loading={pendingActions.has("wishlist")}
+            className={`flex h-11 w-11 items-center justify-center no54123-full border border-black/10 transition active:scale-95 ${wishlistActive
+                ? "bg-black text-white"
+                : "bg-white"
+              }`}
             aria-label={
               wishlistActive
                 ? "Remove from wishlist"
@@ -111,9 +154,13 @@ export default function ProductDetailClient({ product }) {
           >
             <Heart
               size={20}
-              fill={wishlistActive ? "currentColor" : "none"}
+              fill={
+                wishlistActive
+                  ? "currentColor"
+                  : "none"
+              }
             />
-          </button>
+          </LoadingButton>
         </div>
 
         {/* =========================
@@ -122,14 +169,23 @@ export default function ProductDetailClient({ product }) {
         <div className="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-12">
           {/* =========================
               GALLERY
+              2:3 RESPONSIVE IMAGE AREA
           ========================== */}
-          <div className="min-w-0">
-            <ProductGallery
-              images={(product.images || []).map(
-                optimizeCloudinaryImage,
-              )}
-              name={product.name}
-            />
+          <div className="min-w-0 w-full">
+            <div
+              className="
+                w-full
+                [&_.aspect-square]:!aspect-[2/3]
+                [&_.aspect-square]:!w-full
+              "
+            >
+              <ProductGallery
+                images={(product.images || []).map(
+                  optimizeCloudinaryImage,
+                )}
+                name={product.name}
+              />
+            </div>
           </div>
 
           {/* =========================
@@ -186,16 +242,24 @@ export default function ProductDetailClient({ product }) {
                     key={item}
                     type="button"
                     onClick={() => setSize(item)}
-                    className={`no54123 - full min - h - 11 min - w - 11 border px - 3.5 text - sm transition sm: px - 4 ${
-  size === item
-    ? "border-black bg-black text-white"
-    : "border-black/15 hover:border-black/40"
-} `}
+                    className={`rounded min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
+                        ? "border-black bg-black text-white"
+                        : "border-black/15 hover:border-black/40"
+                      }`}
                   >
                     {item}
                   </button>
                 ))}
               </div>
+
+              {!size && actionError ? (
+                <p
+                  className="text-sm text-red-600"
+                  role="alert"
+                >
+                  {actionError}
+                </p>
+              ) : null}
             </div>
 
             {/* =========================
@@ -241,9 +305,10 @@ export default function ProductDetailClient({ product }) {
                 DESKTOP ACTIONS
             ========================== */}
             <div className="hidden flex-wrap gap-3 sm:flex">
-              <button
+              <LoadingButton
                 type="button"
                 onClick={handleAddToCart}
+                loading={pendingActions.has("cart")}
                 className="inline-flex min-h-12 items-center justify-center gap-2 no54123-full bg-black px-7 text-sm font-medium text-white transition hover:scale-[1.02] active:scale-[0.98]"
               >
                 <ShoppingBag size={16} />
@@ -251,7 +316,7 @@ export default function ProductDetailClient({ product }) {
                 {added
                   ? "Added to Cart"
                   : "Add To Cart"}
-              </button>
+              </LoadingButton>
 
               <button
                 type="button"
@@ -261,14 +326,14 @@ export default function ProductDetailClient({ product }) {
                 Buy Now
               </button>
 
-              <button
+              <LoadingButton
                 type="button"
                 onClick={handleWishlist}
-                className={`flex min - h - 12 min - w - 12 items - center justify - center no54123 - full border border - black / 15 p - 3 transition hover: bg - black / 5 active: scale - 95 ${
-  wishlistActive
-    ? "bg-black text-white"
-    : ""
-} `}
+                loading={pendingActions.has("wishlist")}
+                className={`flex min-h-12 min-w-12 items-center justify-center no54123-full border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
+                    ? "bg-black text-white"
+                    : ""
+                  }`}
                 aria-label={
                   wishlistActive
                     ? "Remove from wishlist"
@@ -283,8 +348,17 @@ export default function ProductDetailClient({ product }) {
                       : "none"
                   }
                 />
-              </button>
+              </LoadingButton>
             </div>
+
+            {actionError && size ? (
+              <p
+                className="text-sm text-red-600"
+                role="alert"
+              >
+                {actionError}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -347,9 +421,10 @@ export default function ProductDetailClient({ product }) {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/10 bg-white/95 px-4 pt-3 backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-[600px] items-center gap-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           {/* Add To Cart */}
-          <button
+          <LoadingButton
             type="button"
             onClick={handleAddToCart}
+            loading={pendingActions.has("cart")}
             className="flex h-14 w-14 shrink-0 items-center justify-center no54123-full border border-black/10 bg-black/5 transition active:scale-95"
             aria-label={
               added
@@ -358,7 +433,7 @@ export default function ProductDetailClient({ product }) {
             }
           >
             <ShoppingBag size={22} />
-          </button>
+          </LoadingButton>
 
           {/* Buy Now */}
           <button
@@ -373,4 +448,3 @@ export default function ProductDetailClient({ product }) {
     </>
   );
 }
-

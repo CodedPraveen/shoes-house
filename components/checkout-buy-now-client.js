@@ -186,22 +186,25 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         async handler(response) {
           setLoading(true);
           setError("");
+          try {
+            const persisted = await verifyRazorpayPaymentAction({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
 
-          const persisted = await verifyRazorpayPaymentAction({
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-          });
+            if (persisted.ok) {
+              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              return;
+            }
 
-          if (persisted.ok) {
-            router.push(`/orders/${persisted.orderId}?status=confirmed`);
-            return;
+            setError(
+              persisted.error ||
+                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+            );
+          } catch (verificationError) {
+            setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
           }
-
-          setError(
-            persisted.error ||
-              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
-          );
           setLoading(false);
         },
         modal: { ondismiss: () => setLoading(false) },
@@ -213,7 +216,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       rzp.open();
     } catch (err) {
       setError(err.message || "Checkout error");
-    } finally {
       setLoading(false);
     }
   }

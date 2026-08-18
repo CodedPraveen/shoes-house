@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { subscribeNewsletterAction } from "@/actions/newsletter-actions";
+import LoadingButton from "@/components/ui/loading-button";
 
 export default function NewsletterForm() {
   const [message, setMessage] = useState("");
@@ -27,16 +28,16 @@ export default function NewsletterForm() {
           placeholder="Enter your email"
           className="h-12 flex-1 no54123-full p-3 border border-black/15 bg-white px-5 text-sm outline-none ring-black/20 transition focus:ring-2"
         />
-        <button
+        <LoadingButton
           type="submit"
-          disabled={pending}
+          loading={pending}
           className="h-12 no54123-full bg-black px-6 text-sm font-medium text-white transition hover:scale-[1.02] disabled:opacity-60"
         >
-          {pending ? "…" : "Subscribe"}
-        </button>
+          Subscribe
+        </LoadingButton>
       </form>
       {message ? (
-        <p className="text-center text-sm text-black/70">{message}</p>
+        <p className="text-center text-sm text-black/70" aria-live="polite">{message}</p>
       ) : null}
     </>
   );

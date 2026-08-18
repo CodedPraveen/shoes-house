@@ -151,7 +151,7 @@
 
 "use client";
 
-import { memo } from "react";
+import { memo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
@@ -163,6 +163,7 @@ import { formatPrice } from "@/lib/format-price";
 import SafeImage from "./ui/safe-image";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { getProductPath } from "@/lib/product-routes";
+import LoadingButton from "@/components/ui/loading-button";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -175,6 +176,9 @@ function ProductCard({
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
+  const [pendingActions, setPendingActions] = useState(new Set());
+  const [actionError, setActionError] = useState("");
+  const pendingRef = useRef(new Set());
 
   const productPath = getProductPath(product);
 
@@ -192,19 +196,39 @@ function ProductCard({
     action();
   };
 
+  const runAction = async (name, action) => {
+    if (pendingRef.current.has(name)) return;
+    pendingRef.current.add(name);
+    setPendingActions(new Set(pendingRef.current));
+    setActionError("");
+    try {
+      await action();
+    } catch (error) {
+      setActionError(error?.message || "Could not complete this action.");
+    } finally {
+      pendingRef.current.delete(name);
+      setPendingActions(new Set(pendingRef.current));
+    }
+  };
+
   const handleQuickAdd = (e) => {
-    requireAuth(e, () =>
-      addItem({
+    requireAuth(e, () => {
+      const defaultSize = product.sizes?.[0];
+      if (!defaultSize) {
+        setActionError("Choose options on the product page before adding this item.");
+        return;
+      }
+      runAction("cart", () => addItem({
         product,
         color: product.colors[0]?.id ?? "black",
-        size: product.sizes[0] ?? 40,
+        size: defaultSize,
         quantity: 1,
-      }),
-    );
+      }));
+    });
   };
 
   const handleWishlist = (e) => {
-    requireAuth(e, () => toggleWishlist(product.id));
+    requireAuth(e, () => runAction("wishlist", () => toggleWishlist(product.id)));
   };
 
   const optimizedImage = optimizeCloudinaryImage(product.image);
@@ -242,9 +266,10 @@ function ProductCard({
             loading="lazy"
           />
 
-          <button
+          <LoadingButton
             type="button"
             onClick={handleWishlist}
+            loading={pendingActions.has("wishlist")}
             className={`absolute right-3 top-3 z-10 rounded-full p-2 transition ${isInWishlist(product.id)
                 ? "bg-black text-red-500 hover:bg-black/90"
                 : "bg-white/85 text-black hover:bg-white"
@@ -265,16 +290,17 @@ function ProductCard({
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </LoadingButton>
 
-          <button
+          <LoadingButton
             type="button"
             onClick={handleQuickAdd}
+            loading={pendingActions.has("cart")}
             className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 translate-y-5 items-center gap-2 rounded-full bg-black px-5 py-2 text-xs font-medium text-white opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100"
           >
             <Plus size={14} />
             Quick Add
-          </button>
+          </LoadingButton>
         </div>
 
         <div className="flex flex-1 flex-col px-4 pb-3 pt-4">
@@ -291,6 +317,7 @@ function ProductCard({
               {formatPrice(product.price)}
             </span>
           </div>
+          {actionError ? <p className="mt-2 text-xs text-red-600" role="alert">{actionError}</p> : null}
         </div>
       </article>
     </Link>

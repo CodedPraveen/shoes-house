@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import LoadingButton from "@/components/ui/loading-button";
 import { getInventoryPage } from "@/services/new-admin-service";
 import { EmptyState, MetricCard, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";
 import Pagination from "@/components/new-admin/pagination";

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthGate from "@/components/auth-gate";
@@ -8,11 +9,30 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import SafeImage from "@/components/ui/safe-image";
+import LoadingButton from "@/components/ui/loading-button";
 
 export default function CartPage() {
   const router = useRouter();
   const { items, subtotal, itemCount, updateQuantity, removeItem, hydrated } =
     useCart();
+  const [pendingActions, setPendingActions] = useState(new Set());
+  const [error, setError] = useState("");
+  const pendingRef = useRef(new Set());
+
+  async function runItemAction(key, action) {
+    if (pendingRef.current.has(key)) return;
+    pendingRef.current.add(key);
+    setPendingActions(new Set(pendingRef.current));
+    setError("");
+    try {
+      await action();
+    } catch (actionError) {
+      setError(actionError?.message || "Could not update your cart. Please try again.");
+    } finally {
+      pendingRef.current.delete(key);
+      setPendingActions(new Set(pendingRef.current));
+    }
+  }
 
   const handleBuyNow = (item) => {
     const q = new URLSearchParams({
@@ -50,6 +70,7 @@ export default function CartPage() {
             </div>
           ) : (
             <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+              <div>
               <ul className="space-y-4">
                 {items.map((item) => (
                   <li
@@ -76,34 +97,45 @@ export default function CartPage() {
                     
                       <div className="flex items-center justify-between">
                         <div className="flex items-center border border-black/15 rounded-full">
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                            }
+                          <LoadingButton
+                            type="button"
+                            aria-label={`Decrease quantity for ${item.name}`}
+                            loading={pendingActions.has(`quantity:${item.id}`)}
+                            onClick={() => runItemAction(
+                              `quantity:${item.id}`,
+                              () => updateQuantity(item.id, Math.max(1, item.quantity - 1)),
+                            )}
                             className="p-2"
                           >
                             <Minus size={16} />
-                          </button>
+                          </LoadingButton>
 
                           <span className="px-4 text-sm">{item.quantity}</span>
 
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
+                          <LoadingButton
+                            type="button"
+                            aria-label={`Increase quantity for ${item.name}`}
+                            loading={pendingActions.has(`quantity:${item.id}`)}
+                            onClick={() => runItemAction(
+                              `quantity:${item.id}`,
+                              () => updateQuantity(item.id, item.quantity + 1),
+                            )}
                             className="p-2"
                           >
                             <Plus size={16} />
-                          </button>
+                          </LoadingButton>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => removeItem(item.id)}
+                          <LoadingButton
+                            type="button"
+                            aria-label={`Remove ${item.name} from cart`}
+                            loading={pendingActions.has(`remove:${item.id}`)}
+                            onClick={() => runItemAction(`remove:${item.id}`, () => removeItem(item.id))}
                             className="p-2 text-black/50 hover:text-black"
                           >
                             <Trash2 size={16} />
-                          </button>
+                          </LoadingButton>
 
                           <button
                             onClick={() => handleBuyNow(item)}
@@ -117,6 +149,8 @@ export default function CartPage() {
                   </li>
                 ))}
               </ul>
+              {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
+              </div>
               <aside className="h-fit no54123-3xl border border-black/10 bg-zinc-50 p-6">
                 <h3 className="text-lg font-medium">Order Summary</h3>
                 <div className="mt-6 space-y-3 text-sm">

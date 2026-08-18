@@ -44,7 +44,7 @@ export default function ProductGallery({ images, name }) {
           MAIN IMAGE
       ========================== */}
       <div
-        className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-black/5 bg-zinc-100 sm:rounded-[2rem]"
+        className="group relative aspect-square w-full overflow-hidden rounded border border-black/5 bg-zinc-100 sm:rounded-[2rem]"
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
       >
@@ -54,7 +54,7 @@ export default function ProductGallery({ images, name }) {
           src={activeImage}
           alt={name}
           priority
-          className={`h - full w - full object - contain p - 4 transition duration - 500 sm: p - 8 ${
+          className={`h-full w-full object-contain transition duration-500 ${
   zoom ? "scale-105" : "scale-100"
 } `}
         />

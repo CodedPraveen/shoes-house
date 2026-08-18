@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import LoadingButton from "@/components/ui/loading-button";
 import { getUsersPage } from "@/services/new-admin-service";
 import { formatPrice } from "@/lib/format-price";
 import { EmptyState, MetricCard, PageHeader, StatusBadge, inputClass } from "@/components/new-admin/ui";

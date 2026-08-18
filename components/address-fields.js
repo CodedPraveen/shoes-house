@@ -26,6 +26,7 @@ function AddressField({
     <label className={className}>
       <span className="mb-1.5 block text-xs font-medium text-black/70">
         {label}
+        {required ? <span className="ml-1 text-red-600" aria-hidden="true">*</span> : null}
         {!required ? <span className="ml-1 font-normal text-black/40">(optional)</span> : null}
       </span>
       <input

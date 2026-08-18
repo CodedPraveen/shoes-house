@@ -9,6 +9,7 @@ import {
 } from "@/actions/new-admin-order-actions";
 import { buttonClass, inputClass } from "@/components/new-admin/ui";
 import { getOrderStatusConfig } from "@/lib/order-status";
+import LoadingButton from "@/components/ui/loading-button";
 
 const initialState = { ok: false, error: null, message: null };
 
@@ -45,9 +46,9 @@ export default function OrderActions({ order, compact = false }) {
           <input type="hidden" name="orderId" value={order.id} />
           <input type="hidden" name="expectedStatus" value={order.status} />
           <input type="hidden" name="newStatus" value={config.next} />
-          <button disabled={advancePending} className={buttonClass}>
-            {advancePending ? "Updating…" : config.buttonLabel}
-          </button>
+          <LoadingButton loading={advancePending} className={buttonClass}>
+            {config.buttonLabel}
+          </LoadingButton>
           <Feedback state={advanceState} />
         </form>
       ) : null}
@@ -55,10 +56,10 @@ export default function OrderActions({ order, compact = false }) {
       {canTrack ? (
         <form action={trackingAction} className="space-y-2 rounded-xl border border-slate-200 p-3">
           <input type="hidden" name="orderId" value={order.id} />
-          <label className="block text-xs font-medium text-slate-500">India Post tracking number</label>
+          <label className="block text-xs font-medium text-slate-500">India Post tracking number <span className="text-rose-600" aria-hidden="true">*</span></label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input required name="trackingNumber" autoComplete="off" className={`${inputClass} uppercase`} placeholder="EE123456789IN" />
-            <button disabled={trackingPending} className={buttonClass}>{trackingPending ? "Adding…" : "Add tracking / Mark shipped"}</button>
+            <LoadingButton loading={trackingPending} className={buttonClass}>Add tracking / Mark shipped</LoadingButton>
           </div>
           <Feedback state={trackingState} />
         </form>
@@ -69,7 +70,7 @@ export default function OrderActions({ order, compact = false }) {
           <a href={order.trackingUrl || `https://www.aftership.com/track/india-post/${order.trackingNumber}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium hover:bg-slate-50">Track shipment</a>
           <form action={refreshAction}>
             <input type="hidden" name="orderId" value={order.id} />
-            <button disabled={refreshPending} className={buttonClass}>{refreshPending ? "Refreshing…" : "Refresh tracking"}</button>
+            <LoadingButton loading={refreshPending} className={buttonClass}>Refresh tracking</LoadingButton>
           </form>
           <Feedback state={refreshState} />
         </div>
@@ -79,7 +80,7 @@ export default function OrderActions({ order, compact = false }) {
         <form action={cancelAction}>
           <input type="hidden" name="orderId" value={order.id} />
           <input type="hidden" name="expectedStatus" value={order.status} />
-          <button disabled={cancelPending} className="text-xs font-medium text-rose-600 hover:text-rose-800">{cancelPending ? "Cancelling…" : "Cancel order"}</button>
+          <LoadingButton loading={cancelPending} className="text-xs font-medium text-rose-600 hover:text-rose-800">Cancel order</LoadingButton>
           <Feedback state={cancelState} />
         </form>
       ) : null}
