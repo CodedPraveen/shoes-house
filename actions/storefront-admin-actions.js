@@ -39,6 +39,18 @@ function nullableId(value) {
   return id || null;
 }
 
+function singleUpload(formData, fieldName) {
+  const files = formData
+    .getAll(fieldName)
+    .filter((value) => value && typeof value.arrayBuffer === "function" && value.size > 0);
+
+  if (files.length > 1) {
+    throw new Error("Choose one hero image.");
+  }
+
+  return files[0] ?? null;
+}
+
 async function validatedTargets(collection, targetType, categoryId, productId) {
   if (!TARGET_TYPES.has(targetType)) throw new Error("Invalid destination type.");
   const [category, product] = await Promise.all([
@@ -212,7 +224,7 @@ export async function saveHeroSlideAction(formData) {
   const targetType = String(formData.get("targetType") ?? "COLLECTION");
   const target = await validatedTargets(collection, targetType, nullableId(formData.get("categoryId")), nullableId(formData.get("productId")));
   const customHref = targetType === "CUSTOM" ? localHref(formData.get("customHref")) : null;
-  const asset = await uploadStorefrontAsset(formData.get("image"), "HERO", alt);
+  const asset = await uploadStorefrontAsset(singleUpload(formData, "image"), "HERO", alt);
   if (!id && !asset) throw new Error("Choose a hero image.");
   const data = { alt, enabled: formData.get("enabled") === "on", sortOrder: numberValue(formData.get("sortOrder")), targetType, ...target, customHref, ...(asset ? { mediaAssetId: asset.id } : {}) };
   if (id) await prisma.heroSlide.updateMany({ where: { id, collection }, data });
