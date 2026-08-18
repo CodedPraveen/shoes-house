@@ -119,8 +119,9 @@ export default function ProductDetailClient({ product }) {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-[1400px] px-3 pb-32 pt-2 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
-        
+      <main className="mx-auto w-full max-w-[1400px] px-0 pb-32 pt-0 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
+        {/* <main className="mx-auto w-full max-w-[1400px] px-2 pb-32 pt-2 sm:px-6 sm:py-12 lg:px-8 lg:py-20"> */}
+
         {/* =========================
             MOBILE HEADER
         ========================== */}
@@ -143,8 +144,8 @@ export default function ProductDetailClient({ product }) {
             onClick={handleWishlist}
             loading={pendingActions.has("wishlist")}
             className={`flex h-11 w-11 items-center justify-center no54123-full border border-black/10 transition active:scale-95 ${wishlistActive
-                ? "bg-black text-white"
-                : "bg-white"
+              ? "bg-black text-white"
+              : "bg-white"
               }`}
             aria-label={
               wishlistActive
@@ -166,7 +167,7 @@ export default function ProductDetailClient({ product }) {
         {/* =========================
             PRODUCT
         ========================== */}
-        <div className="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-12">
+        <div className="grid min-w-0 grid-cols-1 gap-7 mt:5 sm:mt-8 lg:grid-cols-2 lg:gap-12">
           {/* =========================
               GALLERY
               2:3 RESPONSIVE IMAGE AREA
@@ -191,7 +192,7 @@ export default function ProductDetailClient({ product }) {
           {/* =========================
               PRODUCT INFO
           ========================== */}
-          <div className="min-w-0 space-y-7 sm:space-y-8">
+          <div className="min-w-0 space-y-7 sm:space-y-8 p-4 mt:0 sm:mt-8 sm:p-6 lg:p-0"> 
             {/* Brand / Name / Price */}
             <div className="space-y-3">
               <p className="text-[11px] uppercase tracking-[0.22em] text-black/45 sm:text-xs sm:tracking-[0.25em]">
@@ -243,8 +244,8 @@ export default function ProductDetailClient({ product }) {
                     type="button"
                     onClick={() => setSize(item)}
                     className={`rounded min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
-                        ? "border-black bg-black text-white"
-                        : "border-black/15 hover:border-black/40"
+                      ? "border-black bg-black text-white"
+                      : "border-black/15 hover:border-black/40"
                       }`}
                   >
                     {item}
@@ -331,8 +332,8 @@ export default function ProductDetailClient({ product }) {
                 onClick={handleWishlist}
                 loading={pendingActions.has("wishlist")}
                 className={`flex min-h-12 min-w-12 items-center justify-center no54123-full border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
-                    ? "bg-black text-white"
-                    : ""
+                  ? "bg-black text-white"
+                  : ""
                   }`}
                 aria-label={
                   wishlistActive
