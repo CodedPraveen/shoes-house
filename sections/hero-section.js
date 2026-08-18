@@ -148,7 +148,7 @@ export default function HeroSection({ slides = [] }) {
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) resumeAutoplay(400);
       }}
-      className="group relative mt-20 w-full overflow-hidden bg-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-950"
+      className="group relative mt-16 w-full overflow-hidden bg-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-950"
     >
       <div
         ref={emblaRef}

@@ -68,7 +68,7 @@ export default function ShoesDropdown({
             <button
                 type="button"
                 aria-expanded={open}
-                className="text-black/75 transition hover:text-black"
+                className="text-[13px] font-semibold tracking-[-0.01em] text-black/75 transition hover:text-black"
             >
                 Shoes
             </button>
