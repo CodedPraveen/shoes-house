@@ -30,35 +30,35 @@ export const categories = [
   {
     id: "cat-men",
     title: "Men",
-    href: "/category/men",
+    href: "/shoes?category=men",
     image:
       "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "cat-boys",
     title: "Boys",
-    href: "/category/boys",
+    href: "/shoes?category=boys",
     image:
       "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "cat-sports",
     title: "Sports",
-    href: "/category/shoes",
+    href: "/shoes?category=shoes",
     image:
       "https://images.unsplash.com/photo-1597045566677-8cf032ed6634?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "cat-lifestyle",
     title: "Lifestyle",
-    href: "/category/footwear",
+    href: "/shoes?category=footwear",
     image:
     "https://res.cloudinary.com/dtgdnok1h/image/upload/q_auto/f_auto/v1780143418/samples/ecommerce/shoes.png",
   },
   {
     id: "cat-sports1",
     title: "Sports",
-    href: "/category/shoes",
+    href: "/shoes?category=shoes",
     image:
       "https://images.unsplash.com/photo-1597045566677-8cf032ed6634?auto=format&fit=crop&w=1200&q=80",
   },

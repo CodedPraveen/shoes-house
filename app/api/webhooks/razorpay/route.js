@@ -20,7 +20,7 @@ export async function POST(request) {
   } catch (err) {
     console.error("[razorpay webhook]", err);
     return NextResponse.json(
-      { ok: false, error: err.message || "Webhook error" },
+      { ok: false, error: "Webhook processing failed" },
       { status: 500 },
     );
   }

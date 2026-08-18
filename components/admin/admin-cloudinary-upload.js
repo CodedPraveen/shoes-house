@@ -1,34 +1,129 @@
 "use client";
 
-import Image from "next/image";
 import { useRef, useState } from "react";
-import { uploadProductImageAction } from "@/actions/admin-product-actions";
+import { uploadNewAdminProductImageAction, uploadProductImageAction } from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import SafeImage from "@/components/ui/safe-image";
+import { validateProductImageUrl } from "@/lib/product-image";
 
-export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig }) {
+export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryConfig, uploadContext, onUploadingChange }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
+  function setUploadState(value) {
+    setUploading(value);
+    onUploadingChange?.(value);
+  }
+
+  function appendCloudinaryUrl(url) {
+    const validation = validateProductImageUrl(url);
+    if (!validation.isValid) {
+      setError(validation.reason || "Cloudinary returned an invalid image URL");
+      return false;
+    }
+    onChange([...imageUrls, validation.url]);
+    return true;
+  }
+
   async function handleFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
     setError("");
-    setUploading(true);
+
+    const remainingSlots = 8 - imageUrls.length;
+
+    if (remainingSlots <= 0) {
+      setError("Maximum 8 product images are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    const selectedFiles = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      setError(
+        `Only ${remainingSlots} more image${remainingSlots === 1 ? "" : "s"
+        } can be added. Maximum is 8.`,
+      );
+    }
+
+    setUploadState(true);
+
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const result = await uploadProductImageAction(fd);
-      if (!result.ok) {
-        setError(result.error || "Upload failed");
-        return;
+      const uploadResults = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const fd = new FormData();
+
+          fd.append("file", file);
+
+          if (uploadContext) {
+            fd.append(
+              "collection",
+              uploadContext.collection,
+            );
+
+            fd.append(
+              "categorySlug",
+              uploadContext.categorySlug,
+            );
+          }
+
+          const result = uploadContext
+            ? await uploadNewAdminProductImageAction(fd)
+            : await uploadProductImageAction(fd);
+
+          return result;
+        }),
+      );
+
+      const successfulUrls = uploadResults
+        .filter((result) => result?.ok && result?.url)
+        .map((result) => {
+          const validation = validateProductImageUrl(
+            result.url,
+          );
+
+          return validation.isValid
+            ? validation.url
+            : null;
+        })
+        .filter(Boolean);
+
+      const failedUploads = uploadResults.filter(
+        (result) => !result?.ok,
+      );
+
+      if (successfulUrls.length) {
+        onChange([
+          ...imageUrls,
+          ...successfulUrls,
+        ]);
       }
-      onChange([...imageUrls, result.url]);
+
+      if (failedUploads.length) {
+        setError(
+          `${failedUploads.length} image${failedUploads.length === 1 ? "" : "s"
+          } failed to upload.`,
+        );
+      }
     } catch (err) {
-      setError(err.message || "Upload failed");
+      console.error(
+        "[admin-cloudinary-upload] multiple upload failed:",
+        err,
+      );
+
+      setError(
+        err?.message || "One or more images failed to upload.",
+      );
     } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
+      setUploadState(false);
+
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
     }
   }
 
@@ -47,20 +142,25 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       {
         cloudName: cloudinaryConfig.cloudName,
         uploadPreset: preset,
-        folder: cloudinaryConfig.folder || "aere/products",
+        folder: cloudinaryConfig.folder || "postmart/products",
         sources: ["local", "url", "camera"],
         multiple: true,
       },
       (err, result) => {
         if (err) {
           setError("Upload cancelled or failed");
+          setUploadState(false);
           return;
         }
         if (result?.event === "success") {
-          onChange([...imageUrls, result.info.secure_url]);
+          appendCloudinaryUrl(result.info.secure_url);
+        }
+        if (["abort", "close", "queues-end"].includes(result?.event)) {
+          setUploadState(false);
         }
       },
     );
+    setUploadState(true);
     widget.open();
   }
 
@@ -75,18 +175,19 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           type="button"
           loading={uploading}
           onClick={() => fileRef.current?.click()}
-          className="no54123-full border border-black/15 px-4 py-2 text-xs"
+          className="rounded-xl border border-black/15 px-4 py-2 text-xs"
         >
           Upload image
         </LoadingButton>
-        {cloudinaryConfig?.configured ? (
-          <button
+        {cloudinaryConfig?.configured && !uploadContext ? (
+          <LoadingButton
             type="button"
             onClick={openWidget}
-            className="no54123-full border border-black/15 px-4 py-2 text-xs"
+            loading={uploading}
+            className="rounded-xl border border-black/15 px-4 py-2 text-xs"
           >
             Cloudinary widget
-          </button>
+          </LoadingButton>
         ) : null}
         <input
           ref={fileRef}
@@ -94,13 +195,14 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
           accept="image/*"
           className="hidden"
           onChange={handleFile}
+          multiple={true}
         />
       </div>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-600" role="alert">{error}</p> : null}
       <ul className="flex flex-wrap gap-2">
         {imageUrls.map((url) => (
           <li key={url} className="relative">
-            <Image
+            <SafeImage
               width={64}
               height={64}
               src={url}

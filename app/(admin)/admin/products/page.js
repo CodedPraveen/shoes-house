@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Products | Admin | Post Mart" };
 
 export default async function AdminProductsPage() {
-  const products = await productService.getAll();
+  const products = await productService.getAll({ includeInvalid: true });
 
   return (
     <div className="space-y-8">
@@ -45,7 +45,7 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3">{p.stock ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/product/${p.slug}`}
+                    href={`/${p.collection.toLowerCase()}/product/${p.slug}`}
                     className="mr-3 text-black/60 hover:text-black"
                   >
                     View

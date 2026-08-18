@@ -44,13 +44,22 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     if (!isLoaded) return;
+    let active = true;
 
-    if (isSignedIn) {
-      syncFromServer().finally(() => setHydrated(true));
-    } else {
-      setItems(loadGuestCart());
-      setHydrated(true);
-    }
+    queueMicrotask(async () => {
+      if (!active) return;
+      if (isSignedIn) {
+        await syncFromServer();
+        if (active) setHydrated(true);
+      } else {
+        setItems(loadGuestCart());
+        setHydrated(true);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [isLoaded, isSignedIn, syncFromServer]);
 
   useEffect(() => {
@@ -59,7 +68,7 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback(
     async (payload) => {
-      const { product, color, size, quantity = 1 } = payload;
+      const { product, size, quantity = 1 } = payload;
 
       if (isSignedIn) {
         const previous = items;
@@ -68,7 +77,6 @@ export function CartProvider({ children }) {
         try {
           const data = await addToCartAction({
             productId: product.id,
-            color,
             size,
             quantity,
           });
@@ -96,6 +104,7 @@ export function CartProvider({ children }) {
           if (lock === syncLock.current) applySummary(data);
         } catch {
           if (lock === syncLock.current) setItems(previous);
+          throw new Error("Could not remove this item from the cart");
         }
         return;
       }
@@ -121,6 +130,7 @@ export function CartProvider({ children }) {
           if (lock === syncLock.current) applySummary(data);
         } catch {
           if (lock === syncLock.current) setItems(previous);
+          throw new Error("Could not update the cart quantity");
         }
         return;
       }

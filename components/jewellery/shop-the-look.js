@@ -39,7 +39,7 @@ function Hotspot({ top, left, title, price, align = "left", delay = "0s" }) {
         <p className="text-xs font-bold text-[#1b1b1c]">{title}</p>
         <p className="mb-2 text-[10px] text-[#575757]">{price}</p>
         <Link
-          href="/products"
+          href="/jewellery/products"
           className="pointer-events-auto text-[10px] uppercase tracking-tight text-[#D4AF37]"
         >
           View Item

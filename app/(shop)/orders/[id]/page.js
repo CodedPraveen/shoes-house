@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
 import { Download, Truck, Hash, PackageCheck, FileText } from "lucide-react";
 import CustomerTrackingCard from "@/components/customer-tracking-card";
+import SafeImage from "@/components/ui/safe-image";
+import { getOrderStatusConfig } from "@/lib/order-status";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -85,6 +86,7 @@ export default function OrderDetailPage() {
                   <h2 className="text-lg  font-medium">Shipping Address</h2>
                   <p className="font-medium">{order.shipFullName}</p>
                   <p className="text-black/60">{order.shipLine1}</p>
+                  {order.shipLandmark && <p className="text-black/60">{order.shipLandmark}</p>}
                   {order.shipLine2 && <p className="text-black/60">{order.shipLine2}</p>}
                   <p className="text-black/60">
                     {order.shipCity}, {order.shipState} {order.shipPincode}
@@ -153,7 +155,7 @@ export default function OrderDetailPage() {
                 <ul className="mt-6 space-y-4">
                   {order.items?.map((item) => (
                     <li key={item.id} className="flex gap-4 pb-4 border-b border-black/10 last:border-0">
-                      <Image
+                      <SafeImage
                         width={80}
                         height={80}
                         src={item.productImage}
@@ -198,12 +200,12 @@ export default function OrderDetailPage() {
                 <div className="space-y-2 border-t border-black/10 pt-4 text-sm">
                   <div className="flex justify-between">
                     <span className="text-black/60">Status</span>
-                    <span className="capitalize font-medium">{order.status}</span>
+                    <span className="font-medium">{getOrderStatusConfig(order.status).customerLabel}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-black/60">Payment</span>
                     <span className="text-black/60">
-                      {order.payments?.some((p) => p.status === "COMPLETED")
+                      {order.payments?.some((p) => p.status === "PAID")
                         ? "Paid"
                         : "Pending"}
                     </span>

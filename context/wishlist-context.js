@@ -39,16 +39,24 @@ export function WishlistProvider({ children }) {
 
   useEffect(() => {
     if (!isLoaded) return;
+    let active = true;
 
-    if (isSignedIn) {
-      getWishlistIdsAction()
-        .then(setProductIds)
-        .catch(() => setProductIds([]))
-        .finally(() => setHydrated(true));
-    } else {
-      setProductIds(loadGuestWishlist());
-      setHydrated(true);
-    }
+    queueMicrotask(() => {
+      if (!active) return;
+      if (isSignedIn) {
+        getWishlistIdsAction()
+          .then((ids) => { if (active) setProductIds(ids); })
+          .catch(() => { if (active) setProductIds([]); })
+          .finally(() => { if (active) setHydrated(true); });
+      } else {
+        setProductIds(loadGuestWishlist());
+        setHydrated(true);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [isLoaded, isSignedIn]);
 
   useEffect(() => {

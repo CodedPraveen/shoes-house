@@ -27,7 +27,7 @@ export function RecentlyViewedProvider({ children }) {
   const [productIds, setProductIds] = useState([]);
 
   useEffect(() => {
-    setProductIds(loadRecent());
+    queueMicrotask(() => setProductIds(loadRecent()));
   }, []);
 
   const trackView = useCallback((productId) => {

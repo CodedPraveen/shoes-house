@@ -1,21 +1,29 @@
 "use client";
 
+import { useFormStatus } from "react-dom";
+
 export default function LoadingButton({
   loading = false,
   children,
   className = "",
+  disabled = false,
+  type = "button",
   ...props
 }) {
+  const { pending } = useFormStatus();
+  const isLoading = loading || pending;
+
   return (
     <button
-      type={props.type ?? "button"}
-      disabled={loading || props.disabled}
-      className={`inline-flex items-center justify-center gap-2 disabled:opacity-60 ${className}`}
       {...props}
+      type={type}
+      disabled={isLoading || disabled}
+      aria-busy={isLoading || undefined}
+      className={`inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
-      {loading ? (
+      {isLoading ? (
         <span
-          className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black"
+          className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent"
           aria-hidden
         />
       ) : null}

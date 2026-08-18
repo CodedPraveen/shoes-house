@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizeTrackingStatus } from "@/lib/tracking-status";
+import { transitionOrderStatus } from "@/services/order-workflow-service";
 
 function verifySignature(rawBody, signature) {
     const expected = crypto
@@ -47,20 +48,36 @@ export async function POST(req) {
             tracking.tag,
         );
 
-       const order = await prisma.order.findFirst({
+        const matchingOrders = await prisma.order.findMany({
             where: {
                 trackingNumber:
                     tracking.tracking_number,
+                deletedAt: null,
             },
+            select: { id: true, status: true },
+        });
+
+        await prisma.order.updateMany({
+            where: { id: { in: matchingOrders.map((order) => order.id) } },
             data: {
                 trackingStatus: status,
                 lastTrackingSync: new Date(),
-                deliveredAt:
-                    status === "DELIVERED"
-                        ? new Date()
-                        : null,
+                ...(status === "DELIVERED" ? { deliveredAt: new Date() } : {}),
             },
         });
+
+        if (status === "DELIVERED") {
+            for (const order of matchingOrders) {
+                if (order.status !== "SHIPPED") continue;
+                await transitionOrderStatus({
+                    orderId: order.id,
+                    expectedStatus: "SHIPPED",
+                    newStatus: "DELIVERED",
+                    actor: { identifier: "aftership-webhook", type: "SYSTEM" },
+                    note: "Delivery confirmed by AfterShip webhook",
+                });
+            }
+        }
 
         return NextResponse.json({
             success: true,

@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
+
   images: {
     remotePatterns: [
       {
@@ -17,6 +23,7 @@ const nextConfig = {
   allowedDevOrigins: [
     "192.168.31.89",
     "*.trycloudflare.com",
+    "10.161.145.155",
   ],
 };
 

@@ -21,7 +21,7 @@ export default function WishlistPageClient({ allProducts = [] }) {
           {products.length === 0 ? (
             <p className="text-center text-sm text-black/50">
               Your wishlist is empty. Explore{" "}
-              <a href="/products" className="underline">
+              <a href="/shoes/products" className="underline">
                 all shoes
               </a>
               .

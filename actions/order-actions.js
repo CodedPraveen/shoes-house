@@ -4,6 +4,8 @@ import { orderService } from "@/services/order-service";
 import { isAdminUser } from "@/lib/auth";
 import { currentUser } from "@clerk/nextjs/server";
 import { requireDbUser } from "@/lib/require-db-user";
+import { getOrderStatusConfig } from "@/lib/order-status";
+import { transitionOrderStatus } from "@/services/order-workflow-service";
 
 export async function getMyOrdersAction() {
   const user = await requireDbUser();
@@ -13,6 +15,7 @@ export async function getMyOrdersAction() {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
+    statusLabel: getOrderStatusConfig(order.status).customerLabel,
     paymentStatus: order.payments[0]?.status ?? "PENDING",
     razorpayPaymentId: order.payments[0]?.razorpayPaymentId,
     total: order.total,
@@ -35,7 +38,13 @@ export async function updateOrderStatusAction(orderId, status) {
     throw new Error("Forbidden");
   }
 
-  return orderService.updateOrderStatus(orderId, status);
+  return transitionOrderStatus({
+    orderId,
+    newStatus: status,
+    actor: { clerkId: clerkUser.id, type: "ADMIN" },
+    note: "Manual transition from legacy admin",
+    allowExceptional: true,
+  });
 }
 
 export async function getAdminOrdersAction() {

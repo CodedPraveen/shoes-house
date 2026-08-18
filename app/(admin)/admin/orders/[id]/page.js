@@ -45,6 +45,10 @@ export default async function AdminOrderDetailsPage({ params }) {
                     <p>{order.shipFullName}</p>
                     <p>{order.shipLine1}</p>
 
+                    {order.shipLandmark && (
+                        <p>{order.shipLandmark}</p>
+                    )}
+
                     {order.shipLine2 && (
                         <p>{order.shipLine2}</p>
                     )}

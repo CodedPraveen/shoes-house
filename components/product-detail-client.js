@@ -1,227 +1,451 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
-import { Heart, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Heart, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
 import ProductGallery from "@/components/product-gallery";
 import ProductRecommendations from "@/components/product-recommendations";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
+import { getProductPath } from "@/lib/product-routes";
+import LoadingButton from "@/components/ui/loading-button";
 
 const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default function ProductDetailClient({ product }) {
-  const color = product.colors[0]?.id;
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
-  const [size, setSize] = useState(product.sizes[0] ?? 40);
+
+  const [size, setSize] = useState(product.sizes[0] ?? null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [pendingActions, setPendingActions] = useState(new Set());
+  const [actionError, setActionError] = useState("");
+  const pendingRef = useRef(new Set());
 
+  const runAction = async (name, action) => {
+    if (pendingRef.current.has(name)) return false;
+
+    pendingRef.current.add(name);
+    setPendingActions(new Set(pendingRef.current));
+    setActionError("");
+
+    try {
+      await action();
+      return true;
+    } catch (error) {
+      setActionError(
+        error?.message ||
+        "Could not complete this action. Please try again.",
+      );
+      return false;
+    } finally {
+      pendingRef.current.delete(name);
+      setPendingActions(new Set(pendingRef.current));
+    }
+  };
 
   const requireAuth = (action) => {
     if (hasClerk && !isSignedIn) {
       router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(`/product/${product.slug}`)}`,
+        `/sign-in?redirect_url=${encodeURIComponent(
+          getProductPath(product),
+        )}`,
       );
+
       return false;
     }
+
     action();
     return true;
   };
 
   const handleAddToCart = () => {
-    requireAuth(() => {
-      addItem({ product, color, size, quantity });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    });
+    if (!size) {
+      setActionError("Please select a size before continuing.");
+      return;
+    }
+
+    requireAuth(() =>
+      runAction("cart", () =>
+        addItem({
+          product,
+          size,
+          quantity,
+        }),
+      ).then((success) => {
+        if (success) {
+          setAdded(true);
+
+          setTimeout(() => {
+            setAdded(false);
+          }, 2000);
+        }
+      }),
+    );
   };
 
   const handleWishlist = () => {
-    requireAuth(() => toggleWishlist(product.id));
+    requireAuth(() =>
+      runAction("wishlist", () =>
+        toggleWishlist(product.id),
+      ),
+    );
   };
 
   const handleBuyNow = () => {
+    if (!size) {
+      setActionError("Please select a size before continuing.");
+      return;
+    }
+
     requireAuth(() => {
       const q = new URLSearchParams({
         productId: product.id,
         size: String(size),
         quantity: String(quantity),
       });
+
       router.push(`/checkout/buy-now?${q.toString()}`);
     });
   };
 
+  const wishlistActive = isInWishlist(product.id);
+
   return (
-    <div className="mx-auto w-full max-w-[1400] space-y-20 px-5 py-24 sm:px-8">
-      <div className="grid gap-12 lg:grid-cols-2">
+    <>
+      <main className="mx-auto w-full max-w-[1400px] px-0 pb-32 pt-0 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
+        {/* <main className="mx-auto w-full max-w-[1400px] px-2 pb-32 pt-2 sm:px-6 sm:py-12 lg:px-8 lg:py-20"> */}
 
-        <ProductGallery images={optimizeCloudinaryImage(product.images)} name={product.name} />
+        {/* =========================
+            MOBILE HEADER
+        ========================== */}
+        <div className="mb-5 flex items-center justify-between sm:hidden">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex h-11 w-11 items-center justify-center no54123-full border border-black/10 bg-white transition active:scale-95"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </button>
 
-        <div className="space-y-8">
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.25em] text-black/45">
-              {product.brand}
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
-              {product.name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4">
-              <p className="text-2xl font-medium">{formatPrice(product.price)}</p>
-              {product.compareAtPrice && (
-                <p className="text-lg text-black/40 line-through">
-                  {formatPrice(product.compareAtPrice)}
+          <h1 className="text-lg font-semibold tracking-tight">
+            Details
+          </h1>
+
+          <LoadingButton
+            type="button"
+            onClick={handleWishlist}
+            loading={pendingActions.has("wishlist")}
+            className={`flex h-11 w-11 items-center justify-center no54123-full border border-black/10 transition active:scale-95 ${wishlistActive
+              ? "bg-black text-white"
+              : "bg-white"
+              }`}
+            aria-label={
+              wishlistActive
+                ? "Remove from wishlist"
+                : "Add to wishlist"
+            }
+          >
+            <Heart
+              size={20}
+              fill={
+                wishlistActive
+                  ? "currentColor"
+                  : "none"
+              }
+            />
+          </LoadingButton>
+        </div>
+
+        {/* =========================
+            PRODUCT
+        ========================== */}
+        <div className="grid min-w-0 grid-cols-1 gap-7 mt:5 sm:mt-8 lg:grid-cols-2 lg:gap-12">
+          {/* =========================
+              GALLERY
+              2:3 RESPONSIVE IMAGE AREA
+          ========================== */}
+          <div className="min-w-0 w-full">
+            <div
+              className="
+                w-full
+                [&_.aspect-square]:!aspect-[2/3]
+                [&_.aspect-square]:!w-full
+              "
+            >
+              <ProductGallery
+                images={(product.images || []).map(
+                  optimizeCloudinaryImage,
+                )}
+                name={product.name}
+              />
+            </div>
+          </div>
+
+          {/* =========================
+              PRODUCT INFO
+          ========================== */}
+          <div className="min-w-0 space-y-7 sm:space-y-8 p-4 mt:0 sm:mt-8 sm:p-6 lg:p-0"> 
+            {/* Brand / Name / Price */}
+            <div className="space-y-3">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-black/45 sm:text-xs sm:tracking-[0.25em]">
+                {product.brand}
+              </p>
+
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <h2 className="min-w-0 flex-1 text-2xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+                  {product.name}
+                </h2>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <p className="text-xl font-semibold sm:text-2xl">
+                  {formatPrice(product.price)}
                 </p>
-              )}
-              {product.discount && (
-                <span className="no54123-full bg-black px-3 py-1 text-xs text-white">
-                  -{product.discount}%
-                </span>
-              )}
+
+                {product.compareAtPrice && (
+                  <p className="text-base text-black/40 line-through sm:text-lg">
+                    {formatPrice(product.compareAtPrice)}
+                  </p>
+                )}
+
+                {product.discount && (
+                  <span className="no54123-full bg-black px-2.5 py-1 text-[11px] text-white sm:px-3 sm:text-xs">
+                    -{product.discount}%
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
 
-          <p className="max-w-lg text-sm leading-relaxed text-black/65 sm:text-base">
-            {product.description}
-          </p>
-
-          <div className="space-y-4"></div>
-
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
-              Size
+            {/* Description */}
+            <p className="max-w-xl text-sm leading-6 text-black/65 sm:text-base sm:leading-relaxed">
+              {product.description}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {product.sizes.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setSize(item)}
-                  className={`h-11 min-w-11 no54123-full border px-4 text-sm transition ${size === item
-                    ? "border-black bg-black text-white"
-                    : "border-black/15 hover:border-black/40"
-                    }`}
+
+            {/* =========================
+                SIZE
+            ========================== */}
+            <div className="space-y-4">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-black/45 sm:text-xs">
+                Size
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setSize(item)}
+                    className={`rounded min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
+                      ? "border-black bg-black text-white"
+                      : "border-black/15 hover:border-black/40"
+                      }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              {!size && actionError ? (
+                <p
+                  className="text-sm text-red-600"
+                  role="alert"
                 >
-                  {item}
+                  {actionError}
+                </p>
+              ) : null}
+            </div>
+
+            {/* =========================
+                QUANTITY
+            ========================== */}
+            <div className="space-y-4">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-black/45 sm:text-xs">
+                Quantity
+              </p>
+
+              <div className="inline-flex items-center no54123-full border border-black/15">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) =>
+                      Math.max(1, q - 1),
+                    )
+                  }
+                  className="no54123-full p-3.5 transition hover:bg-black/5 active:bg-black/10"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={16} />
                 </button>
-              ))}
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-black/45">
-              Quantity
+                <span className="min-w-11 text-center text-sm font-medium">
+                  {quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) => q + 1)
+                  }
+                  className="no54123-full p-3.5 transition hover:bg-black/5 active:bg-black/10"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* =========================
+                DESKTOP ACTIONS
+            ========================== */}
+            <div className="hidden flex-wrap gap-3 sm:flex">
+              <LoadingButton
+                type="button"
+                onClick={handleAddToCart}
+                loading={pendingActions.has("cart")}
+                className="inline-flex min-h-12 items-center justify-center gap-2 no54123-full bg-black px-7 text-sm font-medium text-white transition hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <ShoppingBag size={16} />
+
+                {added
+                  ? "Added to Cart"
+                  : "Add To Cart"}
+              </LoadingButton>
+
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                className="min-h-12 no54123-full border border-black/15 px-7 text-sm font-medium transition hover:bg-black hover:text-white active:scale-[0.98]"
+              >
+                Buy Now
+              </button>
+
+              <LoadingButton
+                type="button"
+                onClick={handleWishlist}
+                loading={pendingActions.has("wishlist")}
+                className={`flex min-h-12 min-w-12 items-center justify-center no54123-full border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
+                  ? "bg-black text-white"
+                  : ""
+                  }`}
+                aria-label={
+                  wishlistActive
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+              >
+                <Heart
+                  size={20}
+                  fill={
+                    wishlistActive
+                      ? "currentColor"
+                      : "none"
+                  }
+                />
+              </LoadingButton>
+            </div>
+
+            {actionError && size ? (
+              <p
+                className="text-sm text-red-600"
+                role="alert"
+              >
+                {actionError}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        {/* =========================
+            PRODUCT INFORMATION
+        ========================== */}
+        <div className="mt-12 grid gap-8 border-t border-black/10 pt-10 sm:mt-0 sm:pt-12 md:grid-cols-3">
+          <div>
+            <h3 className="mb-2 text-sm font-medium">
+              Product Details
+            </h3>
+
+            <p className="text-sm leading-6 text-black/60">
+              {product.description}
             </p>
-            <div className="inline-flex items-center no54123-full border border-black/15">
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="no54123-full p-3 transition hover:bg-black/5"
-                aria-label="Decrease quantity"
-              >
-                <Minus size={16} />
-              </button>
-              <span className="min-w-10 text-center text-sm font-medium">
-                {quantity}
-              </span>
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="no54123-full p-3 transition hover:bg-black/5"
-                aria-label="Increase quantity"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              className="inline-flex items-center gap-2 no54123-full bg-black px-7 py-3 text-sm font-medium text-white transition hover:scale-[1.02]"
-            >
-              <ShoppingBag size={16} />
-              {added ? "Added to Cart" : "Add To Cart"}
-            </button>
-            <button
-              type="button"
-              onClick={handleBuyNow}
-              className="no54123-full border border-black/15 px-7 py-3 text-sm font-medium transition hover:bg-black hover:text-white"
-            >
-              Buy Now
-            </button>
+          <div>
+            <h3 className="mb-2 text-sm font-medium">
+              Materials
+            </h3>
 
-            <button
-              type="button"
-              onClick={() => {
-                const productUrl = `${process.env.NEXT_PUBLIC_APP_URL}/product/${product.slug}`;
+            <p className="text-sm leading-6 text-black/60">
+              {product.materials}
+            </p>
+          </div>
 
-                window.open(
-                  `https://wa.me/919166869035?text=${encodeURIComponent(
-                    `Hi, I'm interested in this 
+          <div>
+            <h3 className="mb-2 text-sm font-medium">
+              Shipping & Returns
+            </h3>
 
-Product: ${product.name}
-Price: ₹${product.price}
+            <p className="text-sm leading-6 text-black/60">
+              {product.shipping}
+            </p>
 
-Link: ${productUrl}`
-                  )}`,
-                  "_blank"
-                );
-              }}
-              className="text-emerald-500 hover:text-green-600 transition border border-black/15 px-5 py-3 text-sm font-medium"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" width="131" height="30" viewBox="0 0 1487.13 346" fill="currentColor">
-                <path d="M1127.34,188.81l21.43-65.42,21.65,65.42h-43.08ZM1428.25,229.87c-15.56,0-24.36-10.83-24.36-32.93v-5.64c0-20.08,9.25-32.26,25.26-32.26,13.08,0,23.68,9.25,23.68,34.96s-9.7,35.87-24.59,35.87ZM1370.28,297.09h33.38v-55.94c8.12,10.83,20.08,15.79,32.93,15.79,31.13,0,50.53-24.36,50.53-63.84s-16.69-61.13-48.27-61.13c-15.56,0-27.29,5.64-36.09,17.37v-13.76h-32.48v161.51ZM1296.75,229.87c-15.56,0-24.36-10.83-24.36-32.93v-5.64c0-20.08,9.25-32.26,25.26-32.26,13.08,0,23.68,9.25,23.68,34.96s-9.7,35.87-24.59,35.87ZM1238.77,297.09h33.38v-55.94c8.12,10.83,20.08,15.79,32.93,15.79,31.13,0,50.53-24.36,50.53-63.84s-16.69-61.13-48.27-61.13c-15.56,0-27.29,5.64-36.09,17.37v-13.76h-32.48v161.51ZM1070.95,253.32h35.64l11.96-35.64h60.68l11.96,35.64h36.77l-57.52-161.06h-41.73l-57.75,161.06ZM1014.33,256.93c34.06,0,51.43-13.99,51.43-36.99s-10.83-32.48-41.96-37.67l-14.66-2.48c-12.63-2.03-16.47-6.09-16.47-12.63s4.96-11.73,19.17-11.73c13.31,0,18.72,4.96,20.98,17.59h31.13c-1.8-26.84-18.95-41.05-52.11-41.05-30.9,0-50.75,13.31-50.75,36.09s13.31,31.58,43.08,36.54l13.53,2.26c12.41,2.03,15.34,6.54,15.34,13.31,0,7.89-5.19,12.86-19.4,12.86s-22.33-5.41-23.68-17.82h-31.81c1.13,29.32,22.56,41.73,56.17,41.73ZM921.85,256.03c10.38,0,20.98-2.93,27.29-7.22v-25.26c-6.32,3.61-12.41,5.41-18.05,5.41-9.7,0-14.89-4.06-14.89-16.47v-50.75h32.93v-26.17h-32.93v-32.48h-29.78v18.05c0,10.15-2.48,14.44-12.63,14.44h-8.8v26.17h17.82v51.88c0,27.29,10.38,42.41,39.02,42.41ZM796.89,233.47c-10.83,0-16.92-4.74-16.92-13.08,0-9.47,6.99-13.99,23.23-16.69,9.02-1.58,16.02-3.38,21.43-7.22v11.5c0,15.56-11.05,25.49-27.75,25.49ZM788.31,256.93c17.37,0,29.55-7.22,39.02-17.82,1.13,5.64,3.16,10.38,5.86,14.21h31.58c-5.64-8.8-8.12-21.88-8.12-39.25v-37.67c0-27.97-14.89-44.44-50.08-44.44-31.13,0-49.4,12.86-53.01,41.05h30.45c1.8-10.83,8.35-17.14,21.43-17.14,12.18,0,19.17,4.96,19.17,13.53s-5.19,11.5-28.2,14.89c-25.04,3.61-48.05,12.63-48.05,37.9,0,22.56,16.02,34.74,39.93,34.74ZM625.23,253.32h33.38v-69.02c0-8.12,2.03-11.96,6.99-16.92,4.96-4.96,11.5-7.67,18.5-7.67,11.05,0,16.92,6.09,16.92,20.98v72.63h33.38v-78.95c0-27.29-13.53-42.41-39.02-42.41-13.08,0-25.26,4.06-36.77,17.59v-57.29h-33.38v161.06ZM444.09,253.32h36.77l26.62-116.17,27.07,116.17h37.22l42.63-161.06h-36.99l-25.26,118.87-27.07-117.97h-33.38l-27.52,118.42-25.26-119.33h-38.12l43.31,161.06Z" />
-                <g>
-                  <path d="M173,0C77.45,0,0,77.45,0,173c0,31.43,8.38,60.91,23.04,86.31L0,346l89.87-21.25c24.67,13.54,53,21.25,83.13,21.25,95.55,0,173-77.45,173-173S268.55,0,173,0ZM173,315.01c-28.91,0-55.81-8.64-78.24-23.48l-53.1,13.52,14.89-50.75c-16.11-23.03-25.56-51.06-25.56-81.3,0-78.43,63.58-142.01,142.01-142.01s142.01,63.58,142.01,142.01-63.58,142.01-142.01,142.01Z" />
-                  <path d="M213.54,195.84l41.86,19.73c1.92.91,3.15,2.85,2.98,4.97-.45,5.51-2.66,16.55-12.56,26.44-27.93,27.93-78.09-3.67-80.13-4.89-12.34-6.63-24.06-15.49-35.17-26.61-11.11-11.11-19.98-22.84-26.61-35.17-1.22-2.04-32.82-52.19-4.89-80.13,9.9-9.9,20.93-12.1,26.44-12.56,2.12-.17,4.07,1.06,4.97,2.98l19.73,41.86c.93,1.98.52,4.33-1.02,5.88l-14.71,14.71c-3.18,3.18-4.12,8.13-1.92,12.06,5.37,9.63,12.59,18.9,20.95,27.43,8.53,8.36,17.8,15.58,27.43,20.95,3.93,2.19,8.88,1.26,12.06-1.92l14.71-14.71c1.55-1.55,3.9-1.96,5.88-1.02Z" />
-                </g>
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleWishlist}
-              className={`no54123-full border border-black/15 p-4 transition hover:bg-black/5 ${isInWishlist(product.id) ? "bg-black text-white" : ""
-                }`}
-              aria-label="Add to wishlist"
-            >
-              <Heart size={20} />
-            </button>
+            <p className="mt-2 text-sm leading-6 text-black/60">
+              {product.returnPolicy}
+            </p>
           </div>
         </div>
-      </div>
 
-      <div className="grid gap-8 border-t border-black/10 pt-12 md:grid-cols-3">
-        <div>
-          <h3 className="mb-2 text-sm font-medium">Product Details</h3>
-          <p className="text-sm text-black/60">{product.description}</p>
+        {/* =========================
+            RECOMMENDATIONS
+        ========================== */}
+        <div className="mt-12 sm:mt-0">
+          <ProductRecommendations
+            slug={product.slug}
+            productId={product.id}
+            brand={product.brand}
+            category={product.category}
+            price={product.price}
+          />
         </div>
-        <div>
-          <h3 className="mb-2 text-sm font-medium">Materials</h3>
-          <p className="text-sm text-black/60">{product.materials}</p>
-        </div>
-        <div>
-          <h3 className="mb-2 text-sm font-medium">Shipping & Returns</h3>
-          <p className="text-sm text-black/60">{product.shipping}</p>
-          <p className="mt-2 text-sm text-black/60">{product.returnPolicy}</p>
+      </main>
+
+      {/* =========================
+          MOBILE FIXED PURCHASE BAR
+      ========================== */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/10 bg-white/95 px-4 pt-3 backdrop-blur-md sm:hidden">
+        <div className="mx-auto flex max-w-[600px] items-center gap-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {/* Add To Cart */}
+          <LoadingButton
+            type="button"
+            onClick={handleAddToCart}
+            loading={pendingActions.has("cart")}
+            className="flex h-14 w-14 shrink-0 items-center justify-center no54123-full border border-black/10 bg-black/5 transition active:scale-95"
+            aria-label={
+              added
+                ? "Added to cart"
+                : "Add to cart"
+            }
+          >
+            <ShoppingBag size={22} />
+          </LoadingButton>
+
+          {/* Buy Now */}
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="flex h-14 flex-1 items-center justify-center no54123-full bg-black text-base font-semibold text-white transition active:scale-[0.98]"
+          >
+            Buy Now
+          </button>
         </div>
       </div>
-
-      <ProductRecommendations
-        slug={product.slug}
-        productId={product.id}
-        brand={product.brand}
-        category={product.category}
-        price={product.price}
-      />
-    </div>
+    </>
   );
 }

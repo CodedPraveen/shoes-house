@@ -16,7 +16,10 @@ async function revalidateProductPaths(slug) {
   revalidateTag("search-catalog", "max");
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
-  if (slug) revalidatePath(`/product/${slug}`);
+  if (slug) {
+    revalidatePath(`/shoes/product/${slug}`);
+    revalidatePath(`/jewellery/product/${slug}`);
+  }
 }
 
 export async function getAdminCategoriesAction() {
@@ -77,7 +80,7 @@ export async function uploadProductImageAction(formData) {
 
   const file = formData.get("file");
   const result = await imageUploadService.uploadFile(file, {
-    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "aere/products",
+    folder: process.env.CLOUDINARY_UPLOAD_FOLDER || "postmart/products",
   });
 
   if (!result.ok) {
@@ -85,6 +88,43 @@ export async function uploadProductImageAction(formData) {
   }
 
   return { ok: true, url: result.url, publicId: result.publicId };
+}
+
+export async function uploadNewAdminProductImageAction(formData) {
+  await requireAdmin();
+  await assertRateLimit({ prefix: "new-admin-upload", limit: 40, windowMs: 60_000 });
+
+  const file = formData.get("file");
+  const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!file || !supportedTypes.has(file.type)) {
+    return { ok: false, error: "Choose a JPG, PNG, or WEBP image." };
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return { ok: false, error: "Each product image must be 10 MB or smaller." };
+  }
+  const collection = String(formData.get("collection") ?? "");
+  const categorySlug = String(formData.get("categorySlug") ?? "");
+  const category = await productAdminService.getUploadCategory(collection, categorySlug);
+  if (!category) return { ok: false, error: "Choose a valid collection and category before uploading." };
+  const folder = `postmart/${category.collection.toLowerCase()}/${category.slug.toLowerCase()}`;
+  const result = await imageUploadService.uploadFile(file, {
+    folder,
+  });
+
+  if (!result.ok) {
+    return { ok: false, error: result.message || "Upload failed" };
+  }
+
+  return { ok: true, url: result.url, publicId: result.publicId };
+}
+
+export async function discardProductImageUploadsAction(publicIds) {
+  await requireAdmin();
+  const ids = Array.from(publicIds || [])
+    .filter((value) => typeof value === "string" && /^postmart\/[a-z0-9-]+\/[a-z0-9-]+\/[a-zA-Z0-9_-]+$/.test(value))
+    .slice(0, 40);
+  await Promise.allSettled(ids.map((publicId) => imageUploadService.delete(publicId)));
+  return { ok: true };
 }
 
 export async function getCloudinaryConfigAction() {

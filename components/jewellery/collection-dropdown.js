@@ -38,7 +38,7 @@ export default function JewelleryDropdown({
             <button
                 type="button"
                 aria-expanded={open}
-                className="text-black/75 transition hover:text-black"
+                className="text-[13px] font-semibold tracking-[-0.01em] text-black/75 transition hover:text-black"
             >
                 Jewellery
             </button>
@@ -72,7 +72,7 @@ export default function JewelleryDropdown({
                                         {categories.map((category) => (
                                             <li key={category.id}>
                                                 <Link
-                                                    href={`/category/${category.slug}`}
+                                                    href={`/jewellery?category=${category.slug}`}
                                                     className="text-sm text-black/70 transition hover:text-black"
                                                 >
                                                     {category.name}

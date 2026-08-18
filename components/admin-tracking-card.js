@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { attachTrackingAction, refreshTrackingAction } from "@/actions/tracking-actions";
 import TrackingStatusBadge from "@/components/tracking-status-badge";
 import TrackingTimeline from "@/components/tracking-timeline";
+import LoadingButton from "@/components/ui/loading-button";
 
 const initialState = {
     success: false,
@@ -67,10 +68,10 @@ export default function AdminTrackingCard({ previousState, order }) {
                             value={order.id}
                         />
 
-                        <button disabled={refreshPending}
+                        <LoadingButton loading={refreshPending}
                             className="rounded-xs bg-black px-5 py-3 text-white">
-                            {refreshPending ? "Refreshing..." : "Refresh Status"}
-                        </button>
+                            Refresh Status
+                        </LoadingButton>
                     </form>
                     <div>
                         <p className="text-xs text-black/45">
@@ -108,16 +109,18 @@ export default function AdminTrackingCard({ previousState, order }) {
 
                     <input
                         name="trackingNumber"
+                        required
                         placeholder="India Post Tracking Number"
+                        aria-label="India Post tracking number"
                         className="w-full rounded-xs border border-black/10 p-3 outline-none uppercase"
                     />
 
-                    <button
-                        disabled={attachPending}
+                    <LoadingButton
+                        loading={attachPending}
                         className="rounded-xs bg-black px-5 py-3 text-white"
                     >
-                        {attachPending ? "Attaching..." : "Attach Tracking"}
-                    </button>
+                        Attach Tracking
+                    </LoadingButton>
 
                 </form>
             )}
@@ -131,4 +134,4 @@ export default function AdminTrackingCard({ previousState, order }) {
             {/* <TrackingTimeline order={order} /> */}
         </div>
     );
-}   
+}

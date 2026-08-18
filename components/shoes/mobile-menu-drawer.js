@@ -13,9 +13,9 @@ import SafeImage from "../ui/safe-image";
 const MENU_DATA = {
   categories: [
     { label: "New Arrivals", href: "/new-arrivals" },
-    { label: "Best Sellers", href: "/category/shoes" },
-    { label: "All Sneakers", href: "/category/shoes" },
-    { label: "Limited Edition", href: "/category/shoes" },
+    { label: "Best Sellers", href: "/shoes?category=shoes" },
+    { label: "All Sneakers", href: "/shoes?category=shoes" },
+    { label: "Limited Edition", href: "/shoes?category=shoes" },
   ],
 
   men: [
@@ -38,21 +38,21 @@ const MENU_DATA = {
       price: "₹3,999",
       image:
         "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
-      href: "/product/aere-velocity",
+      href: "/shoes/product/aere-velocity",
     },
     {
       title: "AERÉ Phantom",
       price: "₹4,499",
       image:
         "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=800&q=80",
-      href: "/product/aere-phantom",
+      href: "/shoes/product/aere-phantom",
     },
     {
       title: "AERÉ Motion",
       price: "₹5,299",
       image:
         "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&q=80",
-      href: "/product/aere-motion",
+      href: "/shoes/product/aere-motion",
     },
   ],
 };
@@ -130,19 +130,19 @@ export default function MobileMenuDrawer({
                 </div>
 
                 <div className="grid grid-cols-3 border-b border-black/10 text-center">
-                  <Link href="/category/men">
+                  <Link href="/shoes?category=men">
                     <button className="py-4 text-sm font-semibold uppercase">
                       Men
                     </button>
                   </Link>
 
-                  <Link href="/category/women">
+                  <Link href="/shoes?category=women">
                     <button className="py-4 text-sm font-semibold uppercase">
                       Women
                     </button>
                   </Link>
 
-                  <Link href="/category/shoes">
+                  <Link href="/shoes?category=shoes">
                     <button className="py-4 text-sm font-semibold uppercase">
                       Shoes
                     </button>
@@ -153,7 +153,7 @@ export default function MobileMenuDrawer({
                 {categories.map((category) => (
                   <li key={category.id}>
                     <Link
-                      href={`/category/${category.slug}`}
+                      href={`/shoes?category=${category.slug}`}
                       onClick={onClose}
                       className="
         flex

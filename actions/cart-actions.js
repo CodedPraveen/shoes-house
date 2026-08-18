@@ -23,17 +23,8 @@ export async function getCartAction() {
   );
 }
 
-// export async function addToCartAction({ productId, color, size, quantity = 1 }) {
-//   await assertRateLimit({ prefix: "cart", limit: 60, windowMs: 60_000 });
-//   const user = await requireDbUser();
-//   return withPerf("cart.add", () =>
-//     cartService.addItem(user.id, { productId, color, size, quantity }),
-//   );
-// }
-
 export async function addToCartAction({
   productId,
-  color,
   size,
   quantity = 1,
 }) {
@@ -54,7 +45,6 @@ export async function addToCartAction({
   return withPerf("cart.add", () =>
     cartService.addItem(user.id, {
       productId,
-      color,
       size,
       quantity,
     }),

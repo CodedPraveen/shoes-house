@@ -48,7 +48,7 @@ export async function POST(request) {
 
       await userService.upsertFromClerk({
         clerkId: data.id,
-        email: email ?? `unknown-${data.id}@aere.local`,
+        email: email ?? `unknown-${data.id}@postmart.local`,
         name: name || null,
         role,
       });

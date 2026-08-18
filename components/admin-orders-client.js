@@ -1,18 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatPrice } from "@/lib/format-price";
 import { ORDER_STATUSES, PAYMENT_STATUSES } from "@/lib/constants";
 import { updateOrderStatusAction } from "@/actions/order-actions";
 
 export default function AdminOrdersClient({ initialOrders }) {
   const [orders, setOrders] = useState(initialOrders);
+  const [updatingIds, setUpdatingIds] = useState(new Set());
+  const [errors, setErrors] = useState({});
+  const updatingRef = useRef(new Set());
 
   async function onStatusChange(orderId, status) {
-    await updateOrderStatusAction(orderId, status);
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o)),
-    );
+    if (updatingRef.current.has(orderId)) return;
+    updatingRef.current.add(orderId);
+    setUpdatingIds(new Set(updatingRef.current));
+    setErrors((current) => ({ ...current, [orderId]: "" }));
+    try {
+      await updateOrderStatusAction(orderId, status);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status } : o)),
+      );
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        [orderId]: error?.message || "Could not update this order.",
+      }));
+    } finally {
+      updatingRef.current.delete(orderId);
+      setUpdatingIds(new Set(updatingRef.current));
+    }
   }
   function getStatusColor(status) {
     switch (status) {
@@ -24,6 +41,9 @@ export default function AdminOrdersClient({ initialOrders }) {
 
       case "PROCESSING":
         return "bg-yellow-100 text-yellow-700";
+
+      case "READY_TO_SEND":
+        return "bg-violet-100 text-violet-700";
 
       case "SHIPPED":
         return "bg-blue-100 text-blue-700";
@@ -75,8 +95,13 @@ export default function AdminOrdersClient({ initialOrders }) {
               <span className="block text-black/45">{order.razorpayPaymentId}</span>
             ) : null}
           </div>
+          <div className="min-w-[190px]">
+          <div className="flex items-center gap-2">
+          {updatingIds.has(order.id) ? <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden /> : null}
           <select
             value={order.status}
+            disabled={updatingIds.has(order.id)}
+            aria-busy={updatingIds.has(order.id) || undefined}
             onChange={(e) => onStatusChange(order.id, e.target.value)}
             className={`
     h-10 rounded-xs border px-3 text-sm font-medium capitalize
@@ -90,6 +115,9 @@ export default function AdminOrdersClient({ initialOrders }) {
               </option>
             ))}
           </select>
+          </div>
+          {errors[order.id] ? <p className="mt-1 text-xs text-red-600" role="alert">{errors[order.id]}</p> : null}
+          </div>
          
           <div className="flex gap-2">
 

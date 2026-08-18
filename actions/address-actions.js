@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { addressService } from "@/services/address-service";
 import { revalidatePath } from "next/cache";
 import { requireDbUser } from "@/lib/require-db-user";

@@ -33,6 +33,8 @@ export default function AdminProductForm({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
   const [availableSubCategories, setAvailableSubCategories] =
@@ -122,6 +124,28 @@ export default function AdminProductForm({
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+
+    if (!form.name.trim() || !form.slug.trim()) {
+      setError("Product name and slug are required.");
+      return;
+    }
+    if (!form.categorySlug) {
+      setError("Please select a category.");
+      return;
+    }
+    if (!Number.isFinite(Number(form.price)) || Number(form.price) <= 0) {
+      setError("Price must be a valid number greater than 0.");
+      return;
+    }
+    if (!form.imageUrls.length) {
+      setError("Add at least one product image.");
+      return;
+    }
+    if (uploading) {
+      setError("Wait for the image upload to finish before saving.");
+      return;
+    }
+    if (loading) return;
     setLoading(true);
     try {
       const payload = buildPayload();
@@ -145,7 +169,8 @@ export default function AdminProductForm({
 
   async function handleDelete() {
     if (!productId || !confirm("Soft-delete this product?")) return;
-    setLoading(true);
+    if (deleting) return;
+    setDeleting(true);
     try {
       await deleteProductAction(productId);
       router.push("/admin/products");
@@ -153,7 +178,7 @@ export default function AdminProductForm({
     } catch (err) {
       setError(err.message || "Delete failed");
     } finally {
-      setLoading(false);
+      setDeleting(false);
     }
   }
 
@@ -166,7 +191,7 @@ export default function AdminProductForm({
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block sm:col-span-2">
-            <span className="text-xs text-black/50">Name</span>
+            <span className="text-xs text-black/50">Name <span className="text-red-600" aria-hidden="true">*</span></span>
             <input
               required
               className={inputClass}
@@ -175,7 +200,7 @@ export default function AdminProductForm({
             />
           </label>
           <label className="block">
-            <span className="text-xs text-black/50">Slug</span>
+            <span className="text-xs text-black/50">Slug <span className="text-red-600" aria-hidden="true">*</span></span>
             <input
               required
               className={inputClass}
@@ -218,9 +243,10 @@ export default function AdminProductForm({
             </select>
           </label>
           <label>
-            <span>Sub Category</span>
+            <span>Sub Category <span className="text-red-600" aria-hidden="true">*</span></span>
 
             <select
+              required
               className={inputClass}
               value={form.categorySlug}
               onChange={(e) => update("categorySlug", e.target.value)}
@@ -244,7 +270,7 @@ export default function AdminProductForm({
             </select>
           </label>
           <label className="block sm:col-span-2">
-            <span className="text-xs text-black/50">Description</span>
+            <span className="text-xs text-black/50">Description <span className="text-red-600" aria-hidden="true">*</span></span>
             <textarea
               required
               rows={4}
@@ -254,7 +280,7 @@ export default function AdminProductForm({
             />
           </label>
           <label className="block">
-            <span className="text-xs text-black/50">Price (₹)</span>
+            <span className="text-xs text-black/50">Price (₹) <span className="text-red-600" aria-hidden="true">*</span></span>
             <input
               required
               type="number"
@@ -304,34 +330,37 @@ export default function AdminProductForm({
         </div>
 
         <div>
-          <p className="mb-2 text-xs text-black/50">Images</p>
+          <p className="mb-2 text-xs text-black/50">Images <span className="text-red-600" aria-hidden="true">*</span></p>
           <AdminCloudinaryUpload
             imageUrls={form.imageUrls}
             onChange={(urls) => update("imageUrls", urls)}
             cloudinaryConfig={cloudinaryConfig}
+            onUploadingChange={setUploading}
           />
         </div>
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
 
         <div className="flex flex-wrap gap-3">
           <LoadingButton
             type="submit"
             loading={loading}
+            disabled={deleting || uploading}
             className="no54123-full bg-black px-6 py-2.5 text-sm text-white"
           >
             {/* add loading spinner */}
             {mode === "edit" ? "Save changes" : "Create product"}
           </LoadingButton>
           {mode === "edit" ? (
-            <button
+            <LoadingButton
               type="button"
               onClick={handleDelete}
-              disabled={loading}
+              loading={deleting}
+              disabled={loading || uploading}
               className="no54123-full border border-red-200 px-6 py-2.5 text-sm text-red-600"
             >
               Delete
-            </button>
+            </LoadingButton>
           ) : null}
         </div>
       </form>

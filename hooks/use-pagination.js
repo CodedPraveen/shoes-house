@@ -18,7 +18,7 @@ export function usePagination(items, perPage = PRODUCTS_PER_PAGE) {
 
   const goToPage = useCallback(
     (next) => {
-      setPage(Math.min(Math.max(1, next), result.totalPages));
+      setPage(Math.min(Math.max(1, next), Math.max(1, result.totalPages)));
     },
     [result.totalPages]
   );

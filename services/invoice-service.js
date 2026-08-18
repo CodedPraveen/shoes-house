@@ -31,6 +31,7 @@ export const invoiceService = {
       },
       shipping: {
         line1: order.shipLine1,
+        landmark: order.shipLandmark,
         line2: order.shipLine2,
         city: order.shipCity,
         state: order.shipState,
@@ -199,6 +200,7 @@ export const invoiceService = {
             <h3>Customer Address</h3>
             <p>${data.customer.name}</p>
             <p>${data.shipping.line1}</p>
+            ${data.shipping.landmark ? `<p>${data.shipping.landmark}</p>` : ""}
             ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
             <p>${data.shipping.city}, ${data.shipping.state}</p>
             <p>${data.shipping.country} - ${data.shipping.pincode}</p>

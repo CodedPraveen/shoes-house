@@ -4,8 +4,8 @@ export const SHOES_NAV_LINKS = [
 ];
 
 export const SHOES_CATEGORY_NAV = [
-    { label: "Shoes", href: "/category/shoes" },
-    { label: "Boys", href: "/category/boys" },
-    { label: "Men", href: "/category/men" },
-    { label: "Footwear", href: "/category/footwear" },
+    { label: "Shoes", href: "/shoes?category=shoes" },
+    { label: "Boys", href: "/shoes?category=boys" },
+    { label: "Men", href: "/shoes?category=men" },
+    { label: "Footwear", href: "/shoes?category=footwear" },
 ];

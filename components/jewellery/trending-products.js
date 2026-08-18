@@ -7,15 +7,15 @@ import SectionHeader from "@/components/jewellery/section-header";
 // export default async function TrendingProducts() {
 //   const products = (await productService.getTrending()).slice(0, 8);
 
-export default function TrendingProducts({ products }) {
+export default function TrendingProducts({ products, title = "Trending Collection", subtitle = "Most loved this season" }) {
   if (!products.length) return null;
 
   return (
     <SectionReveal className="py-16 sm:py-10">
       <JewelleryContainer>
         <SectionHeader
-          title="Trending Collection"
-          subtitle="Most loved this season"
+          title={title}
+          subtitle={subtitle}
           href="/trending"
           italic
         />
