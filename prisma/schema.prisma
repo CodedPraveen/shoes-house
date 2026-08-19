@@ -78,11 +78,11 @@ model Product {
   updatedAt        DateTime                @updatedAt
   deletedAt        DateTime?
   collection       ProductCollection
-  processingStatus ProductProcessingStatus @default(READY)
+  pendingImageUrls String[]                @default([])
+  processedAt      DateTime?
   processingError  String?
   processingJobId  String?
-  processedAt      DateTime?
-  pendingImageUrls String[]                @default([])
+  processingStatus ProductProcessingStatus @default(READY)
   cartItems        CartItem[]
   heroSlides       HeroSlide[]
   navbarItems      NavbarItem[]
