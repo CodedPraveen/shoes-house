@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "prisma generate && prisma db push && next dev",
-    "setup": "prisma generate && prisma db push && node prisma/seed.js",
+    "dev": "concurrently -k -n NEXT,WORKER \"npm:dev:next\" \"npm:worker\"",
+    "dev:next": "prisma generate && next dev",
+    "worker": "node --env-file-if-exists=.env --env-file-if-exists=.env.local workers/index.js",
     "build": "prisma generate && next build",
     "start": "next start",
+    "worker:prod": "node workers/index.js",
+    "dev:setup": "prisma generate && prisma db:push && node prisma/seed.js",
     "postinstall": "prisma generate",
     "lint": "eslint",
     "db:generate": "prisma generate",
@@ -15,8 +18,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
-    "db:studio": "prisma studio",
-    "worker": "node --env-file-if-exists=.env --env-file-if-exists=.env.local workers/index.js"
+    "db:studio": "prisma studio"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -49,6 +51,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "prisma": "^6.19.0",
