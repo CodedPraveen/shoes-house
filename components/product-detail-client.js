@@ -253,8 +253,8 @@ export default function ProductDetailClient({ product }) {
             onClick={handleWishlist}
             loading={pendingActions.has("wishlist")}
             className={`flex h-11 w-11 items-center justify-center border border-black/10 transition active:scale-95 ${wishlistActive
-                ? "bg-black text-white"
-                : "bg-white"
+              ? "bg-black text-white"
+              : "bg-white"
               }`}
             aria-label={
               wishlistActive
@@ -345,8 +345,8 @@ export default function ProductDetailClient({ product }) {
                         setActiveImage(index)
                       }
                       className={`relative aspect-square w-full overflow-hidden border bg-[#f7f7f5] transition ${activeImage === index
-                          ? "border-black"
-                          : "border-transparent hover:border-black/30"
+                        ? "border-black"
+                        : "border-transparent hover:border-black/30"
                         }`}
                       aria-label={`View image ${index + 1
                         }`}
@@ -380,8 +380,8 @@ export default function ProductDetailClient({ product }) {
                       setActiveImage(index)
                     }
                     className={`h-16 w-16 shrink-0 overflow-hidden border bg-[#f7f7f5] ${activeImage === index
-                        ? "border-black"
-                        : "border-black/10"
+                      ? "border-black"
+                      : "border-black/10"
                       }`}
                     aria-label={`View image ${index + 1
                       }`}
@@ -463,8 +463,8 @@ export default function ProductDetailClient({ product }) {
                     type="button"
                     onClick={() => setSize(item)}
                     className={`min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
-                        ? "border-black bg-black text-white"
-                        : "border-black/15 hover:border-black/40"
+                      ? "border-black bg-black text-white"
+                      : "border-black/15 hover:border-black/40"
                       }`}
                   >
                     {item}
@@ -551,8 +551,8 @@ export default function ProductDetailClient({ product }) {
                 onClick={handleWishlist}
                 loading={pendingActions.has("wishlist")}
                 className={`flex min-h-12 min-w-12 items-center justify-center border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
-                    ? "bg-black text-white"
-                    : ""
+                  ? "bg-black text-white"
+                  : ""
                   }`}
                 aria-label={
                   wishlistActive
