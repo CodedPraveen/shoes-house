@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
-import { LocateFixed, MapPin, X } from "lucide-react";
+import { LocateFixed, X } from "lucide-react";
 import { reverseGeocodeAction } from "@/actions/geocode-actions";
 import LoadingButton from "@/components/ui/loading-button";
+import Image from "next/image";
 
 const DEFAULT_CENTER = { lat: 22.9734, lng: 78.6569 };
 const MAX_AUTOMATIC_ACCURACY_METERS = 1000;
@@ -311,7 +312,8 @@ export default function GoogleLocationPicker({
         }}
         className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-4 py-2 text-xs font-medium transition hover:border-black/40"
       >
-        <MapPin aria-hidden="true" size={15} />
+        {/* <MapPin aria-hidden="true" size={15} /> */}
+        <Image src="/Mappin.svg" alt="Map Pin" width={20} height={20} />
         Select location on map
       </button>
 
