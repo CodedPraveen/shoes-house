@@ -93,7 +93,9 @@ export async function getStorefrontConfig(collection) {
 }
 
 export async function getConfiguredProducts(section, fallback) {
-  const selected = section?.items?.map((item) => item.product).filter((product) => product && !product.deletedAt) ?? [];
+  const selected = section?.items?.map((item) => item.product).filter(
+    (product) => product && !product.deletedAt && product.processingStatus === "READY",
+  ) ?? [];
   return selected.length ? mapProducts(selected, { includeInvalid: false }) : fallback;
 }
 

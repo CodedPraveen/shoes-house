@@ -27,6 +27,7 @@ The source code is always the final source of truth.
 - [API.md](./API.md) — important route handlers and server actions
 - [SERVICES.md](./SERVICES.md) — business services and their responsibilities
 - [INTEGRATIONS.md](./INTEGRATIONS.md) — Clerk, Cloudinary, Razorpay, AfterShip, and other external systems
+- [bullmq.md](./bullmq.md) — BullMQ product-image queues, Render worker operations, retries, and scaling
 - [SECURITY.md](./SECURITY.md) — trust boundaries, resource authorization, and secret handling
 - [PERFORMANCE.md](./PERFORMANCE.md) — caching, concurrency, rate limiting, and known constraints
 - [DEPLOYMENT.md](./DEPLOYMENT.md) — environment, migration, webhook, and production setup

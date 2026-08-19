@@ -385,6 +385,8 @@ export async function getProductsPage(params = {}) {
         id: true,
         name: true,
         slug: true,
+        processingStatus: true,
+        processingError: true,
         images: {
           where: { deletedAt: null },
           orderBy: { sortOrder: "asc" },
@@ -402,9 +404,12 @@ export async function getProductsPage(params = {}) {
       ...product,
       imageValidation: validateProductImages(product.images),
     }))
-    .filter((product) => !product.imageValidation.isValid);
+    .filter((product) => (
+      product.processingStatus === "FAILED" ||
+      (product.processingStatus === "READY" && !product.imageValidation.isValid)
+    ));
   return {
-    products: validatedProducts.filter((product) => product.imageValidation.isValid),
+    products: validatedProducts,
     failedProducts,
     categories,
     total,

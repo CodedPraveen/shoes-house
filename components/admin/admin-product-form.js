@@ -155,10 +155,14 @@ export default function AdminProductForm({
           : await createProductAction(payload);
 
       if (!result.ok) {
-        setError("Save failed");
+        setError(result.error || "Save failed");
         return;
       }
-      router.push("/admin/products");
+      router.push(
+        mode === "edit"
+          ? "/admin/products"
+          : "/admin/products?created=processing",
+      );
       router.refresh();
     } catch (err) {
       setError(err.message || "Save failed");

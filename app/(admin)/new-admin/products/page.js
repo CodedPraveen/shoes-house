@@ -7,6 +7,7 @@ import { EmptyState, PageHeader, StatusBadge, inputClass } from "@/components/ne
 import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
 import LoadingButton from "@/components/ui/loading-button";
+import { retryProductImageProcessingAction } from "@/actions/admin-product-actions";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,11 @@ export default async function NewAdminProductsPage({ searchParams }) {
   return (
     <div className="space-y-8">
       <PageHeader eyebrow="Catalog" title="Products" description="Search, filter, create, and maintain the live product catalog." action={<Link href="/new-admin/products/new" className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white"><PackagePlus className="size-4" />Add product</Link>} />
+      {params.created === "processing" ? (
+        <p className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800" role="status">
+          Product created — images are processing in the background. This page can be refreshed to see the latest status.
+        </p>
+      ) : null}
       <form className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_1fr_auto]">
         <label className="relative"><Search className="pointer-events-none absolute left-3 top-3 size-4 text-slate-400" /><input name="q" defaultValue={params.q} className={`${inputClass} pl-9`} placeholder="Product, brand, or slug" /></label>
         <select name="collection" defaultValue={params.collection ?? ""} className={inputClass}><option value="">All collections</option><option value="SHOES">Shoes</option><option value="JEWELLERY">Jewellery</option></select>
@@ -42,8 +48,18 @@ export default async function NewAdminProductsPage({ searchParams }) {
                   <p className="font-semibold text-amber-950">{product.name}</p>
                   <p className="mt-1 text-xs text-amber-700">{product.slug}</p>
                 </div>
-                <p className="text-amber-900">{product.imageValidation.reason}</p>
-                <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">Fix images</Link>
+                <p className="text-amber-900">{product.processingError || product.imageValidation.reason}</p>
+                <div className="flex gap-2">
+                  {product.processingStatus === "FAILED" ? (
+                    <form action={retryProductImageProcessingAction}>
+                      <input type="hidden" name="productId" value={product.id} />
+                      <LoadingButton className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">
+                        Retry
+                      </LoadingButton>
+                    </form>
+                  ) : null}
+                  <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">Fix images</Link>
+                </div>
               </div>
             ))}
           </div>
@@ -60,7 +76,13 @@ export default async function NewAdminProductsPage({ searchParams }) {
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Category</p><p className="text-sm font-medium">{product.category.name}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Price</p><p className="text-sm font-semibold">{formatPrice(product.price)}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Variants</p><p className="text-sm">{product._count.variants}</p></div>
-                <div className="flex items-center justify-between gap-3 sm:justify-end"><StatusBadge tone={product.stock === 0 ? "rose" : product.stock <= 5 ? "amber" : "emerald"}>{product.stock} stock</StatusBadge><Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">Edit</Link></div>
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+                  <StatusBadge tone={product.processingStatus === "FAILED" ? "rose" : product.processingStatus === "PROCESSING" ? "amber" : "emerald"}>
+                    {product.processingStatus === "PROCESSING" ? "Processing" : product.processingStatus === "FAILED" ? "Failed" : "Ready"}
+                  </StatusBadge>
+                  <StatusBadge tone={product.stock === 0 ? "rose" : product.stock <= 5 ? "amber" : "emerald"}>{product.stock} stock</StatusBadge>
+                  <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">Edit</Link>
+                </div>
               </div>
             ))}
           </div>

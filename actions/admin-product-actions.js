@@ -6,9 +6,8 @@ import { assertRateLimit } from "@/lib/rate-limit";
 import { productAdminService } from "@/services/product-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
 import { clearProductCache } from "@/lib/product-cache";
-import { addProductUploadJob } from "@/lib/queues/product-upload-queue";
-
-console.time("create-product");
+import { enqueueProductImages, retryProductImages } from "@/queues";
+import { formatZodError, productCreationInputSchema } from "@/schemas/product.schema";
 
 async function revalidateProductPaths(slug) {
   await clearProductCache(slug);
@@ -36,17 +35,75 @@ export async function createProductAction(input) {
   await requireAdmin();
   await assertRateLimit({ prefix: "admin-product-create", limit: 20, windowMs: 60_000 });
 
-  // const product = await productAdminService.create(input);
-  // await revalidateProductPaths(product.slug);
-  // return { ok: true, product };
-  const job = await addProductUploadJob(input);
+  const validation = productCreationInputSchema.safeParse(input);
+  if (!validation.success) {
+    return { ok: false, error: formatZodError(validation.error) };
+  }
+
+  const product = await productAdminService.createProcessing(validation.data);
+
+  let job;
+  try {
+    job = await enqueueProductImages({
+      productId: product.id,
+      images: validation.data.imageUrls.map((url) => ({ url })),
+    });
+    await productAdminService.setProcessingJobId(product.id, job.id);
+  } catch (error) {
+    await productAdminService.markProcessingFailed(
+      product.id,
+      "Image processing could not be queued. Retry after Redis is available.",
+    );
+    console.error(JSON.stringify({
+      service: "product-create",
+      event: "enqueue-failed",
+      productId: product.id,
+      error: error?.message || "Queue unavailable",
+    }));
+    return {
+      ok: false,
+      productId: product.id,
+      error: "The product was saved as failed because image processing could not be queued.",
+    };
+  }
+
+  await revalidateProductPaths(product.slug);
 
   return {
     ok: true,
     queued: true,
     jobId: job.id,
-    message: "Product is being uploaded.",
+    product,
+    message: "Product created — processing images.",
   };
+}
+
+export async function retryProductImageProcessingAction(formData) {
+  await requireAdmin();
+  await assertRateLimit({ prefix: "admin-product-image-retry", limit: 20, windowMs: 60_000 });
+
+  const productId = String(formData.get("productId") || "");
+  const state = await productAdminService.getProcessingState(productId);
+  if (!state) return { ok: false, error: "Product not found." };
+  if (state.processingStatus === "READY") return { ok: true, message: "Product is already ready." };
+  if (!state.pendingImageUrls.length) return { ok: false, error: "No staged image references are available." };
+
+  try {
+    const job = await retryProductImages({
+      productId,
+      images: state.pendingImageUrls.map((url) => ({ url })),
+    });
+    await productAdminService.markProcessingQueued(productId, job.id);
+    revalidatePath("/new-admin/products");
+    revalidatePath("/admin/products");
+    return { ok: true, message: "Image processing was queued again." };
+  } catch {
+    await productAdminService.markProcessingFailed(
+      productId,
+      "Image processing could not be re-queued. Retry after Redis is available.",
+    );
+    return { ok: false, error: "Image processing could not be re-queued." };
+  }
 }
 
 export async function updateProductAction(id, input) {
@@ -134,5 +191,3 @@ export async function getCloudinaryConfigAction() {
     ...imageUploadService.getUploadWidgetConfig(),
   };
 }
-
-console.timeEnd("create-product");

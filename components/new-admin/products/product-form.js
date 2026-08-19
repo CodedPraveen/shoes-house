@@ -264,7 +264,11 @@ export default function NewAdminProductForm({
         );
       }
 
-      router.push("/new-admin/products");
+      router.push(
+        mode === "edit"
+          ? "/new-admin/products"
+          : "/new-admin/products?created=processing",
+      );
       router.refresh();
     } catch (saveError) {
       console.error(
