@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { uploadNewAdminProductImageAction, uploadProductImageAction } from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import SafeImage from "@/components/ui/safe-image";
@@ -10,6 +10,11 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const imageUrlsRef = useRef(imageUrls);
+
+  useEffect(() => {
+    imageUrlsRef.current = imageUrls;
+  }, [imageUrls]);
 
   function setUploadState(value) {
     setUploading(value);
@@ -143,7 +148,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         cloudName: cloudinaryConfig.cloudName,
         uploadPreset: preset,
         folder: cloudinaryConfig.folder || "postmart/products",
-        sources: ["local", "url", "camera"],
+        sources: ["url", "local"],
         multiple: true,
       },
       (err, result) => {
@@ -171,14 +176,14 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <LoadingButton
+        {/* <LoadingButton
           type="button"
           loading={uploading}
           onClick={() => fileRef.current?.click()}
           className="rounded-xl border border-black/15 px-4 py-2 text-xs"
         >
           Upload image
-        </LoadingButton>
+        </LoadingButton> */}
         {cloudinaryConfig?.configured ? (
           <LoadingButton
             type="button"
