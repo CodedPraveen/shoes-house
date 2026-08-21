@@ -176,7 +176,8 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         cloudName: cloudinaryConfig.cloudName,
         uploadPreset: preset,
         folder: cloudinaryConfig.folder || "postmart/products",
-        sources: ["url", "local"],
+        sources: ["url"],
+        // sources: ["url", "local", "camera"],
         multiple: true,
       },
       (err, result) => {
