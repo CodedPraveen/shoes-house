@@ -23,11 +23,34 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
 
   function appendCloudinaryUrl(url) {
     const validation = validateProductImageUrl(url);
+
     if (!validation.isValid) {
-      setError(validation.reason || "Cloudinary returned an invalid image URL");
+      setError(
+        validation.reason ||
+        "Cloudinary returned an invalid image URL",
+      );
       return false;
     }
-    onChange([...imageUrls, validation.url]);
+
+    const currentUrls = imageUrlsRef.current;
+
+    if (currentUrls.length >= 8) {
+      setError("Maximum 8 product images are allowed.");
+      return false;
+    }
+
+    if (currentUrls.includes(validation.url)) {
+      return true;
+    }
+
+    const nextUrls = [
+      ...currentUrls,
+      validation.url,
+    ];
+
+    imageUrlsRef.current = nextUrls;
+    onChange(nextUrls);
+
     return true;
   }
 
@@ -102,10 +125,15 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
       );
 
       if (successfulUrls.length) {
-        onChange([
-          ...imageUrls,
+        const currentUrls = imageUrlsRef.current;
+
+        const nextUrls = [
+          ...currentUrls,
           ...successfulUrls,
-        ]);
+        ].slice(0, 8);
+
+        imageUrlsRef.current = nextUrls;
+        onChange(nextUrls);
       }
 
       if (failedUploads.length) {
@@ -170,7 +198,12 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
   }
 
   function removeUrl(url) {
-    onChange(imageUrls.filter((u) => u !== url));
+    const nextUrls = imageUrlsRef.current.filter(
+      (u) => u !== url,
+    );
+
+    imageUrlsRef.current = nextUrls;
+    onChange(nextUrls);
   }
 
   return (
