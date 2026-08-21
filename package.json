@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n NEXT,WORKER \"npm:dev:next\" \"npm:worker\"",
-    "dev:next": "prisma generate && next dev",
+    "dev:next": "next dev",
     "worker": "node --env-file-if-exists=.env --env-file-if-exists=.env.local workers/index.js",
     "build": "prisma generate && next build",
     "start": "next start",
