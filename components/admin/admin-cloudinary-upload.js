@@ -179,7 +179,7 @@ export default function AdminCloudinaryUpload({ imageUrls, onChange, cloudinaryC
         >
           Upload image
         </LoadingButton>
-        {cloudinaryConfig?.configured && !uploadContext ? (
+        {cloudinaryConfig?.configured ? (
           <LoadingButton
             type="button"
             onClick={openWidget}
