@@ -101,6 +101,21 @@ export default function NewAdminProductForm({
     };
   }, []);
 
+  useEffect(() => {
+    if (mode === "edit") return;
+
+    const savedCategory = window.localStorage.getItem(
+      "admin-product-category",
+    );
+
+    if (!savedCategory) return;
+
+    setForm((current) => ({
+      ...current,
+      categorySlug: savedCategory,
+    }));
+  }, [mode]);
+  
   /*
    * Load subcategories whenever collection changes.
    */
@@ -450,12 +465,18 @@ export default function NewAdminProductForm({
                 required
                 className={inputClass}
                 value={form.categorySlug}
-                onChange={(event) =>
-                  update(
-                    "categorySlug",
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => {
+                  const value = event.target.value;
+
+                  update("categorySlug", value);
+
+                  if (mode !== "edit") {
+                    window.localStorage.setItem(
+                      "admin-product-category",
+                      value,
+                    );
+                  }
+                }}
               >
                 {categories.map((item) => (
                   <option
