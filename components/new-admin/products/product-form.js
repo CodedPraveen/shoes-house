@@ -44,7 +44,7 @@ export default function NewAdminProductForm({
 
     // Product-level stock.
     // This is the single inventory value for the product.
-    stock: initial?.stock ?? 0,
+    stock: initial?.stock ?? 3,
 
     sizes: initial?.sizes?.join(", ") ?? "7, 8, 9, 10, 11",
 
