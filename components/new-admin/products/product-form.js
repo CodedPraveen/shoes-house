@@ -101,21 +101,7 @@ export default function NewAdminProductForm({
     };
   }, []);
 
-  useEffect(() => {
-    if (mode === "edit") return;
-
-    const savedCategory = window.localStorage.getItem(
-      "admin-product-category",
-    );
-
-    if (!savedCategory) return;
-
-    setForm((current) => ({
-      ...current,
-      categorySlug: savedCategory,
-    }));
-  }, [mode]);
-  
+ 
   /*
    * Load subcategories whenever collection changes.
    */
