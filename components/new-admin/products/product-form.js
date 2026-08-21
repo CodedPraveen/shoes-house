@@ -105,6 +105,7 @@ export default function NewAdminProductForm({
   /*
    * Load subcategories whenever collection changes.
    */
+  
   useEffect(() => {
     let active = true;
 
