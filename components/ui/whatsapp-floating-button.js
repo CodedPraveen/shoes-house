@@ -1,11 +1,73 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 export default function WhatsAppFloatingButton() {
     const phoneNumber = "919166869035";
     const message = "I need help to by product on your website.";
 
+    const [bottomOffset, setBottomOffset] = useState(20);
+
+    useEffect(() => {
+        const updateBottomPosition = () => {
+            // Find any visible mobile fixed bottom action
+            const bottomBars = document.querySelectorAll(
+                ".mobile-pagination, .mobile-bottom-action-bar"
+            );
+
+            let highestBottom = 20;
+
+            bottomBars.forEach((bar) => {
+                const rect = bar.getBoundingClientRect();
+
+                const isVisible =
+                    rect.bottom > 0 &&
+                    rect.top < window.innerHeight &&
+                    rect.height > 0;
+
+                if (isVisible) {
+                    const barBottomSpace =
+                        window.innerHeight - rect.top;
+
+                    highestBottom = Math.max(
+                        highestBottom,
+                        barBottomSpace + 12
+                    );
+                }
+            });
+
+            setBottomOffset(highestBottom);
+        };
+
+        updateBottomPosition();
+
+        window.addEventListener("scroll", updateBottomPosition, {
+            passive: true,
+        });
+
+        window.addEventListener("resize", updateBottomPosition);
+
+        const observer = new MutationObserver(updateBottomPosition);
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["class", "style"],
+        });
+
+        return () => {
+            window.removeEventListener("scroll", updateBottomPosition);
+            window.removeEventListener("resize", updateBottomPosition);
+            observer.disconnect();
+        };
+    }, []);
+
     const handleWhatsApp = () => {
-        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+            message
+        )}`;
+
         window.open(url, "_blank", "noopener,noreferrer");
     };
 
@@ -14,16 +76,19 @@ export default function WhatsAppFloatingButton() {
             type="button"
             onClick={handleWhatsApp}
             aria-label="Contact us on WhatsApp"
+            style={{
+                bottom: `${bottomOffset}px`,
+            }}
             className="
-        fixed bottom-5 right-5 z-[100]
-        flex h-14 w-14 items-center justify-center
-        rounded-full bg-[#25D366] text-white
-        shadow-lg
-        transition-all duration-300
-        hover:scale-110 hover:shadow-xl
-        active:scale-95
-        sm:bottom-6 sm:right-6
-      "
+                fixed right-5 z-[100]
+                flex h-14 w-14 items-center justify-center
+                rounded-full bg-[#25D366] text-white
+                shadow-lg
+                transition-all duration-300
+                hover:scale-110 hover:shadow-xl
+                active:scale-95
+                sm:right-6 sm:bottom-6
+            "
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -33,7 +98,7 @@ export default function WhatsAppFloatingButton() {
                 fill="currentColor"
                 aria-hidden="true"
             >
-                <path d="M19.11 17.21c-.27-.14-1.6-.79-1.85-.88-.25-.09-.43-.14-.61.14-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.14-1.14-.42-2.17-1.34-.8-.71-1.34-1.58-1.5-1.85-.16-.27-.02-.42.12-.56.12-.12.27-.32.41-.48.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.01-.22-.53-.45-.46-.61-.47h-.52c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27s.98 2.63 1.11 2.81c.14.18 1.92 2.93 4.65 4.11.65.28 1.16.45 1.56.58.65.21 1.24.18 1.71.11.52-.08 1.6-.65 1.83-1.28.23-.63.23-1.17.16-1.28-.07-.11-.25-.18-.52-.32Z" />
+                <path d="M19.11 17.21c-.27-.14-1.6-.79-1.85-.88-.25-.09-.43-.14-.61.14-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.14-1.14-.42-2.17-1.34-.8-.71-1.34-1.58-1.5-1.85-.16-.27-.02-.42.12-.56.12-.12.27-.32.41-.48.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.01-.22-.53-.45-.46-.61-.47h-.52c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27s.98 2.63 1.11 2.81c.14.18 1.92 2.93 4.65 4.11.65.28 1.16.45 1.56.58.65-.21 1.24-.18 1.71-.11.52-.08 1.6-.65 1.83-1.28.23-.63.23-1.17.16-1.28-.07-.11-.25-.18-.52-.32Z" />
                 <path d="M16.03 3.2c-7.08 0-12.84 5.76-12.84 12.84 0 2.26.59 4.47 1.72 6.42L3.08 28.8l6.48-1.7a12.8 12.8 0 0 0 6.47 1.76h.01c7.08 0 12.84-5.76 12.84-12.84S23.11 3.2 16.03 3.2Zm0 23.44h-.01a10.6 10.6 0 0 1-5.4-1.48l-.39-.23-3.85 1.01 1.03-3.75-.25-.39a10.6 10.6 0 1 1 8.87 4.84Zm5.82-7.94c-.32-.16-1.9-.94-2.2-1.04-.29-.11-.5-.16-.71.16-.21.32-.81 1.04-.99 1.25-.18.21-.37.24-.68.08-.32-.16-1.33-.49-2.53-1.56-.93-.83-1.56-1.86-1.74-2.18-.18-.32-.02-.49.14-.65.14-.14.32-.37.47-.55.16-.18.21-.32.32-.53.1-.21.05-.39-.03-.55-.08-.16-.71-1.71-.97-2.34-.25-.61-.5-.53-.71-.54h-.6c-.21 0-.55.08-.84.39-.29.32-1.1 1.07-1.1 2.61s1.13 3.03 1.29 3.24c.16.21 2.21 3.38 5.35 4.74.75.32 1.33.51 1.78.65.75.24 1.43.21 1.97.13.6-.09 1.9-.78 2.17-1.53.26-.75.26-1.39.18-1.53-.08-.13-.29-.21-.6-.37Z" />
             </svg>
         </button>

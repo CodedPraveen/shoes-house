@@ -58,7 +58,7 @@ export default function Pagination({
 
       {/* Mobile */}
       <nav
-        className={`fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-2 border-t border-black/10 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 sm:hidden ${showMobilePagination
+        className={`mobile-pagination fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-2 border-t border-black/10 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 sm:hidden ${showMobilePagination
             ? "translate-y-0"
             : "translate-y-full"
           }`}
