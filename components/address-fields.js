@@ -63,7 +63,7 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
           autoComplete="off"
         />
       ) : null}
-      <AddressField
+      {/* <AddressField
         field="fullName"
         label="Name"
         placeholder="Recipient's full name"
@@ -72,8 +72,8 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
         error={errors.fullName}
         required
         autoComplete="name"
-      />
-      <AddressField
+      /> */}
+      {/* <AddressField
         field="phone"
         label="Phone"
         placeholder="10-digit mobile number"
@@ -84,7 +84,7 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
         inputMode="numeric"
         maxLength={10}
         autoComplete="tel"
-      />
+      /> */}
       <AddressField
         field="line1"
         label="Address 1"
@@ -96,7 +96,7 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
         required
         autoComplete="address-line1"
       />
-      <AddressField
+      {/* <AddressField
         field="line2"
         label="Area / Locality"
         placeholder="Area or locality"
@@ -105,7 +105,7 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
         error={errors.line2}
         className="sm:col-span-2"
         autoComplete="address-line2"
-      />
+      /> */}
       <AddressField
         field="city"
         label="City / Town / Village"
