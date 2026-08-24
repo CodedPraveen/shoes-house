@@ -89,6 +89,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(false);
   const touchedFieldsRef = useRef(new Set());
+  const [showMobileAddressFields, setShowMobileAddressFields] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -200,7 +201,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
             setError(
               persisted.error ||
-                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
             );
           } catch (verificationError) {
             setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
@@ -266,9 +267,9 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   return (
     <form
       onSubmit={handlePay}
-      className="mx-auto grid w-full max-w-350 gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
+      className="mx-auto grid w-full max-w-350 gap-10 px-0 pb-20 sm:px-8 lg:grid-cols-2"
     >
-      <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">
+      <div className="space-y-6 no54123-3xl border p-6">
         <h2 className="text-lg font-medium">Shipping Address</h2>
         <p className="text-xs text-black/45">Buy Now — cart is not modified</p>
 
@@ -280,11 +281,10 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             {savedAddresses.map((address) => (
               <label
                 key={address.id}
-                className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${
-                  addressMode === "saved" && selectedAddressId === address.id
-                    ? "border-black bg-white"
-                    : "border-black/10 bg-white/60"
-                }`}
+                className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${addressMode === "saved" && selectedAddressId === address.id
+                  ? "border-black bg-white"
+                  : "border-black/10 bg-white/60"
+                  }`}
               >
                 <input
                   type="radio"
@@ -332,7 +332,9 @@ export default function CheckoutBuyNowClient({ lineItem }) {
               initialCoordinates={selectedCoordinates}
               onLocationConfirmed={handleLocationConfirmed}
             />
-            <span className="text-xs text-black/45">or enter address manually</span>
+            <span className="hidden sm:inline text-xs text-black/45">
+              or enter address manually
+            </span>
           </div>
         )}
         {showLocationWarning && (
@@ -344,13 +346,71 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         )}
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="space-y-3">
-            <AddressFields
-              form={{ ...form, fullName: form.fullName || customerName }}
-              errors={fieldErrors}
-              onChange={updateField}
-            />
+            {/* Mobile: Name + Phone only */}
+            <div className="grid grid-cols-2 gap-3 sm:hidden">
+              <input
+                type="text"
+                value={form.fullName || customerName}
+                onChange={(e) => updateField("fullName", e.target.value)}
+                placeholder="Name"
+                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none"
+              />
+
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                placeholder="Phone"
+                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none"
+              />
+            </div>
+
+            {/* Mobile: hidden address fields dropdown */}
+            <div className="sm:hidden">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowMobileAddressFields((previous) => !previous)
+                }
+                className="flex w-full items-center justify-between rounded-xl border border-black/10 bg-white px-4 py-3 text-sm"
+              >
+                <span>
+                  {showMobileAddressFields
+                    ? "Hide address details"
+                    : "Enter address manually"}
+                </span>
+
+                <span className="text-lg leading-none">
+                  {showMobileAddressFields ? "⌃" : "⌄"}
+                </span>
+              </button>
+
+              {showMobileAddressFields && (
+                <div className="mt-3">
+                  <AddressFields
+                    form={{ ...form, fullName: form.fullName || customerName }}
+                    errors={fieldErrors}
+                    onChange={updateField}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: existing complete address form */}
+            <div className="hidden sm:block">
+              <AddressFields
+                form={{ ...form, fullName: form.fullName || customerName }}
+                errors={fieldErrors}
+                onChange={updateField}
+              />
+            </div>
+
             <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
-              <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={saveAddress}
+                onChange={(event) => setSaveAddress(event.target.checked)}
+              />
               Save this address for future orders
             </label>
           </div>

@@ -10,5 +10,6 @@ export default async function ShoesProductPage({ params }) {
   const { slug } = await params;
   const product = await getCachedProductBySlug(slug, "SHOES");
   if (!product) notFound();
-  return <><ProductViewTracker productId={product.id} /><ProductDetailClient product={product} /></>;
+  return <><ProductViewTracker productId={product.id} />
+  <ProductDetailClient product={product} /></>;
 }

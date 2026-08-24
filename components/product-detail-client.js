@@ -653,7 +653,7 @@ export default function ProductDetailClient({ product }) {
           <button
             type="button"
             onClick={handleBuyNow}
-            className="flex h-14 flex-1 items-center justify-center bg-black text-base font-semibold text-white transition active:scale-[0.98]"
+            className="flex h-14 flex-1 items-center justify-center bg-[#ffe51f] text-base font-semibold text-black transition active:scale-[0.98]"
           >
             Buy Now
           </button>
