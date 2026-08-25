@@ -230,49 +230,8 @@ export default function ProductDetailClient({ product }) {
 
   return (
     <>
-      <main className="mx-auto mt-8 w-full max-w-[1400px] px-0 pb-32 pt-0 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
-        {/* =========================
-            MOBILE HEADER
-        ========================== */}
-        <div className="mb-5 flex items-center justify-between px-4 sm:hidden">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex h-11 w-11 items-center justify-center border border-black/10 bg-white transition active:scale-95"
-            aria-label="Go back"
-          >
-            <ArrowLeft size={20} />
-          </button>
-
-          <h1 className="text-lg font-semibold tracking-tight">
-            Details
-          </h1>
-
-          <LoadingButton
-            type="button"
-            onClick={handleWishlist}
-            loading={pendingActions.has("wishlist")}
-            className={`flex h-11 w-11 items-center justify-center border border-black/10 transition active:scale-95 ${wishlistActive
-              ? "bg-black text-white"
-              : "bg-white"
-              }`}
-            aria-label={
-              wishlistActive
-                ? "Remove from wishlist"
-                : "Add to wishlist"
-            }
-          >
-            <Heart
-              size={20}
-              fill={
-                wishlistActive
-                  ? "currentColor"
-                  : "none"
-              }
-            />
-          </LoadingButton>
-        </div>
-
+      <main className="mx-auto mt-15 w-full max-w-[1400px] px-0 pb-32 pt-0 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
+    
         {/* =========================
             PRODUCT TOP AREA
         ========================== */}
@@ -293,6 +252,41 @@ export default function ProductDetailClient({ product }) {
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
+                {/* Mobile floating controls */}
+                <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 sm:hidden">
+                  {/* Back */}
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex h-11 w-11 items-center justify-center border border-black/10 bg-white transition active:scale-95"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+
+                  {/* Wishlist - same style/logic as desktop */}
+                  <LoadingButton
+                    type="button"
+                    onClick={handleWishlist}
+                    loading={pendingActions.has("wishlist")}
+                    className={`flex h-11 w-11 items-center justify-center border border-black/15 p-3 transition active:scale-95 ${wishlistActive
+                      ? "bg-black text-white"
+                      : "bg-white"
+                      }`}
+                    aria-label={
+                      wishlistActive
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
+                  >
+                    <Heart
+                      size={20}
+                      fill={wishlistActive ? "currentColor" : "none"}
+                    />
+                  </LoadingButton>
+                </div>
+
+                {/* Main image */}
                 <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-[2/3]">
                   {currentImage ? (
                     <img
@@ -308,7 +302,7 @@ export default function ProductDetailClient({ product }) {
                   )}
                 </div>
 
-                {/* Mobile arrows */}
+                {/* Image arrows */}
                 {images.length > 1 ? (
                   <>
                     <button
@@ -528,7 +522,7 @@ export default function ProductDetailClient({ product }) {
               <LoadingButton
                 type="button"
                 onClick={handleAddToCart}
-                loading={pendingActions.has("cart")}
+                // loading={pendingActions.has("cart")}
                 className="inline-flex min-h-12 items-center justify-center gap-2 bg-black px-7 text-sm font-medium text-white transition hover:scale-[1.02] active:scale-[0.98]"
               >
                 <ShoppingBag size={16} />
