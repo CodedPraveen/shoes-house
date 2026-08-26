@@ -213,21 +213,21 @@ function ProductCard({
             }
           >
             {optimisticWishlist ? (
-              // Filled heart
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 512 512"
-                fill="none"
-              >
-                <path
-                  d="M 91 84 L 76 92 L 57 109 L 47 123 L 39 139 L 32 166 L 32 193 L 36 213 L 42 229 L 56 253 L 76 278 L 133 337 L 195 390 L 254 433 L 262 430 L 307 397 L 377 338 L 421 294 L 440 272 L 461 244 L 473 219 L 479 193 L 479 166 L 470 134 L 458 114 L 444 99 L 432 90 L 415 82 L 398 78 L 383 77 L 360 80 L 339 87 L 311 104 L 299 114 L 265 149 L 256 152 L 246 149 L 205 108 L 192 98 L 172 87 L 151 80 L 127 77 L 107 79 Z"
-                  fill="currentColor"
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                />
-              </svg>
+                // Filled heart
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 512 512"
+                  fill="none"
+                >
+                  <path
+                    d="M 91 84 L 76 92 L 57 109 L 47 123 L 39 139 L 32 166 L 32 193 L 36 213 L 42 229 L 56 253 L 76 278 L 133 337 L 195 390 L 254 433 L 262 430 L 307 397 L 377 338 L 421 294 L 440 272 L 461 244 L 473 219 L 479 193 L 479 166 L 470 134 L 458 114 L 444 99 L 432 90 L 415 82 L 398 78 L 383 77 L 360 80 L 339 87 L 311 104 L 299 114 L 265 149 L 256 152 L 246 149 L 205 108 L 192 98 L 172 87 L 151 80 L 127 77 L 107 79 Z"
+                    fill="currentColor"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                  />
+                </svg>
             ) : (
               // Outline heart
               <svg
