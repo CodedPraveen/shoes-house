@@ -13,7 +13,7 @@ export default async function ShoesNewArrivalsPage() {
 
     return (
         <main className="mx-auto max-w-[1280px] px-4 py-12 md:px-16">
-            <h1 className="mb-8 text-3xl font-semibold">
+            <h1 className="my-10 text-3xl font-semibold">
                 New Arrivals
             </h1>
 
