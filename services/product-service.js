@@ -6,7 +6,10 @@ import { prisma } from "@/lib/db";
 import { getCache, setCache } from "@/lib/redis/cache";
 import { validateProductImages } from "@/lib/product-image";
 
-import { activeProductWhere } from "@/lib/product-where";
+import {
+  activeProductWhere,
+  storefrontProductWhere,
+} from "@/lib/product-where";
 
 const productWhere = activeProductWhere;
 // const productWhere = { ...notDeleted, category: { deletedAt: null } };
@@ -68,7 +71,11 @@ export const productService = {
   async getBySlug(slug, collection) {
     return remember(`product:slug:${collection ?? "all"}:${slug}`, async () => {
       const row = await prisma.product.findFirst({
-        where: { slug, ...activeProductWhere, ...(collection && { collection }) },
+        where: {
+          slug,
+          ...storefrontProductWhere,
+          ...(collection && { collection }),
+        },
         include: productInclude,
       });
 

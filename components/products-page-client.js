@@ -10,7 +10,12 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useProductFilters } from "@/hooks/use-product-filters";
 
 export default function ProductsPageClient({ initialProducts = [], collection }) {
-  const collectionLabel = collection === "JEWELLERY" ? "Jewellery" : "Shoes";
+  const collectionLabel =
+    collection === "JEWELLERY"
+      ? "Jewellery"
+      : collection === "SHOES"
+        ? "Shoes"
+        : "Products";
   const {
     products: filtered,
     sortBy,
