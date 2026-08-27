@@ -256,13 +256,7 @@ export const productAdminService = {
   },
 
   async createProcessing(input) {
-    console.log("[PRODUCT DB] createProcessing START", {
-      name: input?.name,
-      slug: input?.slug,
-      categorySlug: input?.categorySlug,
-      imageCount: input?.imageUrls?.length,
-    });
-
+    
     input = productCreationInputSchema.parse(input);
     const category = await this.getCategoryBySlug(input.categorySlug);
 
@@ -306,13 +300,7 @@ export const productAdminService = {
         variants: true,
       },
     });
-
-    console.log("[PRODUCT DB] PROCESSING product inserted", {
-      productId: created.id,
-      processingStatus: created.processingStatus,
-      pendingImageCount: created.pendingImageUrls?.length,
-    });
-
+  
     return mapProduct(created);
   },
 

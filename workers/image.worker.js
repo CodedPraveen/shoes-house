@@ -46,11 +46,6 @@ async function verifyCloudinaryImage(image, cloudName) {
 }
 
 export async function processProductImageJob(job) {
-  console.log("[PRODUCT IMAGE] JOB START", {
-    jobId: job.id,
-    productId: job.data?.productId,
-    imageCount: job.data?.images?.length,
-  });
 
   const parsed = productImageJobSchema.safeParse(job.data);
   if (!parsed.success) {
@@ -62,22 +57,9 @@ export async function processProductImageJob(job) {
   }
 
   const { productId, images } = parsed.data;
-  console.log("[PRODUCT IMAGE] payload valid", {
-    jobId: job.id,
-    productId,
-    imageCount: images.length,
-  });
-
   const product = await prisma.product.findUnique({
     where: { id: productId },
     select: { id: true, deletedAt: true, processingStatus: true, pendingImageUrls: true },
-  });
-
-  console.log("[PRODUCT IMAGE] product loaded", {
-    productId,
-    exists: Boolean(product),
-    processingStatus: product?.processingStatus,
-    pendingImageCount: product?.pendingImageUrls?.length,
   });
 
   if (!product || product.deletedAt) {
@@ -96,39 +78,16 @@ export async function processProductImageJob(job) {
     throw new UnrecoverableError("Queued image references do not match the product staging record");
   }
 
-  console.log("[PRODUCT IMAGE] configuring Cloudinary", {
-    productId,
-  });
-
   const { cloudName } = configureCloudinary();
-
-  console.log("[PRODUCT IMAGE] Cloudinary configured", {
-    productId,
-    cloudName,
-  });
 
   const verifiedImages = [];
   for (const [index, image] of images.entries()) {
-    console.log("[PRODUCT IMAGE] verifying image", {
-      productId,
-      index,
-      url: image.url,
-    });
-
+    
     verifiedImages.push(
       await verifyCloudinaryImage(image, cloudName)
     );
 
-    console.log("[PRODUCT IMAGE] image verified", {
-      productId,
-      index,
-    });
   }
-
-  console.log("[PRODUCT IMAGE] all images verified", {
-    productId,
-    imageCount: verifiedImages.length,
-  });
 
   await prisma.$transaction(async (tx) => {
     const current = await tx.product.findUnique({
@@ -155,11 +114,6 @@ export async function processProductImageJob(job) {
       throw new UnrecoverableError("Product image finalization was incomplete");
     }
 
-    console.log("[PRODUCT IMAGE] setting READY", {
-      productId,
-      imageCount: verifiedImages.length,
-    });
-
     await tx.product.update({
       where: { id: productId },
       data: {
@@ -169,15 +123,6 @@ export async function processProductImageJob(job) {
         pendingImageUrls: [],
       },
     });
-    console.log("[PRODUCT IMAGE] READY update complete", {
-      productId,
-    });
-  });
-
-  console.log("[PRODUCT IMAGE] JOB COMPLETE", {
-    jobId: job.id,
-    productId,
-    imageCount: verifiedImages.length,
   });
 
   return { productId, imageCount: verifiedImages.length };
