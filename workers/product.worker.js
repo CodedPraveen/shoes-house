@@ -20,11 +20,14 @@ export function createProductWorker() {
     },
   });
 
-  worker.on("active", (job) => log("info", "active", {
-    jobId: job.id,
-    productId: job.data?.productId,
-    attempt: job.attemptsMade + 1,
-  }));
+  worker.on("active", (job) => {
+    log("info", "active", {
+      jobId: job.id,
+      productId: job.data?.productId,
+      attempt: job.attemptsMade + 1,
+      imageCount: job.data?.images?.length,
+    });
+  });
 
   worker.on("completed", (job) => log("info", "completed", {
     jobId: job.id,

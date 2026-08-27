@@ -32,24 +32,61 @@ export async function getAdminProductForEditAction(id) {
 }
 
 export async function createProductAction(input) {
+
+  console.log("[PRODUCT CREATE] START", {
+    name: input?.name,
+    slug: input?.slug,
+    imageCount: input?.imageUrls?.length,
+  });
+
   await requireAdmin();
+
+  console.log("[PRODUCT CREATE] admin-auth passed");
+
   await assertRateLimit({ prefix: "admin-product-create", limit: 20, windowMs: 60_000 });
+
+  console.log("[PRODUCT CREATE] rate-limit passed");
 
   const validation = productCreationInputSchema.safeParse(input);
   if (!validation.success) {
+
+    console.error("[PRODUCT CREATE] validation failed", validation.error);
+
     return { ok: false, error: formatZodError(validation.error) };
   }
 
+  console.log("[PRODUCT CREATE] validation passed");
+
   const product = await productAdminService.createProcessing(validation.data);
 
+  console.log("[PRODUCT CREATE] product created as PROCESSING", {
+    productId: product.id,
+    slug: product.slug,
+  });
+  
   let job;
   try {
+    console.log("[PRODUCT CREATE] enqueue starting", {
+      productId: product.id,
+      imageCount: validation.data.imageUrls.length,
+    });
+
     job = await enqueueProductImages({
       productId: product.id,
       images: validation.data.imageUrls.map((url) => ({ url })),
     });
+    console.log("[PRODUCT CREATE] enqueue success", {
+      productId: product.id,
+      jobId: job.id,
+    });
+
     await productAdminService.setProcessingJobId(product.id, job.id);
   } catch (error) {
+    console.error("[PRODUCT CREATE] enqueue FAILED", {
+      productId: product.id,
+      error: error?.message,
+      stack: error?.stack,
+    });
     await productAdminService.markProcessingFailed(
       product.id,
       "Image processing could not be queued. Retry after Redis is available.",
@@ -66,9 +103,18 @@ export async function createProductAction(input) {
       error: "The product was saved as failed because image processing could not be queued.",
     };
   }
+  console.log("[PRODUCT CREATE] revalidation starting", {
+    productId: product.id,
+    slug: product.slug,
+  });
 
   await revalidateProductPaths(product.slug);
 
+  console.log("[PRODUCT CREATE] COMPLETE", {
+    productId: product.id,
+    jobId: job.id,
+  });
+  
   return {
     ok: true,
     queued: true,
