@@ -108,19 +108,21 @@ export async function processProductImageJob(job) {
   });
 
   const verifiedImages = [];
-  for (const image of images) {
+  for (const [index, image] of images.entries()) {
     console.log("[PRODUCT IMAGE] verifying image", {
       productId,
       index,
       url: image.url,
     });
 
-    verifiedImages.push(await verifyCloudinaryImage(image, cloudName));
+    verifiedImages.push(
+      await verifyCloudinaryImage(image, cloudName)
+    );
+
     console.log("[PRODUCT IMAGE] image verified", {
       productId,
       index,
     });
-
   }
 
   console.log("[PRODUCT IMAGE] all images verified", {
