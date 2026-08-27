@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
 import {
@@ -74,6 +75,7 @@ export default function ProductDetailClient({ product }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const { isSignedIn } = useAuthSafe();
+  const isSoldOut = product.stock === 0;
 
   const images = (product.images || []).map(
     optimizeCloudinaryImage,
@@ -217,6 +219,8 @@ export default function ProductDetailClient({ product }) {
   };
 
   const handleAddToCart = () => {
+    if (isSoldOut) return;
+
     if (!size) {
       setActionError(
         "Please select a size before continuing.",
@@ -274,6 +278,8 @@ export default function ProductDetailClient({ product }) {
   };
 
   const handleBuyNow = () => {
+    if (isSoldOut) return;
+
     if (!size) {
       setActionError(
         "Please select a size before continuing.",
@@ -509,129 +515,154 @@ export default function ProductDetailClient({ product }) {
               {product.description}
             </p>
 
+            {isSoldOut ? (
+              <div className="space-y-4 border-y border-black/10 py-6" role="status">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">
+                    SOLD OUT
+                  </p>
+                  <p className="text-sm leading-6 text-black/60 sm:text-base">
+                    This product is currently sold out.
+                  </p>
+                </div>
+                <Link
+                  href="/all/product"
+                  className="inline-flex min-h-12 items-center justify-center border border-black bg-black px-7 text-sm font-medium text-white transition hover:bg-white hover:text-black active:scale-[0.98]"
+                >
+                  View All Products
+                </Link>
+              </div>
+            ) : null}
+
             {/* =========================
                 SIZE
             ========================== */}
-            <div className="space-y-4 border-t border-black/10 pt-6">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-black/50">
-                  Size
-                </p>
-              </div>
+            {!isSoldOut ? (
+              <div className="space-y-4 border-t border-black/10 pt-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-black/50">
+                    Size
+                  </p>
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => setSize(item)}
-                    className={`min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
-                      ? "border-black bg-black text-white"
-                      : "border-black/15 hover:border-black/40"
-                      }`}
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setSize(item)}
+                      className={`min-h-11 min-w-11 border px-3.5 text-sm transition ${size === item
+                        ? "border-black bg-black text-white"
+                        : "border-black/15 hover:border-black/40"
+                        }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+
+                {!size && actionError ? (
+                  <p
+                    className="text-sm text-red-600"
+                    role="alert"
                   >
-                    {item}
-                  </button>
-                ))}
+                    {actionError}
+                  </p>
+                ) : null}
               </div>
-
-              {!size && actionError ? (
-                <p
-                  className="text-sm text-red-600"
-                  role="alert"
-                >
-                  {actionError}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
 
             {/* =========================
                 QUANTITY
             ========================== */}
-            <div className="space-y-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-black/50">
-                Quantity
-              </p>
+            {!isSoldOut ? (
+              <div className="space-y-4">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-black/50">
+                  Quantity
+                </p>
 
-              <div className="inline-flex items-center border border-black/15">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      Math.max(1, q - 1),
-                    )
-                  }
-                  className="p-3.5 transition hover:bg-black/5 active:bg-black/10"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus size={16} />
-                </button>
+                <div className="inline-flex items-center border border-black/15">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setQuantity((q) =>
+                        Math.max(1, q - 1),
+                      )
+                    }
+                    className="p-3.5 transition hover:bg-black/5 active:bg-black/10"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus size={16} />
+                  </button>
 
-                <span className="min-w-11 text-center text-sm font-medium">
-                  {quantity}
-                </span>
+                  <span className="min-w-11 text-center text-sm font-medium">
+                    {quantity}
+                  </span>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setQuantity((q) => q + 1)
-                  }
-                  className="p-3.5 transition hover:bg-black/5 active:bg-black/10"
-                  aria-label="Increase quantity"
-                >
-                  <Plus size={16} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setQuantity((q) => q + 1)
+                    }
+                    className="p-3.5 transition hover:bg-black/5 active:bg-black/10"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* =========================
                 ACTIONS
             ========================== */}
-            <div className="hidden flex-wrap gap-3 sm:flex">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                // loading={pendingActions.has("cart")}
-                className="inline-flex min-h-12 items-center justify-center gap-2 bg-black px-7 text-sm font-medium text-white transition hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <ShoppingBag size={16} />
+            {!isSoldOut ? (
+              <div className="hidden flex-wrap gap-3 sm:flex">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  // loading={pendingActions.has("cart")}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 bg-black px-7 text-sm font-medium text-white transition hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <ShoppingBag size={16} />
 
-                {added
-                  ? "Added to Cart"
-                  : "Add To Cart"}
-              </button>
+                  {added
+                    ? "Added to Cart"
+                    : "Add To Cart"}
+                </button>
 
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="min-h-12 border border-black/15 px-7 text-sm font-medium transition hover:bg-black hover:text-white active:scale-[0.98]"
-              >
-                Buy Now
-              </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="min-h-12 border border-black/15 px-7 text-sm font-medium transition hover:bg-black hover:text-white active:scale-[0.98]"
+                >
+                  Buy Now
+                </button>
 
-              <button
-                type="button"
-                onClick={handleWishlist}
-                disabled={pendingActions.has("wishlist")}
-                className={`flex min-h-12 min-w-12 items-center justify-center border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
-                  ? "text-red-500"
-                  : "text-black"
-                  }`}
-                aria-label={
-                  wishlistActive
-                    ? "Remove from wishlist"
-                    : "Add to wishlist"
-                }
-              >
-                {wishlistActive ? (
-                  <WishlistFilledIcon />
-                ) : (
-                  <WishlistOutlineIcon />
-                )}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleWishlist}
+                  disabled={pendingActions.has("wishlist")}
+                  className={`flex min-h-12 min-w-12 items-center justify-center border border-black/15 p-3 transition hover:bg-black/5 active:scale-95 ${wishlistActive
+                    ? "text-red-500"
+                    : "text-black"
+                    }`}
+                  aria-label={
+                    wishlistActive
+                      ? "Remove from wishlist"
+                      : "Add to wishlist"
+                  }
+                >
+                  {wishlistActive ? (
+                    <WishlistFilledIcon />
+                  ) : (
+                    <WishlistOutlineIcon />
+                  )}
+                </button>
+              </div>
+            ) : null}
                 
-            {actionError && size ? (
+            {!isSoldOut && actionError && size ? (
               <p
                 className="text-sm text-red-600"
                 role="alert"
@@ -694,31 +725,33 @@ export default function ProductDetailClient({ product }) {
       {/* =========================
           MOBILE FIXED PURCHASE BAR
       ========================== */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/10 bg-white/95 px-4 pt-3 backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex max-w-[600px] items-center gap-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            // loading={pendingActions.has("cart")}
-            className="flex h-14 w-14 shrink-0 items-center justify-center border border-black/10 bg-black/5 transition active:scale-95"
-            aria-label={
-              added
-                ? "Added to cart"
-                : "Add to cart"
-            }
-          >
-            <ShoppingBag size={22} />
-          </button>
+      {!isSoldOut ? (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/10 bg-white/95 px-4 pt-3 backdrop-blur-md sm:hidden">
+          <div className="mx-auto flex max-w-[600px] items-center gap-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              // loading={pendingActions.has("cart")}
+              className="flex h-14 w-14 shrink-0 items-center justify-center border border-black/10 bg-black/5 transition active:scale-95"
+              aria-label={
+                added
+                  ? "Added to cart"
+                  : "Add to cart"
+              }
+            >
+              <ShoppingBag size={22} />
+            </button>
 
-          <button
-            type="button"
-            onClick={handleBuyNow}
-            className="flex h-14 flex-1 items-center justify-center bg-[#ffe51f] text-base font-semibold text-black transition active:scale-[0.98]"
-          >
-            Buy Now
-          </button>
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              className="flex h-14 flex-1 items-center justify-center bg-[#ffe51f] text-base font-semibold text-black transition active:scale-[0.98]"
+            >
+              Buy Now
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
     </>
   );
 }
