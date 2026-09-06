@@ -12,6 +12,8 @@ This document focuses on important network and mutation boundaries rather than e
 | `POST /api/webhooks/clerk` | Synchronize Clerk users and roles | Verified Svix signature |
 | `POST /api/webhooks/razorpay` | Process payment events | Verified Razorpay signature |
 | `POST /api/webhooks/aftership` | Synchronize carrier state | Verified AfterShip HMAC |
+| `GET /api/admin/images/staging/[imageId]` | Preview a staged admin image | Admin only |
+| `GET /images/[...path]` | Serve a validated stored WebP path | Public, immutable cache |
 | `GET/POST /api/admin/products` | Existing admin product API | Inspect the current handler before use |
 
 ## Product actions
@@ -21,10 +23,9 @@ This document focuses on important network and mutation boundaries rather than e
 - Administrator category reads.
 - Product retrieval for edit.
 - Product create, update, and soft-delete.
-- Existing admin image upload action.
-- New-admin JPG/PNG/WEBP image upload action with a 10 MB per-file limit.
-- Failed-upload Cloudinary cleanup.
-- Cloudinary widget configuration for the existing admin.
+- Shared JPG/PNG staging action with a 10 MB per-file limit.
+- BullMQ product-image submission and failed-job retry.
+- Explicit staged-upload cleanup.
 
 Every exported sensitive action calls `requireAdmin()`.
 

@@ -32,22 +32,25 @@ model User {
 }
 
 model Category {
-  id              String                  @id @default(cuid())
-  name            String
-  slug            String                  @unique
-  imageUrl        String?
-  sortOrder       Int                     @default(0)
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  deletedAt       DateTime?
-  collection      ProductCollection
-  parentId        String?
-  parent          Category?               @relation("CategoryTree", fields: [parentId], references: [id])
-  children        Category[]              @relation("CategoryTree")
-  heroSlides      HeroSlide[]
-  navbarItems     NavbarItem[]
-  products        Product[]
-  storefrontItems StorefrontSectionItem[]
+  id               String                  @id @default(cuid())
+  name             String
+  slug             String                  @unique
+  imageUrl         String?
+  imageStoragePath String?
+  imageWidth       Int?
+  imageHeight      Int?
+  sortOrder        Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  deletedAt        DateTime?
+  collection       ProductCollection
+  parentId         String?
+  parent           Category?               @relation("CategoryTree", fields: [parentId], references: [id])
+  children         Category[]              @relation("CategoryTree")
+  heroSlides       HeroSlide[]
+  navbarItems      NavbarItem[]
+  products         Product[]
+  storefrontItems  StorefrontSectionItem[]
 
   @@index([collection])
   @@index([slug])
@@ -137,19 +140,23 @@ model ProductVariant {
 }
 
 model ProductImage {
-  id        String    @id @default(cuid())
-  productId String
-  url       String
-  alt       String?
-  sortOrder Int       @default(0)
-  isHover   Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-  publicId  String?
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  productId   String
+  url         String?
+  storagePath String?
+  width       Int?
+  height      Int?
+  alt         String?
+  sortOrder   Int       @default(0)
+  isHover     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  publicId    String?
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([publicId])
+  @@index([storagePath])
 }
 
 model ProductColor {
@@ -370,7 +377,10 @@ model OrderStatusHistory {
 
 model MediaAsset {
   id           String                  @id @default(cuid())
-  url          String
+  url          String?
+  storagePath  String?
+  width        Int?
+  height       Int?
   publicId     String?                 @unique
   resourceType String                  @default("image")
   folder       String
@@ -381,6 +391,7 @@ model MediaAsset {
   sectionItems StorefrontSectionItem[]
 
   @@index([folder])
+  @@index([storagePath])
 }
 
 model StorefrontSection {

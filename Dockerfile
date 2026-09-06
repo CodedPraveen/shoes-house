@@ -26,6 +26,8 @@ FROM base AS nextjs
 ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3000
+RUN mkdir -p /data/ecommerce/images \
+    && chown -R node:node /data/ecommerce/images
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/.next ./.next
 COPY --from=builder --chown=node:node /app/public ./public
@@ -38,6 +40,8 @@ CMD ["npm", "run", "start"]
 
 FROM base AS worker
 ENV NODE_ENV=production
+RUN mkdir -p /data/ecommerce/images \
+    && chown -R node:node /data/ecommerce/images
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=source --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=source --chown=node:node /app/prisma ./prisma

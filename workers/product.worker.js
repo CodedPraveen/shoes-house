@@ -3,7 +3,7 @@ import { prisma } from "../lib/db.js";
 import { getBullMqConnectionOptions } from "../lib/queues/connection.js";
 import { getBullMqEnvironment } from "../schemas/queue.schema.js";
 import { PRODUCT_IMAGE_QUEUE } from "../queues/image.queue.js";
-import { processProductImageJob } from "./image.worker.js";
+import { cleanupFailedImageJob, processImageJob } from "./image.worker.js";
 
 function log(level, event, context = {}) {
   console[level](JSON.stringify({ service: "bullmq-worker", queue: PRODUCT_IMAGE_QUEUE, event, ...context }));
@@ -11,7 +11,7 @@ function log(level, event, context = {}) {
 
 export function createProductWorker() {
   const config = getBullMqEnvironment();
-  const worker = new Worker(PRODUCT_IMAGE_QUEUE, processProductImageJob, {
+  const worker = new Worker(PRODUCT_IMAGE_QUEUE, processImageJob, {
     connection: getBullMqConnectionOptions(process.env, { worker: true }),
     concurrency: config.BULLMQ_WORKER_CONCURRENCY,
     limiter: {
@@ -24,6 +24,7 @@ export function createProductWorker() {
     log("info", "active", {
       jobId: job.id,
       productId: job.data?.productId,
+      bannerId: job.data?.bannerId,
       attempt: job.attemptsMade + 1,
       imageCount: job.data?.images?.length,
     });
@@ -32,6 +33,7 @@ export function createProductWorker() {
   worker.on("completed", (job) => log("info", "completed", {
     jobId: job.id,
     productId: job.data?.productId,
+    bannerId: job.data?.bannerId,
     attemptsMade: job.attemptsMade,
   }));
 
@@ -65,6 +67,15 @@ export function createProductWorker() {
           error: statusError?.message || "Unable to update product status",
         });
       }
+    }
+
+    if (finalFailure) {
+      await cleanupFailedImageJob(job?.data).catch((cleanupError) => {
+        log("error", "failed-cleanup", {
+          jobId: job?.id,
+          error: cleanupError?.message || "Unable to clean failed image job",
+        });
+      });
     }
   });
 

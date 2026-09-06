@@ -8,7 +8,7 @@ This setup runs the production Next.js application, the existing BullMQ worker, 
 - A project-root `.env` containing the application's real local credentials. Start from `.env.example`; never commit `.env`.
 - Reachable Supabase PostgreSQL values for `DATABASE_URL` and `DIRECT_URL`
 
-The worker validates `DATABASE_URL`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` at startup. The application also needs its existing Clerk, Cloudinary, payment, shipping, and Google variables for the features you exercise. Compose overrides only `REDIS_URL` so both Node.js services use the internal Redis service.
+The worker validates `DATABASE_URL` at startup. The application also needs its existing Clerk, payment, shipping, and Google variables for the features you exercise. Compose overrides `REDIS_URL` and `IMAGE_STORAGE_ROOT` for both Node.js services.
 
 ## Start and stop
 
@@ -45,11 +45,13 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
-Redis data is stored in the named `redis-data` volume. `docker compose down -v` also deletes that local queue data, so use it only when a reset is intentional.
+Redis data is stored in `redis-data`. Staged and finalized images are stored in the shared `image-data` volume at `/data/ecommerce/images`. `docker compose down -v` deletes both volumes, so use it only when a full local reset is intentional.
 
 ## Networking
 
 Compose provides an internal network. Both `nextjs` and `worker` receive `REDIS_URL=redis://redis:6379`, where `redis` is Docker's service name. Redis is not published to the host. A Redis healthcheck gates the two Node.js services so they do not start before Redis is ready.
+
+Both Node.js services mount the same image volume. Next.js writes temporary uploads under `staging/`; the worker converts them to WebP under `products/{productId}/` or `banners/{bannerId}/`, persists relative metadata in Supabase, and removes the source. Next.js currently serves those files at `/images/...`; a future Nginx configuration can map that URL prefix directly to the same storage root.
 
 The image build uses the committed npm lockfile, generates Prisma Client through the existing npm scripts, and builds Next.js in production mode. Some existing pages query Prisma while Next.js prerenders them, so Compose provides `.env` to that single build step as an ephemeral BuildKit secret. The file is excluded from the build context and is not copied into an image layer. Any `NEXT_PUBLIC_*` value used by Next.js is still compiled into browser assets by Next.js's normal behavior and therefore must not be a secret.
 

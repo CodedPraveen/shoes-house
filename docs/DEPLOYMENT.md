@@ -40,13 +40,15 @@ The build script generates Prisma Client before the Next.js build. On Windows, a
 
 ```text
 Git repository
-  → Vercel build/runtime
+  → Docker Compose
+     → Next.js
+     → BullMQ worker
+     → Redis
+     → shared image-data volume at /data/ecommerce/images
   → Supabase PostgreSQL
   → Clerk
-  → Cloudinary
   → Razorpay
   → AfterShip
-  → Redis when configured
 ```
 
 The actual deployed topology must be verified in the hosting project.
@@ -58,8 +60,6 @@ The actual deployed topology must be verified in the hosting project.
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - Clerk public sign-in/sign-up/redirect paths
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
-- `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`
 - Public Google Maps variables
 - `NEXT_PUBLIC_FACEBOOK_PIXEL_ID`
 
@@ -68,7 +68,7 @@ The actual deployed topology must be verified in the hosting project.
 - `DATABASE_URL`, `DIRECT_URL`
 - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`
 - `ADMIN_EMAILS`, `ADMIN_URL`
-- Cloudinary server variables
+- `IMAGE_STORAGE_ROOT` (server-only; `/data/ecommerce/images` in Docker)
 - Razorpay server variables
 - AfterShip server variables
 - Server Google variables
@@ -94,7 +94,7 @@ Configure the corresponding signing secrets in the deployment environment. Test 
 
 - Apply migrations before serving code that depends on them.
 - Verify Clerk roles and both administrator experiences.
-- Verify one-image and multi-image Cloudinary uploads.
+- Verify one-image and multi-image queue processing, WebP serving, and shared-volume persistence.
 - Verify Razorpay test and production modes are not mixed.
 - Verify AfterShip carrier/webhook configuration.
 - Run owner/non-owner order access tests.
