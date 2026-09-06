@@ -31,7 +31,7 @@ export default async function StorefrontAdminPage({ searchParams }) {
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Content management" title="Storefront" description="Manage homepage product sections, campaign imagery, and navigation without changing storefront code." action={<div className="flex gap-2"><Link href="/new-admin/storefront?collection=SHOES" className={`rounded-xl px-4 py-2 text-sm ${collection === "SHOES" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white"}`}>Shoes</Link><Link href="/new-admin/storefront?collection=JEWELLERY" className={`rounded-xl px-4 py-2 text-sm ${collection === "JEWELLERY" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white"}`}>Jewellery</Link></div>} />
+      <PageHeader eyebrow="Content management" title="Storefront" description="Manage homepage product sections, campaign imagery, and navigation without changing storefront code." action={<div className="flex flex-wrap gap-2"><Link href="/new-admin/storefront/feature/categories?collection=SHOES" className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700">Categories</Link><Link href="/new-admin/storefront?collection=SHOES" className={`rounded-xl px-4 py-2 text-sm ${collection === "SHOES" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white"}`}>Shoes</Link><Link href="/new-admin/storefront?collection=JEWELLERY" className={`rounded-xl px-4 py-2 text-sm ${collection === "JEWELLERY" ? "bg-slate-950 text-white" : "border border-slate-200 bg-white"}`}>Jewellery</Link></div>} />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold">Homepage product sections</h2>
