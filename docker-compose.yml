@@ -1,0 +1,54 @@
+services:
+  nextjs:
+    build:
+      context: .
+      target: nextjs
+      secrets:
+        - app_env
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: worker
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+secrets:
+  app_env:
+    file: .env
