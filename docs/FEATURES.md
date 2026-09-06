@@ -1,6 +1,6 @@
 # Feature Status
 
-Status reflects source code inspected on 2026-08-10.
+Status reflects source code and Phase 1 verification on 2026-09-06.
 
 ## Complete
 
@@ -18,11 +18,11 @@ Status reflects source code inspected on 2026-08-10.
 - [x] Cash on Delivery order creation and new-admin call-confirmation workflow.
 - [x] Validated seven-state new-admin order workflow with stale-action protection and administrator audit history.
 - [x] Admin-managed storefront hero, sections, lifestyle content, selected products, and navbar destinations.
-- [x] Server-derived Cloudinary folders for new-admin catalog and storefront uploads.
+- [x] Persistent product/banner image paths shared by the Next.js and worker containers.
 - [x] Explicit checkout consent before a new shipping address is saved.
 - [x] Existing `/admin` system.
 - [x] Protected `/new-admin` operations system.
-- [x] Server-side Cloudinary device uploads for new-admin product images.
+- [x] Server-side JPG/PNG staging and BullMQ/Sharp WebP processing for admin product images.
 - [x] Product image ordering and edit preservation.
 - [x] Central product-image validation, storefront filtering, SafeImage fallback, and new-admin failure reporting.
 - [x] India Post tracking through AfterShip, including webhook and manual refresh.
@@ -34,13 +34,13 @@ Status reflects source code inspected on 2026-08-10.
 - [~] Inventory: paid fulfillment is atomic, but new-admin adjustment UI is not implemented and COD stock accounting is incomplete.
 - [~] Reviews: schema and guarded placeholder action exist; submission/display UI is planned.
 - [~] Refunds: service foundation exists; no finished admin refund workflow.
-- [~] Product image lifecycle: database removal works, but successful removal does not destroy the Cloudinary asset.
+- [~] Historical Cloudinary records remain readable but have not been bulk-migrated to local storage.
 - [~] Rate limiting: implemented in memory per process, not as a complete multi-instance control.
 
 ## Not verified by source-only validation
 
 - Current production deployment health.
 - Signed-in admin/customer behavior against real Clerk test identities.
-- Live database migrations and seed state.
-- Real Cloudinary, Razorpay, and AfterShip integration credentials.
+- Ongoing production database/seed correctness beyond the verified image migration.
+- Real Razorpay and AfterShip integration credentials.
 - Full end-to-end browser test coverage; no automated E2E suite was found.

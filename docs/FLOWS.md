@@ -3,24 +3,21 @@
 ## Product creation and images
 
 ```text
-Administrator selects local JPG/PNG/WEBP files
-  → imageFiles in the new-admin form
-  → uploadNewAdminProductImageAction
-  → shared imageUploadService
-  → server validates collection/category
-  → Cloudinary folder postmart/<collection>/<category>
-  → secure URLs in original selection order
-  → createProductAction
-  → product-admin-service
-  → Product + ProductImage + colors + sizes + variants
-  → RESTOCK inventory movements for positive initial stock
+Administrator selects local JPG/PNG files
+  → authenticated action validates content and writes a staging file
+  → product-admin-service stores Product(PROCESSING) and pending staging references
+  → existing BullMQ queue
+  → worker validates with Sharp and converts to WebP without resizing
+  → persistent /data/ecommerce/images/products/{productId}/{imageId}.webp
+  → ProductImage(storagePath, width, height, sortOrder)
+  → Product(READY) and staged-original cleanup
 ```
 
 The first image has `sortOrder = 0` and is the primary image. The current mapper treats the second image as the hover image. New-admin does not accept a pasted product-image URL.
 
-On edit, existing image URLs are retained by default. Explicitly removed records are soft-deleted, retained records keep their IDs, and new local files append after retained images.
+On edit, existing image records are retained by default. Explicitly removed records are soft-deleted, retained records keep their IDs, and new local files append after retained images.
 
-Customer product lists validate every product image before rendering. A product with a missing, malformed, non-HTTPS, or non-Cloudinary image is omitted from storefront lists and reported in new-admin as needing attention. `SafeImage` validates before calling `next/image` and falls back safely if a permitted source later fails to load.
+Current local metadata maps to `/images/...`; historical HTTPS Cloudinary URLs continue to render. `SafeImage` validates before calling `next/image` and falls back safely if an allowed source fails to load.
 
 ## Cart and Buy Now
 

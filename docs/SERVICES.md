@@ -43,7 +43,7 @@ New production-safe operational services:
 
 ## Media and location
 
-- `services/upload/image-upload-service.js` — server-side Cloudinary configuration, upload streams, file upload, batch upload, and delete.
+- `services/upload/image-upload-service.js` — validated JPG/PNG staging and cleanup for the shared filesystem/BullMQ image flow.
 - `google-geolocation-service.js` and related helpers — Google location integrations.
 
 ## Service rules

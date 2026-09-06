@@ -13,20 +13,11 @@ Important variables:
 
 The webhook uses Svix verification before user synchronization.
 
-## Cloudinary
+## Image storage
 
-New-admin product uploads validate the selected collection/category and use `postmart/<collection>/<category>`. Storefront assets use approved folders such as `postmart/storefront/hero` and `postmart/storefront/lifestyle`. Legacy admin uploads retain their existing configured folder.
+New product and hero-banner images are not sent to an external image provider. Next.js stages validated JPG/PNG files, Redis/BullMQ delivers jobs to the existing worker, and Sharp writes WebP files under `IMAGE_STORAGE_ROOT`. Next.js and the worker must mount the same persistent path. See [IMAGE_STORAGE.md](./IMAGE_STORAGE.md).
 
-Purpose: product image storage and delivery.
-
-Server implementation: `services/upload/image-upload-service.js`.
-
-Variables:
-
-- Server-only: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_UPLOAD_FOLDER`.
-- Existing widget support: `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
-
-The server upload folder is `CLOUDINARY_UPLOAD_FOLDER`, falling back to `aere/products`. New-admin uses local JPG/PNG/WEBP files and never receives the Cloudinary API secret.
+Historical Cloudinary URLs remain supported when reading existing database records; Cloudinary is not part of the active upload or finalization path.
 
 ## Razorpay
 
@@ -62,7 +53,7 @@ Variables:
 
 ## Redis
 
-Purpose: checkout locks and cache helpers when configured.
+Purpose: BullMQ image jobs, checkout locks, and cache helpers.
 
 Variable: `REDIS_URL`.
 
@@ -75,6 +66,6 @@ Purpose: customer address/location assistance and server geocoding.
 - Public/referrer-restricted: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`.
 - Server-only: `GOOGLE_GEOCODING_API_KEY`, `GOOGLE_GEOLOCATION_API_KEY`.
 
-## Vercel
+## Hosting instrumentation
 
-The repository includes Vercel Analytics and Speed Insights. Deployment is expected to provide environment variables and webhook endpoints, but actual production state must be verified outside source code.
+The repository includes Vercel Analytics and Speed Insights packages. The production application topology documented here is Docker Compose with separate Next.js, worker, and Redis services.

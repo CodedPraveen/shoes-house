@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { imageUploadService } from "@/services/upload/image-upload-service";
+import { enqueueBannerImage } from "@/queues";
 import {
   PRODUCT_SECTION_DEFAULTS,
   getProductSectionDefaults,
@@ -14,7 +15,6 @@ import {
 
 const COLLECTIONS = new Set(["SHOES", "JEWELLERY"]);
 const TARGET_TYPES = new Set(["COLLECTION", "CATEGORY", "PRODUCT", "CUSTOM"]);
-const ASSET_FOLDERS = { HERO: "hero", LIFESTYLE: "lifestyle", NAVBAR: "navbar" };
 
 function collectionValue(formData) {
   const value = String(formData.get("collection") ?? "");
@@ -64,15 +64,13 @@ async function validatedTargets(collection, targetType, categoryId, productId) {
 
 async function uploadStorefrontAsset(file, kind, alt) {
   if (!file || typeof file.arrayBuffer !== "function" || file.size === 0) return null;
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) {
-    throw new Error("Choose a JPG, PNG, or WEBP image up to 10 MB.");
+  if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 10 * 1024 * 1024) {
+    throw new Error("Choose a JPG or PNG image up to 10 MB.");
   }
-  const suffix = ASSET_FOLDERS[kind];
-  if (!suffix) throw new Error("Invalid storefront asset type.");
-  const folder = `postmart/storefront/${suffix}`;
-  const result = await imageUploadService.uploadFile(file, { folder });
+  if (kind !== "HERO") throw new Error("Invalid storefront asset type.");
+  const result = await imageUploadService.uploadFile(file);
   if (!result.ok) throw new Error(result.message || "Image upload failed.");
-  return prisma.mediaAsset.create({ data: { url: result.url, publicId: result.publicId, folder, alt: alt || null } });
+  return result;
 }
 
 function refreshStorefront(collection) {
@@ -226,9 +224,24 @@ export async function saveHeroSlideAction(formData) {
   const customHref = targetType === "CUSTOM" ? localHref(formData.get("customHref")) : null;
   const asset = await uploadStorefrontAsset(singleUpload(formData, "image"), "HERO", alt);
   if (!id && !asset) throw new Error("Choose a hero image.");
-  const data = { alt, enabled: formData.get("enabled") === "on", sortOrder: numberValue(formData.get("sortOrder")), targetType, ...target, customHref, ...(asset ? { mediaAssetId: asset.id } : {}) };
-  if (id) await prisma.heroSlide.updateMany({ where: { id, collection }, data });
-  else await prisma.heroSlide.create({ data: { collection, mediaAssetId: asset.id, ...data } });
+  const data = { collection, alt, enabled: formData.get("enabled") === "on", sortOrder: numberValue(formData.get("sortOrder")), targetType, ...target, customHref };
+  if (asset) {
+    const bannerId = id || randomUUID();
+    try {
+      await enqueueBannerImage({
+        bannerId,
+        mediaAssetId: randomUUID(),
+        create: !id,
+        image: { imageId: asset.imageId, sortOrder: data.sortOrder },
+        data,
+      });
+    } catch (error) {
+      await imageUploadService.delete(asset.imageId);
+      throw error;
+    }
+  } else {
+    await prisma.heroSlide.updateMany({ where: { id, collection }, data });
+  }
   refreshStorefront(collection);
 }
 

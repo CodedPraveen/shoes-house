@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db";
 import { productInclude } from "@/lib/product-include";
 import { mapProducts } from "@/lib/mappers/product-mapper";
+import { publicImageUrl } from "@/lib/image-storage";
+
+export function mediaAssetSource(asset) {
+  return publicImageUrl(asset?.storagePath) || asset?.url || "";
+}
 
 export const STOREFRONT_SECTION_DEFAULTS = Object.freeze([
   { key: "HERO", title: "Hero", subtitle: "Homepage campaign slides", sortOrder: 0 },
@@ -87,7 +92,7 @@ export async function getStorefrontConfig(collection) {
 
   return {
     sections: mergeSections(sections),
-    slides: slides.filter((slide) => slide.enabled).map((slide) => ({ id: slide.id, image: slide.mediaAsset.url, alt: slide.alt || slide.mediaAsset.alt || "Post Mart campaign", href: targetHref(slide, collection) })),
+    slides: slides.filter((slide) => slide.enabled).map((slide) => ({ id: slide.id, image: mediaAssetSource(slide.mediaAsset), alt: slide.alt || slide.mediaAsset.alt || "Post Mart campaign", href: targetHref(slide, collection) })),
     navbarItems: navbarItems.map((item) => ({ id: item.id, label: item.label, href: targetHref(item, collection) })),
   };
 }
@@ -112,7 +117,10 @@ export async function getStorefrontAdminData(collection) {
     productSections: getHomepageProductSections(config.sections, collection),
     categories,
     products,
-    slides,
+    slides: slides.map((slide) => ({
+      ...slide,
+      mediaAsset: { ...slide.mediaAsset, url: mediaAssetSource(slide.mediaAsset) },
+    })),
     navbarItems,
   };
 }

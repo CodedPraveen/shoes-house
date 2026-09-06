@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
 import { productInclude } from "@/lib/product-include";
-import { mapProduct } from "@/lib/mappers/product-mapper";
+import { mapProduct, productImageSource } from "@/lib/mappers/product-mapper";
 import { ensureUniqueProductSlug, slugify } from "@/lib/slugify";
 import { notDeleted } from "@/lib/prisma-helpers";
 import { validateProductImageUrl } from "@/lib/product-image";
-import { productCreationInputSchema } from "@/schemas/product.schema";
+import { productCreationInputSchema, productPersistenceInputSchema } from "@/schemas/product.schema";
 
 /**
  * Variants are kept temporarily for size/SKU compatibility.
@@ -41,7 +41,7 @@ function normalizeImages(
         !validateProductImageUrl(url).isValid
       ) {
         throw new Error(
-          "Product images must be uploaded through Cloudinary",
+          "Product images must be existing images or staged device uploads",
         );
       }
 
@@ -329,6 +329,11 @@ export const productAdminService = {
         id: true,
         processingStatus: true,
         pendingImageUrls: true,
+        processingJobId: true,
+        images: {
+          where: { deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+        },
       },
     });
   },
@@ -345,8 +350,20 @@ export const productAdminService = {
     });
   },
 
-  async update(id, input) {
-    input = productCreationInputSchema.parse(input);
+  async beginImageProcessing(id, pendingImageUrls) {
+    return prisma.product.update({
+      where: { id },
+      data: {
+        processingStatus: "PROCESSING",
+        processingError: null,
+        processedAt: null,
+        pendingImageUrls,
+      },
+    });
+  },
+
+  async update(id, input, { allowEmptyImages = false } = {}) {
+    input = (allowEmptyImages ? productPersistenceInputSchema : productCreationInputSchema).parse(input);
     const existing = await prisma.product.findFirst({
       where: {
         id,
@@ -403,12 +420,12 @@ export const productAdminService = {
       input.imageUrls,
       new Set(
         existing.images.map(
-          (image) => image.url,
+          (image) => productImageSource(image),
         ),
       ),
     );
 
-    if (!images.length) {
+    if (!images.length && !allowEmptyImages) {
       throw new Error(
         "At least one product image is required",
       );
@@ -446,12 +463,12 @@ export const productAdminService = {
 
         for (const image of existing.images) {
           const matches =
-            availableImages.get(image.url) || [];
+            availableImages.get(productImageSource(image)) || [];
 
           matches.push(image);
 
           availableImages.set(
-            image.url,
+            productImageSource(image),
             matches,
           );
         }

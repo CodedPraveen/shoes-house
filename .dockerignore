@@ -16,6 +16,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 coverage
+.data
 out
 build
 stitch_shoes_house_jewellery_vertical

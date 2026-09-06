@@ -10,6 +10,9 @@ services:
     environment:
       NODE_ENV: production
       REDIS_URL: redis://redis:6379
+      IMAGE_STORAGE_ROOT: /data/ecommerce/images
+    volumes:
+      - image-data:/data/ecommerce/images
     ports:
       - "3000:3000"
     depends_on:
@@ -27,6 +30,9 @@ services:
     environment:
       NODE_ENV: production
       REDIS_URL: redis://redis:6379
+      IMAGE_STORAGE_ROOT: /data/ecommerce/images
+    volumes:
+      - image-data:/data/ecommerce/images
     depends_on:
       redis:
         condition: service_healthy
@@ -48,6 +54,7 @@ services:
 
 volumes:
   redis-data:
+  image-data:
 
 secrets:
   app_env:

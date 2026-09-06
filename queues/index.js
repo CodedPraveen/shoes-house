@@ -1,5 +1,6 @@
 export {
   enqueueProductImages,
+  enqueueBannerImage,
   getProductImageJobState,
   productImageJobId,
   retryProductImages,

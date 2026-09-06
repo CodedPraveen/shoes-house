@@ -14,10 +14,17 @@ const optionalInteger = z.preprocess(
 export const productImageReferenceSchema = z.object({
   url: z.string().trim().refine(
     (value) => validateProductImageUrl(value).isValid,
-    "Product images must be secure Cloudinary URLs",
+    "Product images must be staged uploads, stored images, or historical Cloudinary URLs",
   ),
   publicId: z.string().trim().min(1).max(500).optional(),
 });
+
+const productImageUrlsSchema = z.array(
+  z.string().trim().refine(
+    (value) => validateProductImageUrl(value).isValid,
+    "Product images must be staged uploads, stored images, or historical Cloudinary URLs",
+  ),
+).max(8);
 
 export const productCreationInputSchema = z.object({
   name: z.string().trim().min(1).max(200),
@@ -37,12 +44,11 @@ export const productCreationInputSchema = z.object({
   categorySlug: z.string().trim().min(1).max(200),
   collection: z.enum(["SHOES", "JEWELLERY"]).optional(),
   sizes: z.array(z.coerce.number().int().positive()).max(100).default([]),
-  imageUrls: z.array(
-    z.string().trim().refine(
-      (value) => validateProductImageUrl(value).isValid,
-      "Product images must be secure Cloudinary URLs",
-    ),
-  ).min(1).max(8),
+  imageUrls: productImageUrlsSchema.min(1),
+});
+
+export const productPersistenceInputSchema = productCreationInputSchema.extend({
+  imageUrls: productImageUrlsSchema,
 });
 
 export function formatZodError(error) {
