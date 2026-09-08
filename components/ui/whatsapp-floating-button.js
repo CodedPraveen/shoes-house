@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function WhatsAppFloatingButton() {
-    const phoneNumber = "919166869035";
+    const phoneNumber = "+916378422421";
     const message = "I need help to by product on your website.";
 
     const [bottomOffset, setBottomOffset] = useState(20);
