@@ -176,7 +176,7 @@ export const invoiceService = {
         <h3>Customer Details</h3>
         <p><strong>${data.customer.name}</strong></p>
         ${data.customer.email ? `<p>${data.customer.email}</p>` : ""}
-        <p>${data.customer.phone}</p>
+        <p><span class="label">Mobile:</span> ${data.customer.phone}</p>
       </div>
       <div class="detail-box">
         <h3>Payment Details</h3>
@@ -199,6 +199,7 @@ export const invoiceService = {
           <div>
             <h3>Customer Address</h3>
             <p>${data.customer.name}</p>
+            <p><span class="label">Mobile:</span> ${data.customer.phone}</p>
             <p>${data.shipping.line1}</p>
             ${data.shipping.landmark ? `<p>${data.shipping.landmark}</p>` : ""}
             ${data.shipping.line2 ? `<p>${data.shipping.line2}</p>` : ""}
