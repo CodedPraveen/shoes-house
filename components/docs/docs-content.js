@@ -19,7 +19,7 @@ const sections = [
     id: "architecture",
     title: "2. Architecture",
     summary: "The App Router connects UI boundaries to server actions and route handlers, then services, Prisma, and Supabase PostgreSQL.",
-    code: "Browser\n  → Next.js App Router pages and components\n  → Server Components / Server Actions / API routes\n  → services/*\n  → Prisma\n  → Supabase PostgreSQL\n\nExternal: Clerk · Cloudinary · Razorpay · AfterShip · Google Maps · Redis (optional)",
+    code: "Browser\n  → Next.js App Router pages and components\n  → Server Components / Server Actions / API routes\n  → services/*\n  → Prisma\n  → Supabase PostgreSQL\n\nImages: Next.js staging → Redis/BullMQ → worker/Sharp → persistent filesystem\nExternal: Clerk · Razorpay · AfterShip · Google Maps",
     items: [
       "app/ owns route groups, pages, layouts, route handlers, and webhooks.",
       "components/ owns storefront, existing admin, new-admin, and shared UI.",
@@ -37,7 +37,7 @@ const sections = [
       "Next.js 16.2.6, React and React DOM 19.2.4, JavaScript, App Router.",
       "Prisma Client and CLI 6.19.0 with PostgreSQL/Supabase connection URLs.",
       "Clerk 7.4.2 and Svix 1.95.1 for identity and Clerk webhook verification.",
-      "Cloudinary 2.10.0, Razorpay 2.9.6, Axios 1.18.1, and ioredis 5.11.1.",
+      "BullMQ 6.0.8, ioredis 5.11.1, Sharp 0.34.5, Razorpay 2.9.6, and Axios 1.18.1.",
       "Tailwind CSS 4, Framer Motion 12.40.0, Lucide React 1.18.0, Vercel Analytics, and Speed Insights.",
     ],
   },
@@ -63,7 +63,7 @@ const sections = [
       "Category: unique slug, ProductCollection, parent/children hierarchy, sort order, and products.",
       "Product: unique slug, price, catalog flags, aggregate stock, category, collection, images, colors, sizes, variants, reviews, cart items, and order items.",
       "ProductVariant: unique SKU plus unique product/color/size; variant stock, active state, and InventoryMovement history.",
-      "ProductImage: URL, alt text, sortOrder, hover flag, soft deletion, and owning product. No Cloudinary public ID column exists.",
+      "ProductImage: relative storage path, width, height, ordering, hover flag, soft deletion, and owning product; the nullable URL remains for historical external records.",
       "Cart/CartItem and Wishlist use user/product relations; Wishlist and ProductVariant include compound uniqueness constraints.",
       "CheckoutSession/CheckoutSessionItem snapshot checkout lines and use CART or BUY_NOW mode.",
       "Order/OrderItem/Payment snapshot fulfilment and payment data; TrackingCheckpoint stores carrier events.",
@@ -85,18 +85,17 @@ const sections = [
     ],
   },
   {
-    id: "cloudinary",
-    title: "7. Product Images & Cloudinary",
-    summary: "Both admin product experiences use the same server-side Cloudinary service.",
-    code: "Device JPG/PNG/WEBP\n  → uploadNewAdminProductImageAction\n  → imageUploadService.uploadFile/uploadBuffer\n  → CLOUDINARY_UPLOAD_FOLDER (fallback: postmart/products)\n  → secure_url + public_id\n  → createProductAction/updateProductAction\n  → ProductImage(url, sortOrder, isHover)",
+    id: "image-storage",
+    title: "7. Persistent Image Storage",
+    summary: "Product and hero-banner uploads share local staging, BullMQ, Sharp, and persistent filesystem storage.",
+    code: "Device JPG/PNG (≤10 MB)\n  → authenticated server-side staging\n  → BullMQ product-image-processing queue\n  → worker validates content and converts with Sharp\n  → /data/ecommerce/images/{entity}/{entityId}/{imageId}.webp\n  → relative storagePath + width/height metadata\n  → remove staged original",
     items: [
-      "Cloudinary credentials are configured only in services/upload/image-upload-service.js; API secrets are never sent to the browser.",
-      "New-admin accepts local JPG, PNG, and WEBP files up to 10 MB each and uploads them in selection order.",
-      "The first URL has sortOrder 0 and remains the primary image. The second image is marked as the hover image by current mapping rules.",
-      "The upload action returns secure URL and public ID. ProductImage stores the URL only because the schema has no publicId field.",
-      "On edit, existing URLs are retained unless explicitly removed; retained ProductImage rows keep their IDs and ordering is reconciled.",
-      "Newly introduced product URLs must be HTTPS Cloudinary delivery URLs for the configured cloud. There is no URL-entry field in new-admin.",
-      "Removed database images are soft-deleted, but their Cloudinary assets are not currently destroyed during a successful edit.",
+      "IMAGE_STORAGE_ROOT selects the shared root; Docker mounts the image-data volume at /data/ecommerce/images in both Next.js and the worker.",
+      "Generated image IDs and validated entity IDs determine paths; original filenames never become storage paths.",
+      "Sharp converts JPG/PNG to WebP without resizing and records the actual output width and height.",
+      "The first product image retains sortOrder 0; the second remains the hover image under current mapping rules.",
+      "Workers write through a temporary output and atomically rename only a verified WebP, then finalize database metadata and delete staging.",
+      "The /images route serves current local files; legacy Cloudinary URLs remain readable for historical records but are not used for new uploads.",
     ],
   },
   {
@@ -165,7 +164,7 @@ const sections = [
     summary: "The existing /admin system is a separate, established interface and must remain behaviorally unchanged.",
     items: [
       "Routes cover dashboard, products, product create/edit, orders and order details, inventory, users, and newsletter email records.",
-      "It uses the existing AdminSidebar, server layout guard, product actions/service, Cloudinary uploader, order components, and tracking actions.",
+      "It uses the existing AdminSidebar, server layout guard, product actions/service, shared image uploader, order components, and tracking actions.",
       "Work on /new-admin must not redesign, reroute, or replace /admin.",
     ],
   },
@@ -176,7 +175,7 @@ const sections = [
     items: [
       "Routes currently present: dashboard, products, product create/edit, orders, order detail/export, inventory, users, and newsletter email records.",
       "All child pages inherit the server-side new-admin layout guard, including direct nested-route navigation.",
-      "Product mutations reuse admin-product-actions and product-admin-service; local files reuse the shared Cloudinary upload service.",
+      "Product mutations reuse admin-product-actions and product-admin-service; local files use the shared staged-image service and BullMQ worker.",
       "Order mutations use new-admin-order-actions and independently require an administrator.",
       "Read-heavy pages call new-admin-service from protected Server Components; no browser API exposes those service functions directly.",
     ],
@@ -186,7 +185,7 @@ const sections = [
     title: "15. API & Server Actions",
     summary: "Important network boundaries authenticate before returning or mutating sensitive resources.",
     items: [
-      "admin-product-actions: admin-only category reads, product CRUD, Cloudinary upload, and failed-upload cleanup; inputs are revalidated in the service layer.",
+      "admin-product-actions: admin-only category reads, product CRUD, staged image upload, queue submission, retry, and cleanup; inputs are revalidated in the service layer.",
       "new-admin-order-actions: admin-only COD confirmation, cancellation, tracking attachment, and carrier refresh with order-state checks.",
       "GET /new-admin/orders/export: admin-only CSV; 401 logged out, 403 non-admin.",
       "GET /api/orders/[orderId] and /invoice: authenticated owner or admin; validate the ID before access and authorize before tracking synchronization.",
@@ -206,7 +205,7 @@ const sections = [
       "Authenticated non-admin visitors receive a 404 boundary for new-admin pages; they are not redirected to the storefront.",
       "Customer order routes enforce owner-or-admin resource authorization and do not synchronize carrier state before authorization.",
       "Safe redirects are restricted to the normalized local new-admin subtree.",
-      "Cloudinary, Clerk, database, Razorpay, AfterShip, Redis, and server Google keys remain server-only.",
+      "Clerk, database, Razorpay, AfterShip, Redis, and server Google credentials remain server-only.",
       "Webhook signatures, rate limits, input validation, amount verification, atomic stock operations, and idempotency provide layered protection.",
     ],
   },
@@ -215,10 +214,10 @@ const sections = [
     title: "17. Environment Variables",
     summary: "Store values in local/deployment secrets; documentation lists names only.",
     items: [
-      "Public/client-safe: NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET, NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID, NEXT_PUBLIC_FACEBOOK_PIXEL_ID.",
-      "Server-only: DATABASE_URL, DIRECT_URL, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, ADMIN_EMAILS, ADMIN_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_UPLOAD_FOLDER, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, AFTERSHIP_API_KEY, AFTERSHIP_WEBHOOK_SECRET, GOOGLE_GEOCODING_API_KEY, GOOGLE_GEOLOCATION_API_KEY, REDIS_URL, PERF_LOG.",
+      "Public/client-safe: NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID, NEXT_PUBLIC_FACEBOOK_PIXEL_ID.",
+      "Server-only: DATABASE_URL, DIRECT_URL, CLERK_SECRET_KEY, CLERK_WEBHOOK_SECRET, ADMIN_EMAILS, ADMIN_URL, IMAGE_STORAGE_ROOT, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, AFTERSHIP_API_KEY, AFTERSHIP_WEBHOOK_SECRET, GOOGLE_GEOCODING_API_KEY, GOOGLE_GEOLOCATION_API_KEY, REDIS_URL, PERF_LOG.",
       "Required new-admin route setting: ADMIN_URL=/new-admin. It is a path, not an authorization secret.",
-      "Never create NEXT_PUBLIC_ADMIN_URL or expose CLERK_SECRET_KEY/CLOUDINARY_API_SECRET through a NEXT_PUBLIC name.",
+      "Never create NEXT_PUBLIC_ADMIN_URL or expose server credentials through a NEXT_PUBLIC name.",
     ],
   },
   {
@@ -235,8 +234,8 @@ const sections = [
   {
     id: "deployment",
     title: "19. Deployment",
-    summary: "Repository documentation targets Vercel with managed external services, but also lists a generic Node production flow.",
-    code: "Git repository → Vercel build\n  → Supabase PostgreSQL\n  → Clerk\n  → Cloudinary\n  → Razorpay\n  → AfterShip\n\nProduction: npm run db:deploy → npm run build → npm run start",
+    summary: "The Docker stack runs separate Next.js, BullMQ worker, and Redis services with external Supabase PostgreSQL.",
+    code: "Git repository → Docker Compose\n  → Next.js + BullMQ worker + Redis\n  → shared /data/ecommerce/images volume\n  → Supabase PostgreSQL\n  → Clerk · Razorpay · AfterShip\n\nProduction: npm run db:deploy → docker compose up --build -d",
     items: [
       "Configure production and preview environment variables independently.",
       "Register Clerk, Razorpay, and AfterShip webhook URLs against the deployed app and configure their signing secrets.",
@@ -252,7 +251,7 @@ const sections = [
       "[x] Shoe/jewellery category hierarchy, catalog, variants, search/filtering, cart, wishlist, addresses, and Buy Now.",
       "[x] Razorpay checkout, signature verification, webhook idempotency, orders, invoices, and paid-order inventory movements.",
       "[x] COD order creation and new-admin call-confirmation workflow.",
-      "[x] Cloudinary device uploads and ordered ProductImage persistence for new-admin.",
+      "[x] Persistent JPG/PNG staging, queued Sharp WebP conversion, and ordered ProductImage metadata persistence.",
       "[x] Existing /admin and protected /new-admin operations areas.",
       "[x] India Post tracking through AfterShip with webhook/manual refresh.",
       "[~] Reviews: model and guarded placeholder action exist; submission UI is planned.",
@@ -280,7 +279,7 @@ const sections = [
     items: [
       "P0: COD creation validates available stock but does not atomically decrement it or write a SALE movement, so concurrent/subsequent COD orders can oversell.",
       "P1: Product edit recreates variants; the current delete-first strategy can remove variant movement history through cascade behavior and can conflict with referenced order items.",
-      "P1: Successful removal of a ProductImage record does not delete the corresponding Cloudinary asset because public IDs are not persisted.",
+      "P1: Historical Cloudinary image records remain external and are not bulk-migrated by the local image-storage phase.",
       "P1: Rate limiting is in-memory per server instance; it is not a complete multi-region production control.",
       "P2: Refund logic and reviews have service/schema foundations but no finished user/admin workflow.",
       "P2: New-admin inventory is visibility-only and has no variant stock adjustment mutation UI.",
@@ -297,7 +296,7 @@ const sections = [
       "Derive user/admin identity from Clerk server APIs; never trust a client-provided userId or role.",
       "Keep all secret values server-only and document variable names rather than values.",
       "Reuse services and actions before creating duplicate business or integration layers.",
-      "Product images must use the existing Cloudinary service; new-admin must not accept pasted/external URLs.",
+      "New product and banner images must use the staged filesystem/BullMQ flow; admin forms must not accept pasted external URLs.",
       "Keep Prisma access and business rules in existing server/service boundaries rather than duplicating logic in UI components.",
       "Protect sensitive route handlers and server actions independently of page layouts.",
       "Preserve mobile-first behavior and avoid unrelated UI redesigns.",
@@ -336,7 +335,7 @@ export default function DocsContent() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search architecture, payments, Cloudinary…"
+              placeholder="Search architecture, payments, image storage…"
               className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-4 text-sm outline-none ring-indigo-200 focus:ring-2"
             />
           </label>

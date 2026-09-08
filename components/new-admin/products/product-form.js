@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 
 import {
   createProductAction,
   deleteProductAction,
-  getCloudinaryConfigAction,
   getSubCategoriesAction,
   updateProductAction,
 } from "@/actions/admin-product-actions";
 
-import AdminCloudinaryUpload from "@/components/admin/admin-cloudinary-upload";
+import AdminImageUpload from "@/components/admin/admin-image-upload";
 import LoadingButton from "@/components/ui/loading-button";
 import { buttonClass, inputClass } from "@/components/new-admin/ui";
 import { slugify } from "@/lib/slugify-text";
@@ -32,7 +30,6 @@ export default function NewAdminProductForm({
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
   const [categories, setCategories] = useState(subCategories ?? []);
 
   const [form, setForm] = useState({
@@ -63,43 +60,6 @@ export default function NewAdminProductForm({
 
     imageUrls: initial?.images ?? [],
   });
-
-  /*
-   * Load Cloudinary configuration.
-   *
-   * This only loads public widget configuration.
-   * The Cloudinary API secret stays on the server.
-   */
-  useEffect(() => {
-    let active = true;
-
-    async function loadCloudinaryConfig() {
-      try {
-        const config = await getCloudinaryConfigAction();
-
-        if (active) {
-          setCloudinaryConfig(config);
-        }
-      } catch (configError) {
-        console.error(
-          "[new-admin] Cloudinary config failed:",
-          configError,
-        );
-
-        if (active) {
-          setCloudinaryConfig({
-            configured: false,
-          });
-        }
-      }
-    }
-
-    loadCloudinaryConfig();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
  
   /*
@@ -319,38 +279,8 @@ export default function NewAdminProductForm({
     }
   }
 
-  /*
-   * Use a product-specific Cloudinary folder.
-   *
-   * Create mode:
-   * products/{slug}
-   *
-   * Edit mode:
-   * products/{productId}
-   *
-   * The existing Cloudinary widget accepts this folder
-   * through cloudinaryConfig.
-   */
-  const cloudinaryFolder = productId
-    ? `products/${productId}`
-    : form.slug
-      ? `products/${form.slug}`
-      : cloudinaryConfig?.folder || "postmart/products";
-
-  const productCloudinaryConfig = cloudinaryConfig
-    ? {
-      ...cloudinaryConfig,
-      folder: cloudinaryFolder,
-    }
-    : null;
-
   return (
     <>
-      <Script
-        src="https://upload-widget.cloudinary.com/global/all.js"
-        strategy="lazyOnload"
-      />
-
       <form
         onSubmit={submit}
         className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
@@ -583,39 +513,25 @@ export default function NewAdminProductForm({
                 </span>
               </div>
 
-              {!cloudinaryConfig ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-                  Loading image uploader...
-                </div>
-              ) : !cloudinaryConfig.configured ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
-                  Cloudinary is not configured.
-                </div>
-              ) : (
-                <AdminCloudinaryUpload
-                  imageUrls={form.imageUrls}
-                  onChange={handleImagesChange}
-                  cloudinaryConfig={
-                    productCloudinaryConfig
-                  }
-                  onUploadingChange={setUploading}
-                  uploadContext={{
-                    collection: form.collection,
-                    categorySlug: form.categorySlug,
-                  }}
-                />
-              )}
+              <AdminImageUpload
+                imageUrls={form.imageUrls}
+                onChange={handleImagesChange}
+                onUploadingChange={setUploading}
+                uploadContext={{
+                  collection: form.collection,
+                  categorySlug: form.categorySlug,
+                }}
+              />
 
               <p className="mt-2 text-xs text-slate-500">
                 Upload up to {MAX_PRODUCT_IMAGES} images
-                from your device or use a public image
-                URL.
+                from your device. JPG and PNG files are
+                converted to WebP without resizing.
               </p>
 
               <p className="mt-1 text-xs text-slate-500">
                 The server validates the selected collection
-                and category, then chooses the Cloudinary
-                folder.
+                and category before staging the upload.
               </p>
             </div>
 

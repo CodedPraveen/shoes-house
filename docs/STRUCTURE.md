@@ -29,14 +29,14 @@ docs/         Repository-level technical documentation
 
 ## Important components
 
-- `components/admin/` contains existing admin UI and Cloudinary upload components.
+- `components/admin/` contains existing admin UI and the shared staged image uploader.
 - `components/new-admin/` contains the newer operations shell, tables, product form, and order actions.
 - `components/docs/` renders the searchable `/docs` web page.
 - Shared storefront components live directly under `components/` or in collection-specific folders.
 
 ## Server boundaries
 
-- `actions/admin-product-actions.js` owns administrator product actions and Cloudinary upload actions.
+- `actions/admin-product-actions.js` owns administrator product actions, staged image uploads, queue submission, retries, and cleanup.
 - `actions/new-admin-order-actions.js` owns new-admin order mutations.
 - Customer mutations live in purpose-specific action files such as cart, checkout, address, wishlist, and review actions.
 - `services/*` should contain reusable business logic. UI components must not duplicate Prisma workflows.

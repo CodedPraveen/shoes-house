@@ -30,11 +30,11 @@ Before creating a service, helper, action, API, component, schema pattern, or in
 
 ## Product images
 
-- Product images use the existing Cloudinary service.
+- New product and banner images use the shared staged filesystem, BullMQ queue, and Sharp worker flow.
 - Do not introduce pasted or arbitrary external product-image URLs in new-admin.
-- Keep Cloudinary API secrets server-only.
+- Use generated image IDs and relative storage paths; never accept arbitrary filesystem paths or original filenames as permanent identity.
 - Preserve selected image order and existing edit images unless explicitly removed.
-- Do not store local paths or blob URLs.
+- Store controlled relative paths, never absolute VPS paths or browser blob URLs.
 
 ## Database
 
@@ -65,7 +65,7 @@ Never expose:
 
 - passwords, tokens, or private keys;
 - database credentials or connection URLs;
-- Clerk, Cloudinary, Razorpay, AfterShip, Redis, or server Google secrets;
+- Clerk, Razorpay, AfterShip, Redis, or server Google secrets;
 - webhook signing secrets;
 - server-only environment values through `NEXT_PUBLIC_*`, logs, documentation, responses, or client bundles.
 

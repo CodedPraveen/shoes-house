@@ -12,10 +12,10 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 
 ### Catalog
 
-- `Category` has a unique slug, `ProductCollection`, optional parent, child categories, sort order, and products.
+- `Category` has a unique slug, `ProductCollection`, optional parent, child categories, sort order, products, and optional local image metadata.
 - `Product` has a unique slug, catalog content, prices, flags, aggregate stock, category, collection, images, colors, sizes, variants, and commerce relations.
 - `ProductVariant` has a unique SKU and a compound unique constraint on product/color/size. Variant stock is the operational stock source.
-- `ProductImage` stores URL, optional alt text, `sortOrder`, `isHover`, timestamps, and soft deletion. It does not currently store a Cloudinary public ID.
+- `ProductImage` stores a nullable historical URL or current relative `storagePath`, width, height, optional alt text, `sortOrder`, `isHover`, timestamps, and soft deletion.
 - `ProductColor` is unique per product/color key.
 - `ProductSize` is unique per product/size.
 
@@ -31,7 +31,7 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 - `CheckoutSessionItem` snapshots product and variant details for checkout.
 - `Order` stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, checkpoints, and status history.
 - `OrderStatusHistory` records each operational status transition, its previous/new state, a server-derived actor identifier, timestamp, and optional note.
-- `MediaAsset`, `HeroSlide`, `StorefrontSection`, `StorefrontSectionItem`, and `NavbarItem` provide the lightweight storefront CMS without changing product-image ownership.
+- `MediaAsset` supports a nullable historical URL or current relative storage path plus dimensions; `HeroSlide`, `StorefrontSection`, `StorefrontSectionItem`, and `NavbarItem` provide the lightweight storefront CMS.
 - `OrderItem` snapshots name, image, SKU, price, color, size, and quantity so catalog edits do not rewrite order history.
 - `Payment` stores Razorpay identifiers, signature, webhook ID, amount, status, method, raw payload, refund time, and soft deletion.
 

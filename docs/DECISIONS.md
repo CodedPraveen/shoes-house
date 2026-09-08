@@ -24,9 +24,9 @@ Paid fulfillment uses `updateMany` with `stock >= quantity`, checks the affected
 
 Actions and route handlers own trust boundaries. Services own reusable business logic and Prisma work. UI components should not duplicate either.
 
-## ADR-007: Shared Cloudinary implementation
+## ADR-007: Shared persistent image implementation
 
-Both administrator systems use `services/upload/image-upload-service.js` and the same folder configuration. New-admin adds stricter file-input validation without creating a second storage architecture.
+Both administrator systems use the same validated staging service and existing BullMQ queue. The worker alone performs Sharp conversion and writes relative-path-addressed WebP files to the shared persistent filesystem. Historical Cloudinary URLs are a read-only compatibility path.
 
 ## ADR-008: Separate administrator interfaces
 

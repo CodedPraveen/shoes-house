@@ -36,10 +36,10 @@ Versions are taken from `package.json`:
 | Styling | Tailwind CSS 4, Framer Motion 12.40.0 |
 | Authentication | Clerk 7.4.2, Svix 1.95.1 |
 | Data | Prisma 6.19.0, PostgreSQL/Supabase |
-| Images | Cloudinary 2.10.0 |
+| Images | Sharp 0.34.5, BullMQ 6.0.8, persistent filesystem storage |
 | Payments | Razorpay 2.9.6 |
 | Tracking | AfterShip API through Axios |
-| Cache/locking | ioredis 5.11.1 with safe project wrappers |
+| Queue/cache/locking | Redis with BullMQ 6.0.8 and ioredis 5.11.1 |
 | Hosting instrumentation | Vercel Analytics and Speed Insights |
 
 ## Primary commands

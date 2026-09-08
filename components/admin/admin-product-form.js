@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { getSubCategoriesAction } from "@/actions/admin-product-actions";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import {
   createProductAction,
   updateProductAction,
   deleteProductAction,
-  getCloudinaryConfigAction,
 } from "@/actions/admin-product-actions";
-import AdminCloudinaryUpload from "@/components/admin/admin-cloudinary-upload";
+import AdminImageUpload from "@/components/admin/admin-image-upload";
 import LoadingButton from "@/components/ui/loading-button";
 import { COLOR_FILTERS } from "@/lib/constants";
 import { slugify } from "@/lib/slugify-text";
@@ -36,7 +34,6 @@ export default function AdminProductForm({
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const [cloudinaryConfig, setCloudinaryConfig] = useState(null);
   const [availableSubCategories, setAvailableSubCategories] =
     useState(subCategories);
 
@@ -66,11 +63,6 @@ export default function AdminProductForm({
       initial?.category ?? subCategories[0]?.slug ?? "",
 
   });
-  // this for cloudinary photo upload - for now its disable
-  // useEffect(() => {
-  //   getCloudinaryConfigAction().then(setCloudinaryConfig);
-  // }, []);  
-
   useEffect(() => {
     async function loadSubCategories() {
       const items = await getSubCategoriesAction(form.collection);
@@ -188,10 +180,6 @@ export default function AdminProductForm({
 
   return (
     <>
-      <Script
-        src="https://upload-widget.cloudinary.com/global/all.js"
-        strategy="lazyOnload"
-      />
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block sm:col-span-2">
@@ -335,10 +323,9 @@ export default function AdminProductForm({
 
         <div>
           <p className="mb-2 text-xs text-black/50">Images <span className="text-red-600" aria-hidden="true">*</span></p>
-          <AdminCloudinaryUpload
+          <AdminImageUpload
             imageUrls={form.imageUrls}
             onChange={(urls) => update("imageUrls", urls)}
-            cloudinaryConfig={cloudinaryConfig}
             onUploadingChange={setUploading}
           />
         </div>

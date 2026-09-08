@@ -9,7 +9,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 | COD inventory accounting | Planned | P0 | Atomically decrement stock and write SALE movements for COD without double-decrementing later | Checkout/order lifecycle decision |
 | Product variant edit safety | Planned | P0 | Preserve referenced variants and inventory history during product edits | Schema/service migration design |
 | Authentication integration tests | Planned | P1 | Test logged-out, customer, and admin page/API/action behavior | Clerk test identities |
-| Product upload integration tests | Planned | P1 | Verify one/multiple images, ordering, edit preservation, and cleanup | Cloudinary test account and DB |
+| Product upload integration tests | Partial | P1 | Automate one/multiple images, ordering, edit preservation, persistence, and cleanup | Isolated DB and Docker stack |
 | Shared rate limiting | Planned | P1 | Replace per-process limits with Redis/Upstash-backed limits | Production Redis choice |
 | E2E suite | Planned | P1 | Cover checkout, payment, orders, tracking, and admin access | Stable test environment |
 
@@ -38,7 +38,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 | Admin refund UI | Partial | P1 | Wire refund service with permission and idempotency checks | Razorpay refund policy |
 | Tracking exception workflow | Planned | P1 | Highlight stale/failed shipments and retry safely | AfterShip behavior |
 | Reporting | Planned | P2 | Add verified operational metrics and exports | Metric definitions |
-| Cloudinary asset lifecycle | Planned | P1 | Persist public IDs and delete assets safely after committed removals | Schema migration |
+| Historical image migration | Planned | P2 | Decide whether and how to copy legacy Cloudinary records into local storage | Explicit migration and retention policy |
 
 ## Phase 5 — Growth
 
@@ -53,7 +53,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 - COD can oversell because stock is validated but not decremented atomically on order creation.
 - Product edit recreates variants and can affect referenced order variants or movement history.
-- Successful image removal does not destroy the Cloudinary asset because `publicId` is not stored.
+- Historical Cloudinary records are readable but are not managed by the new local lifecycle.
 - Rate limiting is local to one application process.
 - Review and refund workflows are unfinished.
 - New-admin inventory is read-only.

@@ -33,13 +33,14 @@ Never accept an arbitrary customer/admin `userId` when the server can derive it.
 
 ## Product image safety
 
-- Cloudinary API credentials remain server-only.
-- New-admin accepts JPG, PNG, and WEBP files up to 10 MB each.
-- Newly introduced stored URLs must be HTTPS Cloudinary delivery URLs for the configured cloud.
+- New-admin accepts JPG and PNG files up to 10 MB each.
+- File signatures and Sharp metadata are checked instead of trusting the browser MIME type or filename.
+- Generated image IDs and validated entity IDs are the only values used to construct paths; arbitrary paths and original filenames are rejected.
+- New records store controlled relative paths, never absolute VPS paths or pasted external URLs.
 - Storefront lists exclude products containing missing or unsupported images; new-admin retains and reports those records for repair.
 - `SafeImage` validates before rendering `next/image` and switches to a local fallback after remote request failure.
-- Failed product saves attempt to destroy newly uploaded assets.
-- Successful image removal currently soft-deletes the database row but does not destroy the Cloudinary asset.
+- Failed finalization removes staged inputs and only outputs created by that failed attempt.
+- Historical Cloudinary URLs remain readable but are not accepted by the new upload path.
 
 ## Payments and inventory
 
@@ -58,7 +59,7 @@ Never accept an arbitrary customer/admin `userId` when the server can derive it.
 
 ## Secrets
 
-Never expose database URLs, `CLERK_SECRET_KEY`, `CLOUDINARY_API_SECRET`, Razorpay secrets, AfterShip secrets, Redis credentials, or server Google keys through `NEXT_PUBLIC_*`, browser code, logs, documentation, or API responses.
+Never expose database URLs, `CLERK_SECRET_KEY`, Razorpay secrets, AfterShip secrets, Redis credentials, or server Google keys through `NEXT_PUBLIC_*`, browser code, logs, documentation, or API responses.
 
 ## Remaining concerns
 

@@ -1,28 +1,28 @@
-import { productImageJobSchema } from "../schemas/queue.schema.js";
+import { bannerImageJobSchema, productImageJobSchema } from "../schemas/queue.schema.js";
 import { getProductImageQueue } from "./image.queue.js";
 
-export function productImageJobId(productId) {
-  return `product-images-${productId}`;
+export function productImageJobId(payload) {
+  return `product-images-${payload.productId}-${payload.images[0].imageId}`;
 }
 
 export async function enqueueProductImages(payload) {
-  const parsed = productImageJobSchema.parse(payload);
+  const parsed = productImageJobSchema.parse({ ...payload, type: "product" });
   const queue = getProductImageQueue();
-
   return queue.add("finalize-product-images", parsed, {
-    jobId: productImageJobId(parsed.productId),
+    jobId: productImageJobId(parsed),
   });
 }
 
-export async function getProductImageJobState(productId) {
-  const job = await getProductImageQueue().getJob(productImageJobId(productId));
+export async function getProductImageJobState(jobId) {
+  const job = await getProductImageQueue().getJob(String(jobId || ""));
   return job ? job.getState() : null;
 }
 
-export async function retryProductImages(payload) {
-  const parsed = productImageJobSchema.parse(payload);
+export async function retryProductImages(payload, existingJobId = null) {
+  const parsed = productImageJobSchema.parse({ ...payload, type: "product" });
   const queue = getProductImageQueue();
-  const existing = await queue.getJob(productImageJobId(parsed.productId));
+  const jobId = existingJobId || productImageJobId(parsed);
+  const existing = await queue.getJob(jobId);
 
   if (existing) {
     const state = await existing.getState();
@@ -36,5 +36,12 @@ export async function retryProductImages(payload) {
     await existing.remove();
   }
 
-  return enqueueProductImages(parsed);
+  return queue.add("finalize-product-images", parsed, { jobId });
+}
+
+export async function enqueueBannerImage(payload) {
+  const parsed = bannerImageJobSchema.parse({ ...payload, type: "banner" });
+  return getProductImageQueue().add("finalize-banner-image", parsed, {
+    jobId: `banner-image-${parsed.bannerId}-${parsed.image.imageId}`,
+  });
 }

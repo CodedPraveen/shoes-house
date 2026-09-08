@@ -10,7 +10,8 @@ Browser
   → Prisma
   → Supabase PostgreSQL
 
-External systems: Clerk, Cloudinary, Razorpay, AfterShip, Google Maps, optional Redis
+External systems: Clerk, Razorpay, AfterShip, Google Maps
+Image processing: Next.js staging → Redis/BullMQ → worker/Sharp → shared persistent filesystem
 ```
 
 ## Responsibilities
@@ -57,4 +58,4 @@ Business mutations should follow this direction:
 UI → authenticated action/route → service → Prisma transaction → cache invalidation
 ```
 
-Do not call third-party APIs with secrets from Client Components.
+Do not call third-party APIs with secrets from Client Components. Do not process image binaries in the Next.js request process beyond validation and staging.

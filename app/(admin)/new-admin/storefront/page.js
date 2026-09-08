@@ -76,7 +76,7 @@ export default async function StorefrontAdminPage({ searchParams }) {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold">Hero slides</h2>
-        <p className="mt-1 text-sm text-slate-500">Uploads are routed by the server to postmart/storefront/hero.</p>
+        <p className="mt-1 text-sm text-slate-500">JPG and PNG uploads are converted to WebP by the image worker.</p>
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
           {data.slides.map((slide) => (
             <StorefrontActionForm key={slide.id} action={saveHeroSlideAction} errorMessage="The hero slide could not be saved. Please try again." className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
@@ -88,8 +88,8 @@ export default async function StorefrontAdminPage({ searchParams }) {
               <label htmlFor={`hero-image-${slide.id}`} className="text-xs font-medium text-slate-600 sm:col-span-2">
                 Replacement image <span className="font-normal text-slate-400">(optional)</span>
               </label>
-              <input id={`hero-image-${slide.id}`} type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby={`hero-image-help-${slide.id}`} className="text-sm sm:col-span-2" />
-              <p id={`hero-image-help-${slide.id}`} className="text-xs text-slate-500 sm:col-span-2">Choose one JPG, PNG, or WEBP image up to 10 MB. Leave empty to keep the current image.</p>
+              <input id={`hero-image-${slide.id}`} type="file" name="image" accept="image/jpeg,image/png" aria-describedby={`hero-image-help-${slide.id}`} className="text-sm sm:col-span-2" />
+              <p id={`hero-image-help-${slide.id}`} className="text-xs text-slate-500 sm:col-span-2">Choose one JPG or PNG image up to 10 MB. Leave empty to keep the current image.</p>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={slide.enabled} />Enabled</label>
               <LoadingButton className={buttonClass}>Save slide</LoadingButton>
               <p className="text-xs text-slate-500 sm:col-span-2">Destination: {targetHref(slide, collection)}</p>
@@ -104,8 +104,8 @@ export default async function StorefrontAdminPage({ searchParams }) {
             <label htmlFor="new-hero-image" className="text-xs font-medium text-slate-600 sm:col-span-2">
               Hero image <span className="text-rose-600" aria-hidden="true">*</span>
             </label>
-            <input id="new-hero-image" type="file" name="image" required accept="image/jpeg,image/png,image/webp" aria-describedby="new-hero-image-help" className="text-sm sm:col-span-2" />
-            <p id="new-hero-image-help" className="text-xs text-slate-500 sm:col-span-2">Choose one JPG, PNG, or WEBP image up to 10 MB.</p>
+            <input id="new-hero-image" type="file" name="image" required accept="image/jpeg,image/png" aria-describedby="new-hero-image-help" className="text-sm sm:col-span-2" />
+            <p id="new-hero-image-help" className="text-xs text-slate-500 sm:col-span-2">Choose one JPG or PNG image up to 10 MB.</p>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked />Enabled</label>
             <LoadingButton className={buttonClass}>Add slide</LoadingButton>
           </StorefrontActionForm>
