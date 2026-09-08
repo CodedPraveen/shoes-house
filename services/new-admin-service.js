@@ -390,7 +390,10 @@ export async function getProductsPage(params = {}) {
         images: {
           where: { deletedAt: null },
           orderBy: { sortOrder: "asc" },
-          select: { url: true },
+          select: {
+            url: true,
+            storagePath: true,
+          },
         },
       },
     }),
