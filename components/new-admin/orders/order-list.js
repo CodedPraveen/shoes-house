@@ -252,9 +252,9 @@ export default function OrderList({ orders }) {
         </div>
       ) : null}
 
-      {/* Desktop */}
-      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-        <table className="h-64 w-full text-left text-sm">
+      {/* Orders table */}
+      <div className="max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="h-64 min-w-[1200px] w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">
@@ -383,99 +383,7 @@ export default function OrderList({ orders }) {
         </table>
       </div>
 
-      {/* Mobile */}
-      <div className="space-y-3 md:hidden">
-        {orders.map((order) => (
-          <article
-            key={order.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex gap-3">
-                <input
-                  aria-label={`Select ${order.orderNumber}`}
-                  type="checkbox"
-                  checked={selected.includes(order.id)}
-                  onChange={() => toggle(order.id)}
-                />
-
-                <div>
-                  <Link
-                    href={`/new-admin/orders/${order.id}`}
-                    className="font-semibold"
-                  >
-                    {order.orderNumber}
-                  </Link>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    {new Date(order.createdAt).toLocaleString("en-IN")}
-                  </p>
-                </div>
-              </div>
-
-              <p className="font-semibold">
-                {formatPrice(order.total)}
-              </p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-xs text-slate-400">Customer</p>
-                <p className="font-medium">{order.shipFullName}</p>
-
-                <a
-                  href={`tel:${order.shipPhone}`}
-                  className="text-indigo-600"
-                >
-                  {order.shipPhone}
-                </a>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Payment</p>
-                <p>{order.paymentMethod}</p>
-
-                <StatusBadge tone={toneFor(order.paymentStatus)}>
-                  {order.paymentStatus}
-                </StatusBadge>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Status</p>
-
-                <StatusBadge tone={toneFor(order.workflowLabel)}>
-                  {order.workflowLabel}
-                </StatusBadge>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  {order.workflow?.nextAction}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Tracking</p>
-
-                <p className="truncate">
-                  {order.trackingNumber || "Not added"}
-                </p>
-              </div>
-            </div>
-
-            <details className="mt-4 border-t border-slate-100 pt-3">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
-                Manage order
-                <ExternalLink className="size-4" />
-              </summary>
-
-              <div className="mt-3">
-                <OrderActions order={order} compact />
-              </div>
-            </details>
-          </article>
-        ))}
-      </div>
-
-      {/* Desktop manage modal */}
+      {/* Manage modal */}
       <ManageOrderModal
         order={manageOrder}
         onClose={() => setManageOrder(null)}
