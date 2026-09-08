@@ -91,10 +91,14 @@ export default function CheckoutClient() {
         const rows = await getAddressesAction();
         setSavedAddresses(rows);
         if (rows.length > 0) {
-          const def = rows.find((a) => a.isDefault) ?? rows[0];
-          setSelectedAddressId(def.id);
-          setForm(addressToForm(def));
-          setAddressMode("saved");
+          if (touchedFieldsRef.current.size === 0) {
+            const def = rows.find((a) => a.isDefault) ?? rows[0];
+            setSelectedAddressId(def.id);
+            setForm(addressToForm(def));
+            setAddressMode("saved");
+          } else {
+            setAddressMode("new");
+          }
         } else {
           setAddressMode("new");
         }
@@ -133,6 +137,7 @@ export default function CheckoutClient() {
 
   function handleLocationConfirmed({ address, coordinates }) {
     setError("");
+    touchedFieldsRef.current.add("location");
     setAddressMode("new");
     setSelectedAddressId(null);
     setSelectedCoordinates(coordinates);
@@ -256,6 +261,7 @@ export default function CheckoutClient() {
   return (
     <form
       onSubmit={handlePay}
+      noValidate
       className="mx-auto grid w-full max-w-[1400px] gap-10 px-5 pb-20 sm:px-8 lg:grid-cols-2"
     >
       <div className="space-y-6 no54123-3xl border border-black/10 bg-zinc-50 p-6">

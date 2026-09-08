@@ -19,6 +19,9 @@ function AddressField({
   inputMode,
   maxLength,
   autoComplete,
+  type = "text",
+  pattern,
+  title,
 }) {
   const errorId = `${field}-error`;
 
@@ -30,10 +33,13 @@ function AddressField({
         {!required ? <span className="ml-1 font-normal text-black/40">(optional)</span> : null}
       </span>
       <input
+        type={type}
         required={required}
         inputMode={inputMode}
         maxLength={maxLength}
         autoComplete={autoComplete}
+        pattern={pattern}
+        title={title}
         placeholder={placeholder}
         value={value || ""}
         onChange={(event) => onChange(field, event.target.value)}
@@ -48,7 +54,13 @@ function AddressField({
   );
 }
 
-export default function AddressFields({ form, errors = {}, onChange, showLabel = false }) {
+export default function AddressFields({
+  form,
+  errors = {},
+  onChange,
+  showLabel = false,
+  showContactFields = true,
+}) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {showLabel ? (
@@ -63,28 +75,37 @@ export default function AddressFields({ form, errors = {}, onChange, showLabel =
           autoComplete="off"
         />
       ) : null}
-      {/* <AddressField
-        field="fullName"
-        label="Name"
-        placeholder="Recipient's full name"
-        value={form.fullName}
-        onChange={onChange}
-        error={errors.fullName}
-        required
-        autoComplete="name"
-      /> */}
-      {/* <AddressField
-        field="phone"
-        label="Phone"
-        placeholder="10-digit mobile number"
-        value={form.phone}
-        onChange={(field, value) => onChange(field, value.replace(/\D/g, "").slice(0, 10))}
-        error={errors.phone}
-        required
-        inputMode="numeric"
-        maxLength={10}
-        autoComplete="tel"
-      /> */}
+      {showContactFields ? (
+        <>
+          <AddressField
+            field="fullName"
+            label="Name"
+            placeholder="Recipient's full name"
+            value={form.fullName}
+            onChange={onChange}
+            error={errors.fullName}
+            required
+            autoComplete="name"
+          />
+          <AddressField
+            field="phone"
+            label="Mobile number"
+            placeholder="Enter your mobile number"
+            value={form.phone}
+            onChange={(field, value) =>
+              onChange(field, value.replace(/\D/g, "").slice(0, 10))
+            }
+            error={errors.phone}
+            required
+            type="tel"
+            inputMode="numeric"
+            maxLength={10}
+            pattern="[6-9][0-9]{9}"
+            title="Enter a valid 10-digit Indian mobile number"
+            autoComplete="tel"
+          />
+        </>
+      ) : null}
       <AddressField
         field="line1"
         label="Address 1"

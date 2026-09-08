@@ -16,13 +16,15 @@ import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
 import { revalidatePath } from "next/cache";
 
 async function resolveShippingAddress(userId, { addressId, ...manual }) {
+  let candidate = manual;
+
   if (addressId) {
     const saved = await addressService.getByIdForUser(userId, addressId);
     if (!saved) throw new Error("Saved address not found");
-    return toCheckoutAddress(saved);
+    candidate = toCheckoutAddress(saved);
   }
 
-  const result = validateAddressInput(manual);
+  const result = validateAddressInput(candidate);
   if (!result.isValid) {
     throw new Error(firstAddressError(result.errors));
   }

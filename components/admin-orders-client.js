@@ -73,6 +73,12 @@ export default function AdminOrdersClient({ initialOrders }) {
             <p className="text-sm text-black/60">
               {order.customer}
             </p>
+            <a
+              href={`tel:${order.shipPhone}`}
+              className="text-sm text-black/60 hover:text-black"
+            >
+              {order.shipPhone}
+            </a>
 
             <p className="text-xs text-black/45">
               {new Date(order.createdAt).toLocaleDateString("en-IN")}

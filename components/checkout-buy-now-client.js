@@ -97,10 +97,14 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         const rows = await getAddressesAction();
         setSavedAddresses(rows);
         if (rows.length > 0) {
-          const def = rows.find((a) => a.isDefault) ?? rows[0];
-          setSelectedAddressId(def.id);
-          setForm(addressToForm(def));
-          setAddressMode("saved");
+          if (touchedFieldsRef.current.size === 0) {
+            const def = rows.find((a) => a.isDefault) ?? rows[0];
+            setSelectedAddressId(def.id);
+            setForm(addressToForm(def));
+            setAddressMode("saved");
+          } else {
+            setAddressMode("new");
+          }
         } else {
           setAddressMode("new");
         }
@@ -132,6 +136,13 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       setError(firstAddressError(validation.errors));
+      if (
+        Object.keys(validation.errors).some(
+          (field) => field !== "fullName" && field !== "phone",
+        )
+      ) {
+        setShowMobileAddressFields(true);
+      }
       return;
     }
 
@@ -248,6 +259,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
   function handleLocationConfirmed({ address, coordinates }) {
     setError("");
+    touchedFieldsRef.current.add("location");
     setAddressMode("new");
     setSelectedAddressId(null);
     setSelectedCoordinates(coordinates);
@@ -267,6 +279,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   return (
     <form
       onSubmit={handlePay}
+      noValidate
       className="mx-auto grid w-full max-w-350 gap-10 px-0 pb-20 sm:px-8 lg:grid-cols-2"
     >
       <div className="space-y-6 no54123-3xl border p-6">
@@ -348,21 +361,55 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           <div className="space-y-3">
             {/* Mobile: Name + Phone only */}
             <div className="grid grid-cols-2 gap-3 sm:hidden">
-              <input
-                type="text"
-                value={form.fullName || customerName}
-                onChange={(e) => updateField("fullName", e.target.value)}
-                placeholder="Name"
-                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none"
-              />
+              <label>
+                <span className="mb-1.5 block text-xs font-medium text-black/70">
+                  Name <span className="text-red-600" aria-hidden="true">*</span>
+                </span>
+                <input
+                  type="text"
+                  required
+                  autoComplete="name"
+                  value={form.fullName || customerName}
+                  onChange={(e) => updateField("fullName", e.target.value)}
+                  placeholder="Name"
+                  aria-invalid={Boolean(fieldErrors.fullName)}
+                  aria-describedby={fieldErrors.fullName ? "buy-now-name-error" : undefined}
+                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none ${fieldErrors.fullName ? "border-red-500" : "border-black/10"}`}
+                />
+                {fieldErrors.fullName ? (
+                  <p id="buy-now-name-error" className="mt-1 text-xs text-red-600" role="alert">
+                    {fieldErrors.fullName}
+                  </p>
+                ) : null}
+              </label>
 
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
-                placeholder="Phone"
-                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none"
-              />
+              <label>
+                <span className="mb-1.5 block text-xs font-medium text-black/70">
+                  Mobile number <span className="text-red-600" aria-hidden="true">*</span>
+                </span>
+                <input
+                  type="tel"
+                  required
+                  inputMode="numeric"
+                  maxLength={10}
+                  pattern="[6-9][0-9]{9}"
+                  title="Enter a valid 10-digit Indian mobile number"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(e) =>
+                    updateField("phone", e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  placeholder="Enter your mobile number"
+                  aria-invalid={Boolean(fieldErrors.phone)}
+                  aria-describedby={fieldErrors.phone ? "buy-now-phone-error" : undefined}
+                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none ${fieldErrors.phone ? "border-red-500" : "border-black/10"}`}
+                />
+                {fieldErrors.phone ? (
+                  <p id="buy-now-phone-error" className="mt-1 text-xs text-red-600" role="alert">
+                    {fieldErrors.phone}
+                  </p>
+                ) : null}
+              </label>
             </div>
 
             {/* Mobile: hidden address fields dropdown */}
@@ -391,6 +438,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
                     form={{ ...form, fullName: form.fullName || customerName }}
                     errors={fieldErrors}
                     onChange={updateField}
+                    showContactFields={false}
                   />
                 </div>
               )}

@@ -60,6 +60,7 @@ export async function getAdminOrdersAction() {
     orderNumber: order.orderNumber,
     customer: order.user?.name || order.user?.email || "—",
     email: order.user?.email,
+    shipPhone: order.shipPhone,
     total: order.total,
     status: order.status,
     paymentStatus: order.payments[0]?.status ?? "PENDING",
