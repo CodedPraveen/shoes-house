@@ -362,12 +362,12 @@ export default function ProductDetailClient({ product }) {
                 </div>
 
                 {/* Main image */}
-                <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-[2/3]">
+                <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-auto lg:max-h-[600px]">
                   {currentImage ? (
                     <img
                       src={currentImage}
                       alt={product.name}
-                      className="h-full w-full select-none object-contain"
+                      className="h-auto max-h-[600px] w-full select-none object-contain"
                       draggable={false}
                     />
                   ) : (
