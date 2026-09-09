@@ -19,7 +19,7 @@ export default async function ShoesPage() {
     await Promise.all([
       productService.getBestSellers(6, "SHOES"),
 
-      productService.getTrending(8, "SHOES"),
+      productService.getTrending(16, "SHOES"),
 
       categoryService.getSubCategoriesBySlug("shoes"),
       getStorefrontConfig("SHOES"),
