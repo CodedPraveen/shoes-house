@@ -10,11 +10,11 @@ export default function TrendingGrid({
   return (
     <SectionReveal
       id="trending"
-      className="sm:px-8 lg:pb-10"
+      className="border-t border-black/8 px-5 py-12 sm:px-8 sm:py-16 lg:py-24"
       loading="lazy"
     >
-      <div className="mx-auto w-full max-w-350 space-y-10">
-        <div className="mb-0 flex flex-wrap items-end justify-between gap-4 px-5 pb-8">
+      <div className="mx-auto w-full max-w-[1400px] space-y-8 sm:space-y-10">
+        <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="space-y-3">
             {subtitle ? (
               <p className="text-xs uppercase tracking-[0.25em] text-black/45">
@@ -29,7 +29,7 @@ export default function TrendingGrid({
 
           <Link
             href="/trending"
-            className="no54123-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-black/15 px-5 py-2 text-sm font-medium transition hover:bg-black hover:text-white"
           >
             View All
           </Link>

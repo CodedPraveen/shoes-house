@@ -1,14 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import SafeImage from "@/components/ui/safe-image";
 
 const AUTOPLAY_DELAY = 5000;
 const isPlaceholder = (src) => src.startsWith("PASTE_IMAGE_URL_");
-const passthroughLoader = ({ src }) => src;
 
 export default function HeroSection({ slides = [] }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -136,6 +135,8 @@ export default function HeroSection({ slides = [] }) {
     }
   };
 
+  if (!slides.length) return null;
+
   return (
     <section
       aria-label="Featured collections"
@@ -148,7 +149,7 @@ export default function HeroSection({ slides = [] }) {
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) resumeAutoplay(400);
       }}
-      className="group relative mt-16 w-full overflow-hidden bg-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-950"
+      className="group relative mt-17 w-full overflow-hidden bg-neutral-950 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
     >
       <div
         ref={emblaRef}
@@ -158,10 +159,10 @@ export default function HeroSection({ slides = [] }) {
         onPointerCancel={handlePointerEnd}
         className="overflow-hidden touch-pan-y select-none"
       >
-        <div className="flex gap-2 lg:gap-2.5">
+        <div className="flex">
           {slides.map((slide, index) => {
             const content = (
-              <div className="relative aspect-[2/3] w-full overflow-hidden bg-neutral-100">
+              <div className="relative h-[70svh] min-h-[30rem] w-full overflow-hidden bg-neutral-900 sm:h-[72svh] lg:h-[min(78vh,52rem)] lg:min-h-[38rem]">
                 {isPlaceholder(slide.image) ? (
                   <div className="absolute inset-0 grid place-items-center bg-neutral-200">
                     <div className="mx-6 max-w-xs text-center text-neutral-950">
@@ -174,8 +175,7 @@ export default function HeroSection({ slides = [] }) {
                     </div>
                   </div>
                 ) : (
-                  <Image
-                    loader={passthroughLoader}
+                  <SafeImage
                     src={slide.image}
                     alt={slide.alt}
                     fill
@@ -186,6 +186,22 @@ export default function HeroSection({ slides = [] }) {
                     className="pointer-events-none object-cover object-center"
                   />
                 )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-black/15" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[1400px] items-end justify-between gap-6 px-5 pb-14 text-white sm:px-8 sm:pb-16 lg:px-12 lg:pb-20">
+                  <div className="max-w-2xl">
+                    <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-white/70 sm:text-xs">
+                      Post Mart edit
+                    </p>
+                    <p className="mt-3 text-3xl font-medium leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                      {slide.alt}
+                    </p>
+                  </div>
+                  {slide.href ? (
+                    <span className="hidden shrink-0 rounded-full border border-white/50 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur-sm sm:inline-flex">
+                      Shop the edit
+                    </span>
+                  ) : null}
+                </div>
               </div>
             );
 
@@ -194,7 +210,7 @@ export default function HeroSection({ slides = [] }) {
                 key={slide.id}
                 // aria-roledescription=""
                 aria-label={`${index + 1} of ${slides.length}`}
-                className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_60%] lg:flex-[0_0_40%]"
+                className="min-w-0 flex-[0_0_100%]"
               >
                 {slide.href ? (
                   <Link

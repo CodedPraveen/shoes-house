@@ -38,7 +38,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 | Admin refund UI | Partial | P1 | Wire refund service with permission and idempotency checks | Razorpay refund policy |
 | Tracking exception workflow | Planned | P1 | Highlight stale/failed shipments and retry safely | AfterShip behavior |
 | Reporting | Planned | P2 | Add verified operational metrics and exports | Metric definitions |
-| Historical image migration | Planned | P2 | Decide whether and how to copy legacy Cloudinary records into local storage | Explicit migration and retention policy |
+| Historical image migration | Planned | P2 | Decide whether and how to copy legacy external records into local storage | Explicit migration and retention policy |
 
 ## Phase 5 — Growth
 
@@ -53,7 +53,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 - COD can oversell because stock is validated but not decremented atomically on order creation.
 - Product edit recreates variants and can affect referenced order variants or movement history.
-- Historical Cloudinary records are readable but are not managed by the new local lifecycle.
+- Legacy external image records require migration or administrator re-upload before they can render.
 - Rate limiting is local to one application process.
 - Review and refund workflows are unfinished.
 - New-admin inventory is read-only.

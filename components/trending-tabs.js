@@ -28,13 +28,13 @@ export default function TrendingTabs({ initialProducts }) {
             {/* =========================
           TABS
       ========================== */}
-            <div className="flex gap-3 overflow-x-auto px-5 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none sm:gap-3">
                 {tabs.map((tab) => (
                     <button
                         key={tab}
                         type="button"
                         onClick={() => setActiveTab(tab)}
-                        className={`shrink-0 border px-5 py-2 text-sm transition ${activeTab === tab
+                        className={`min-h-10 shrink-0 rounded-full border px-5 py-2 text-sm capitalize transition ${activeTab === tab
                                 ? "bg-black text-white"
                                 : "bg-white text-black"
                             }`}

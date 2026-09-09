@@ -3,6 +3,11 @@ import { resolveImageStoragePath } from "@/lib/image-storage";
 
 export const runtime = "nodejs";
 
+const FALLBACK_WEBP = Buffer.from(
+  "UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAgA0JaQAA3AA/vq2gAA=",
+  "base64",
+);
+
 export async function GET(_request, { params }) {
   try {
     const segments = (await params).path;
@@ -15,6 +20,13 @@ export async function GET(_request, { params }) {
       },
     });
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response(FALLBACK_WEBP, {
+      headers: {
+        "Content-Type": "image/webp",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-Image-Fallback": "missing",
+      },
+    });
   }
 }

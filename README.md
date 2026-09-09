@@ -1,6 +1,6 @@
 # Post Mart — Scalable Ecommerce
 
-A modern, scalable eCommerce platform built with **Next.js**, **Prisma**, **Supabase**, **Clerk**, **Razorpay**, and **Cloudinary**.
+A modern, scalable eCommerce platform built with **Next.js**, **Prisma**, **Supabase**, **Clerk**, **Razorpay**, Redis/BullMQ, and Sharp.
 
 ---
 
@@ -12,7 +12,7 @@ A modern, scalable eCommerce platform built with **Next.js**, **Prisma**, **Supa
 - Supabase PostgreSQL
 - Clerk Authentication
 - Razorpay Payments
-- Cloudinary Image Storage
+- Persistent local/VPS image storage with BullMQ + Sharp WebP processing
 - Tailwind CSS
 - Vercel
 

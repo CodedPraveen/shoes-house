@@ -216,6 +216,21 @@ async function processBannerImageJob(data) {
   }
 
   await cleanupStaged([data.image]);
+
+  if (!data.create && current?.mediaAssetId !== data.mediaAssetId) {
+    const removed = await prisma.mediaAsset.deleteMany({
+      where: {
+        id: current.mediaAssetId,
+        heroSlides: { none: {} },
+        sectionItems: { none: {} },
+      },
+    }).catch(() => ({ count: 0 }));
+
+    if (removed.count === 1 && current.mediaAsset.storagePath) {
+      await removeStoredImage(current.mediaAsset.storagePath).catch(() => {});
+    }
+  }
+
   return { bannerId: data.bannerId, storagePath: converted.storagePath };
 }
 

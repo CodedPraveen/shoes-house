@@ -5,7 +5,7 @@
 - [x] Phase 0–1: Prisma schema, seed, slug URLs, product reads
 - [x] Phase 4: Razorpay, orders, invoices, addresses, webhooks
 - [x] Pre-Phase 5 hardening: InventoryMovement, webhook idempotency, refunds foundation
-- [x] Phase 5: Admin product CRUD, Cloudinary, newsletter
+- [x] Phase 5: Admin product CRUD, persistent local image processing, newsletter
 - [x] Performance audit: cart speed, Buy Now isolation, caching, recommendations
 
 ## Phase 6 — Reviews

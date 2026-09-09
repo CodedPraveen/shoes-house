@@ -13,7 +13,7 @@ categories/{categoryId}/{imageId}.webp
 banners/{bannerId}/{imageId}.webp
 ```
 
-The database stores relative `storagePath` values, dimensions, ordering, and ownership metadata. It never stores `/data/ecommerce/images` as part of a new image record. Existing Cloudinary URLs remain readable for historical records only.
+The database stores relative `storagePath` values, dimensions, ordering, and ownership metadata. It never stores `/data/ecommerce/images` as part of a new image record. Legacy external URL fields are not used for storefront rendering.
 
 ## Processing flow
 
@@ -24,7 +24,7 @@ The database stores relative `storagePath` values, dimensions, ordering, and own
 5. The worker verifies that output width and height equal the input dimensions, atomically moves the output into its permanent directory, and commits relative metadata to Supabase.
 6. Only after successful database finalization does the worker delete the staged original.
 
-On a final job failure, the worker marks product processing as failed where applicable and removes staged/partial files. Generated IDs and database upserts make product retries idempotent. Historical Cloudinary data is not migrated by this change.
+On a final job failure, the worker marks product processing as failed where applicable and removes staged/partial files. Generated IDs and database upserts make product retries idempotent. Legacy external records require a separate, reviewed data migration or administrator re-upload.
 
 ## Docker and local development
 

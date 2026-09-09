@@ -70,4 +70,4 @@ Healthy worker logs include a `started` event, then `active`, `completed`, or ex
 
 For verification, submit a real staged JPG/PNG through BullMQ and confirm all of the following: the output is WebP, dimensions are unchanged, metadata is committed, the source is removed, `/images/...` serves the file, and the file survives container recreation. Use isolated records and remove them after testing.
 
-Historical Cloudinary URLs remain readable for existing records only. Cloudinary credentials and asset verification are not part of this queue or worker.
+Legacy external URLs are not read by the application. Credentials for external image providers are not part of this queue or worker.

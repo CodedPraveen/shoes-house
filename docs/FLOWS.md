@@ -17,7 +17,7 @@ The first image has `sortOrder = 0` and is the primary image. The current mapper
 
 On edit, existing image records are retained by default. Explicitly removed records are soft-deleted, retained records keep their IDs, and new local files append after retained images.
 
-Current local metadata maps to `/images/...`; historical HTTPS Cloudinary URLs continue to render. `SafeImage` validates before calling `next/image` and falls back safely if an allowed source fails to load.
+Current local metadata maps to `/images/...`. `SafeImage` validates local sources before calling `next/image` and falls back safely when a source is missing or fails to load.
 
 ## Cart and Buy Now
 

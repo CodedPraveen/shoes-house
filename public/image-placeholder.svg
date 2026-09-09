@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" role="img" aria-labelledby="title description">
+  <title id="title">Image unavailable</title>
+  <desc id="description">A neutral Post Mart image placeholder.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5f5f4"/>
+      <stop offset="1" stop-color="#d6d3d1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#background)"/>
+  <g fill="none" stroke="#78716c" stroke-width="8" opacity=".55">
+    <rect x="330" y="475" width="540" height="420" rx="32"/>
+    <circle cx="485" cy="620" r="54"/>
+    <path d="m370 835 165-170 105 106 78-78 112 142"/>
+  </g>
+  <text x="600" y="1010" fill="#57534e" font-family="Arial, sans-serif" font-size="40" letter-spacing="10" text-anchor="middle">POST MART</text>
+</svg>

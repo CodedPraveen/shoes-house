@@ -311,9 +311,10 @@ These optimizations are beyond current scope but recommended for Phase 6:
    - Next.js Image automatically handles AVIF
    - Verify browser support via DevTools
 
-3. **Cloudinary Integration**
-   - Move product images to Cloudinary (already configured)
-   - Use Cloudinary transformation API for responsive sizing
+3. **Persistent Image Pipeline**
+   - Keep new product images on the shared local/VPS volume
+   - Use BullMQ and Sharp to generate verified WebP assets before publication
+   - Re-upload or migrate legacy external records before they can be displayed
 
 ---
 

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import SafeImage from "../ui/safe-image";
-import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 
 const MENU_DATA = {
     categories: [
@@ -170,11 +168,11 @@ export default function ShoesDropdown({
                       "
                                             >
                                                 <div className="relative aspect-square overflow-hidden">
-                                                    <SafeImage
-                                                        // src={product.image}
-                                                        src={optimizeCloudinaryImage(product.image)}
+                                                    <Image
+                                                        src={product.image}
                                                         alt={product.title}
                                                         fill
+                                                        sizes="(min-width: 1024px) 16vw, 33vw"
                                                         className="
                             object-cover
                             transition

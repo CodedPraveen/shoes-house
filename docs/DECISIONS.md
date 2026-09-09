@@ -26,7 +26,7 @@ Actions and route handlers own trust boundaries. Services own reusable business 
 
 ## ADR-007: Shared persistent image implementation
 
-Both administrator systems use the same validated staging service and existing BullMQ queue. The worker alone performs Sharp conversion and writes relative-path-addressed WebP files to the shared persistent filesystem. Historical Cloudinary URLs are a read-only compatibility path.
+Both administrator systems use the same validated staging service and existing BullMQ queue. The worker alone performs Sharp conversion and writes relative-path-addressed WebP files to the shared persistent filesystem. Storefront rendering accepts only local image paths.
 
 ## ADR-008: Separate administrator interfaces
 

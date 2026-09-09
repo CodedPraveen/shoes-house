@@ -13,7 +13,7 @@ Premium sneaker ecommerce (**Post Mart**) built with Next.js 16 App Router, Java
 | Database | Supabase PostgreSQL |
 | ORM | Prisma 6.19 |
 | Payments | Razorpay (webhook = source of truth) |
-| Media | Cloudinary (admin uploads) |
+| Media | Persistent local/VPS storage; Redis/BullMQ + Sharp WebP processing; local paths only |
 | Deploy | Vercel |
 
 ## Key directories

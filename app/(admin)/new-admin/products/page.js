@@ -8,6 +8,7 @@ import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
 import LoadingButton from "@/components/ui/loading-button";
 import { retryProductImageProcessingAction } from "@/actions/admin-product-actions";
+import { productImageSource } from "@/lib/mappers/product-mapper";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
           <div className="divide-y divide-slate-100">
             {data.products.map((product) => (
               <div key={product.id} className="grid gap-4 p-4 sm:grid-cols-[4rem_1fr_auto] sm:items-center lg:grid-cols-[4rem_1.5fr_1fr_1fr_1fr_auto]">
-                <div className="relative size-16 overflow-hidden rounded-xl bg-slate-100"><SafeImage src={product.images[0]?.url} alt={product.name} fill sizes="64px" className="object-cover" /></div>
+                <div className="relative size-16 overflow-hidden rounded-xl bg-slate-100"><SafeImage src={productImageSource(product.images[0])} alt={product.name} fill sizes="64px" className="object-cover" /></div>
                 <div className="min-w-0"><p className="truncate font-semibold">{product.name}</p><p className="mt-1 text-xs text-slate-500">{product.brand} · {product.collection}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Category</p><p className="text-sm font-medium">{product.category.name}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Price</p><p className="text-sm font-semibold">{formatPrice(product.price)}</p></div>

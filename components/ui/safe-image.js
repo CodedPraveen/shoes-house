@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { validateImageSource } from "@/lib/product-image";
 
-const DEFAULT_FALLBACK = "/jewellery/placeholder.svg";
+const DEFAULT_FALLBACK = "/image-placeholder.svg";
 
 export default function SafeImage({
     src,
