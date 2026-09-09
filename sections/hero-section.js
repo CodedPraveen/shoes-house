@@ -17,17 +17,22 @@ export default function HeroSection({ slides = [] }) {
     duration: 28,
     skipSnaps: false,
   });
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
   const draggedRef = useRef(false);
   const pointerStartRef = useRef(null);
   const resumeTimerRef = useRef(null);
 
   const resumeAutoplay = useCallback((delay = 900) => {
     window.clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = window.setTimeout(() => setIsPaused(false), delay);
+
+    resumeTimerRef.current = window.setTimeout(() => {
+      setIsPaused(false);
+    }, delay);
   }, []);
 
   const scrollPrev = useCallback(() => {
@@ -45,7 +50,10 @@ export default function HeroSection({ slides = [] }) {
   useEffect(() => {
     if (!emblaApi) return;
 
-    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    const onSelect = () => {
+      setSelectedIndex(emblaApi.selectedScrollSnap());
+    };
+
     emblaApi.on("select", onSelect).on("reInit", onSelect);
     onSelect();
 
@@ -55,18 +63,30 @@ export default function HeroSection({ slides = [] }) {
   }, [emblaApi]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updateMotionPreference = () => setPrefersReducedMotion(mediaQuery.matches);
-    const updateVisibility = () => setIsPageVisible(!document.hidden);
+    const mediaQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+
+    const updateMotionPreference = () => {
+      setPrefersReducedMotion(mediaQuery.matches);
+    };
+
+    const updateVisibility = () => {
+      setIsPageVisible(!document.hidden);
+    };
 
     updateMotionPreference();
     updateVisibility();
+
     mediaQuery.addEventListener("change", updateMotionPreference);
     document.addEventListener("visibilitychange", updateVisibility);
 
     return () => {
       mediaQuery.removeEventListener("change", updateMotionPreference);
-      document.removeEventListener("visibilitychange", updateVisibility);
+      document.removeEventListener(
+        "visibilitychange",
+        updateVisibility,
+      );
     };
   }, []);
 
@@ -86,7 +106,14 @@ export default function HeroSection({ slides = [] }) {
     }, AUTOPLAY_DELAY);
 
     return () => window.clearTimeout(autoplayTimer);
-  }, [emblaApi, isPageVisible, isPaused, prefersReducedMotion, selectedIndex, slides.length]);
+  }, [
+    emblaApi,
+    isPageVisible,
+    isPaused,
+    prefersReducedMotion,
+    selectedIndex,
+    slides.length,
+  ]);
 
   useEffect(
     () => () => {
@@ -97,18 +124,29 @@ export default function HeroSection({ slides = [] }) {
 
   const handlePointerDown = (event) => {
     window.clearTimeout(resumeTimerRef.current);
+
     setIsPaused(true);
+
     draggedRef.current = false;
-    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+
+    pointerStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+    };
   };
 
   const handlePointerMove = (event) => {
     const start = pointerStartRef.current;
+
     if (!start) return;
 
     const horizontalDistance = Math.abs(event.clientX - start.x);
     const verticalDistance = Math.abs(event.clientY - start.y);
-    if (horizontalDistance > 8 && horizontalDistance > verticalDistance) {
+
+    if (
+      horizontalDistance > 8 &&
+      horizontalDistance > verticalDistance
+    ) {
       draggedRef.current = true;
     }
   };
@@ -130,6 +168,7 @@ export default function HeroSection({ slides = [] }) {
       event.preventDefault();
       scrollPrev();
     }
+
     if (event.key === "ArrowRight") {
       event.preventDefault();
       scrollNext();
@@ -146,7 +185,11 @@ export default function HeroSection({ slides = [] }) {
       onMouseLeave={() => resumeAutoplay(400)}
       onFocusCapture={() => setIsPaused(true)}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) resumeAutoplay(400);
+        if (
+          !event.currentTarget.contains(event.relatedTarget)
+        ) {
+          resumeAutoplay(400);
+        }
       }}
       className="group relative mt-16 w-full overflow-hidden bg-white outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-950"
     >
@@ -168,6 +211,7 @@ export default function HeroSection({ slides = [] }) {
                       <p className="text-[0.6rem] font-medium uppercase tracking-[0.28em] text-neutral-500 sm:text-[0.65rem]">
                         Campaign image
                       </p>
+
                       <p className="mt-3 text-xs font-light leading-relaxed text-neutral-700 sm:text-sm">
                         Upload this campaign image in new-admin.
                       </p>
@@ -181,7 +225,7 @@ export default function HeroSection({ slides = [] }) {
                     fill
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
-                    sizes="(min-width: 1024px) 40vw, (min-width: 640px) 60vw, 85vw"
+                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 60vw, 85vw"
                     draggable={false}
                     className="pointer-events-none object-cover object-center"
                   />
@@ -192,9 +236,8 @@ export default function HeroSection({ slides = [] }) {
             return (
               <div
                 key={slide.id}
-                // aria-roledescription=""
                 aria-label={`${index + 1} of ${slides.length}`}
-                className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_60%] lg:flex-[0_0_40%]"
+                className="min-w-0 flex-[0_0_100%] sm:flex-[0_0_60%] lg:flex-[0_0_30%]"
               >
                 {slide.href ? (
                   <Link
@@ -223,15 +266,24 @@ export default function HeroSection({ slides = [] }) {
             aria-label="Show previous hero slide"
             className="absolute left-4 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white opacity-0 backdrop-blur-md transition-[opacity,background-color,transform] duration-300 hover:scale-105 hover:bg-black/50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:flex lg:left-6 lg:group-hover:opacity-100"
           >
-            <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={1.5} />
+            <ChevronLeft
+              aria-hidden="true"
+              className="size-5"
+              strokeWidth={1.5}
+            />
           </button>
+
           <button
             type="button"
             onClick={scrollNext}
             aria-label="Show next hero slide"
             className="absolute right-4 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white opacity-0 backdrop-blur-md transition-[opacity,background-color,transform] duration-300 hover:scale-105 hover:bg-black/50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:flex lg:right-6 lg:group-hover:opacity-100"
           >
-            <ChevronRight aria-hidden="true" className="size-5" strokeWidth={1.5} />
+            <ChevronRight
+              aria-hidden="true"
+              className="size-5"
+              strokeWidth={1.5}
+            />
           </button>
 
           <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-3 sm:bottom-4">
@@ -250,14 +302,20 @@ export default function HeroSection({ slides = [] }) {
                 }}
               />
             </div>
+
             <span className="min-w-11 text-[0.6rem] font-medium tabular-nums tracking-[0.14em] text-white drop-shadow-sm">
-              {String(selectedIndex + 1).padStart(2, "0")} / {slides.length}
+              {String(selectedIndex + 1).padStart(2, "0")} /{" "}
+              {slides.length}
             </span>
           </div>
         </>
       ) : null}
 
-      <p className="sr-only" aria-live="polite" aria-atomic="true">
+      <p
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         Slide {selectedIndex + 1} of {slides.length}
       </p>
     </section>

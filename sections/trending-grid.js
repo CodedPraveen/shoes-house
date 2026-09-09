@@ -35,7 +35,7 @@ export default function TrendingGrid({
           </Link>
         </div>
 
-        <TrendingTabs initialProducts={products.slice(0, 6)} />
+        <TrendingTabs initialProducts={products.slice(0, 16)} />
       </div>
     </SectionReveal>
   );
