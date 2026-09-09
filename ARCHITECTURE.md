@@ -19,7 +19,12 @@ flowchart TB
   subgraph External["External Services"]
     Clerk[Clerk Auth]
     RZP[Razorpay Payments]
-    CLD[Cloudinary CDN]
+  end
+
+  subgraph Images["Image Pipeline"]
+    Redis[Redis / BullMQ]
+    Worker[Image Worker / Sharp]
+    Storage[(Persistent image storage)]
   end
 
   subgraph Data["Data Layer"]
@@ -40,7 +45,9 @@ flowchart TB
   Clerk -->|webhooks user.*| API
   RZP -->|webhooks payment.*| API
   SA -->|checkout| RZP
-  SA -->|admin uploads| CLD
+  SA -->|stage admin uploads| Redis
+  Redis --> Worker
+  Worker -->|WebP| Storage
 
   Clerk -.->|session| SA
 ```
@@ -57,7 +64,7 @@ Browser
 ```
 
 Payments: **Razorpay webhook** is authoritative (not frontend success).  
-Media: **Cloudinary** for admin product images.
+Media: admin uploads use persistent local/VPS storage through Redis/BullMQ and Sharp. Storefront image reads resolve only validated local storage paths.
 
 ## Core tables (ER overview)
 
@@ -108,7 +115,7 @@ erDiagram
 
 - Create / edit / soft-delete: `product-admin-service.js` + `admin-product-actions.js`
 - Pages: `/admin/products/new`, `/admin/products/[id]/edit`
-- Images: Cloudinary (`image-upload-service.js`) + optional upload widget
+- Images: filesystem staging (`image-upload-service.js`) → BullMQ → Sharp worker → persistent WebP storage
 - New products appear on storefront via `revalidatePath` (products, slug, categories, search)
 
 ## Rate limiting
@@ -125,7 +132,7 @@ npm run dev
 
 ## Env
 
-See `.env.local.example` — database, Clerk (`CLERK_WEBHOOK_SECRET`), Razorpay, Cloudinary, `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` (widget).
+See `.env.local.example` — database, Clerk (`CLERK_WEBHOOK_SECRET`), Razorpay, Redis/BullMQ, and `IMAGE_STORAGE_ROOT`.
 
 ## Manual testing checklist
 
@@ -159,7 +166,7 @@ See `.env.local.example` — database, Clerk (`CLERK_WEBHOOK_SECRET`), Razorpay,
 ### Admin
 - [ ] Create product → visible on `/products` and `/product/[slug]`
 - [ ] Edit / soft-delete product
-- [ ] Cloudinary image upload
+- [ ] Local image upload → BullMQ worker → stored WebP
 - [ ] Orders dashboard
 - [ ] Inventory movement history (Prisma Studio)
 

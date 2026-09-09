@@ -7,15 +7,14 @@ import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
 import { decrementStockForSale } from "@/services/inventory-service";
+import { productImageSource } from "@/lib/mappers/product-mapper";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
 function buildLineFromProduct(product, variant, size, quantity) {
   const images = product.images || [];
   const primary =
-    images.find((i) => !i.isHover)?.url ??
-    images[0]?.url ??
-    "";
+    productImageSource(images.find((i) => !i.isHover) ?? images[0]);
 
   return {
     productId: product.id,

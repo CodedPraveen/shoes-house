@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 
 import ProductRecommendations from "@/components/product-recommendations";
+import SafeImage from "@/components/ui/safe-image";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
-import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { getProductPath } from "@/lib/product-routes";
 
 const hasClerk = Boolean(
@@ -77,9 +77,7 @@ export default function ProductDetailClient({ product }) {
   const { isSignedIn } = useAuthSafe();
   const isSoldOut = product.stock === 0;
 
-  const images = (product.images || []).map(
-    optimizeCloudinaryImage,
-  );
+  const images = product.images || [];
 
   const [activeImage, setActiveImage] = useState(0);
   const [size, setSize] = useState(product.sizes[0] ?? null);
@@ -362,12 +360,15 @@ export default function ProductDetailClient({ product }) {
                 </div>
 
                 {/* Main image */}
-                <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-[2/3]">
+                <div className="relative aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-[2/3]">
                   {currentImage ? (
-                    <img
+                    <SafeImage
                       src={currentImage}
                       alt={product.name}
-                      className="h-full w-full select-none object-contain"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 55vw"
+                      className="select-none object-contain"
                       draggable={false}
                     />
                   ) : (
@@ -423,11 +424,13 @@ export default function ProductDetailClient({ product }) {
                         activeImage === index
                       }
                     >
-                      <img
+                      <SafeImage
                         src={image}
                         alt={`${product.name} ${index + 1
                           }`}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="76px"
+                        className="object-cover"
                         draggable={false}
                       />
                     </button>
@@ -448,18 +451,20 @@ export default function ProductDetailClient({ product }) {
                     onClick={() =>
                       setActiveImage(index)
                     }
-                    className={`h-16 w-16 shrink-0 overflow-hidden border bg-[#f7f7f5] ${activeImage === index
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-[#f7f7f5] ${activeImage === index
                       ? "border-black"
                       : "border-black/10"
                       }`}
                     aria-label={`View image ${index + 1
                       }`}
                   >
-                    <img
+                    <SafeImage
                       src={image}
                       alt={`${product.name} ${index + 1
                         }`}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="64px"
+                      className="object-cover"
                       draggable={false}
                     />
                   </button>

@@ -14,7 +14,7 @@ const optionalInteger = z.preprocess(
 export const productImageReferenceSchema = z.object({
   url: z.string().trim().refine(
     (value) => validateProductImageUrl(value).isValid,
-    "Product images must be staged uploads, stored images, or historical Cloudinary URLs",
+    "Product images must be staged uploads or stored local images",
   ),
   publicId: z.string().trim().min(1).max(500).optional(),
 });
@@ -22,7 +22,7 @@ export const productImageReferenceSchema = z.object({
 const productImageUrlsSchema = z.array(
   z.string().trim().refine(
     (value) => validateProductImageUrl(value).isValid,
-    "Product images must be staged uploads, stored images, or historical Cloudinary URLs",
+    "Product images must be staged uploads or stored local images",
   ),
 ).max(8);
 

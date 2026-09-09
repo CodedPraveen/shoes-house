@@ -34,7 +34,7 @@ Status reflects source code and Phase 1 verification on 2026-09-06.
 - [~] Inventory: paid fulfillment is atomic, but new-admin adjustment UI is not implemented and COD stock accounting is incomplete.
 - [~] Reviews: schema and guarded placeholder action exist; submission/display UI is planned.
 - [~] Refunds: service foundation exists; no finished admin refund workflow.
-- [~] Historical Cloudinary records remain readable but have not been bulk-migrated to local storage.
+- [~] Legacy external image records require an explicit migration or administrator re-upload.
 - [~] Rate limiting: implemented in memory per process, not as a complete multi-instance control.
 
 ## Not verified by source-only validation

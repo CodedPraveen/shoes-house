@@ -95,7 +95,7 @@ const sections = [
       "Sharp converts JPG/PNG to WebP without resizing and records the actual output width and height.",
       "The first product image retains sortOrder 0; the second remains the hover image under current mapping rules.",
       "Workers write through a temporary output and atomically rename only a verified WebP, then finalize database metadata and delete staging.",
-      "The /images route serves current local files; legacy Cloudinary URLs remain readable for historical records but are not used for new uploads.",
+      "The /images route serves validated local files; external image URLs are not fetched by product or hero rendering.",
     ],
   },
   {
@@ -279,7 +279,7 @@ const sections = [
     items: [
       "P0: COD creation validates available stock but does not atomically decrement it or write a SALE movement, so concurrent/subsequent COD orders can oversell.",
       "P1: Product edit recreates variants; the current delete-first strategy can remove variant movement history through cascade behavior and can conflict with referenced order items.",
-      "P1: Historical Cloudinary image records remain external and are not bulk-migrated by the local image-storage phase.",
+      "P1: Legacy external image records require an explicit, production-safe migration or administrator re-upload before they can render.",
       "P1: Rate limiting is in-memory per server instance; it is not a complete multi-region production control.",
       "P2: Refund logic and reviews have service/schema foundations but no finished user/admin workflow.",
       "P2: New-admin inventory is visibility-only and has no variant stock adjustment mutation UI.",

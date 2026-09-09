@@ -8,9 +8,9 @@ export default function FeaturedProducts({
   subtitle = "Featured Products",
 }) {
   return (
-    <SectionReveal className="px-0 py-1 sm:px-8 lg:py-10">
-      <div className="mx-auto w-full max-w-350 space-y-10">
-        <div className="mb-2 flex flex-wrap items-end justify-between gap-4 px-5 py-2 sm:mb-10">
+    <SectionReveal className="px-0 py-12 sm:px-8 sm:py-16 lg:py-24">
+      <div className="mx-auto w-full max-w-[1400px] space-y-8 sm:space-y-10">
+        <div className="flex flex-wrap items-end justify-between gap-5 px-5 sm:px-0">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.25em] text-black/45">
               {subtitle}
@@ -23,7 +23,7 @@ export default function FeaturedProducts({
 
           <Link
             href="/shoes/products"
-            className="no54123-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-black/15 px-5 py-2 text-sm font-medium transition hover:bg-black hover:text-white"
           >
             View All Shoes
           </Link>

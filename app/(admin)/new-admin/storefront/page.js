@@ -15,6 +15,7 @@ import {
 import LoadingButton from "@/components/ui/loading-button";
 import StorefrontTargetFields from "@/components/new-admin/storefront-target-fields";
 import StorefrontActionForm from "@/components/new-admin/storefront-action-form";
+import SafeImage from "@/components/ui/safe-image";
 
 export const metadata = { title: "Storefront" };
 export const dynamic = "force-dynamic";
@@ -81,7 +82,18 @@ export default async function StorefrontAdminPage({ searchParams }) {
           {data.slides.map((slide) => (
             <StorefrontActionForm key={slide.id} action={saveHeroSlideAction} errorMessage="The hero slide could not be saved. Please try again." className="grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
               <HiddenCollection collection={collection} /><input type="hidden" name="id" value={slide.id} />
-              <a href={slide.mediaAsset.url} target="_blank" rel="noreferrer" className="truncate text-xs text-indigo-600 sm:col-span-2">Current image</a>
+              <div className="sm:col-span-2">
+                <div className="relative aspect-[16/7] overflow-hidden rounded-xl bg-slate-100">
+                  <SafeImage
+                    src={slide.mediaAsset.url}
+                    alt={slide.alt}
+                    fill
+                    sizes="(min-width: 1280px) 40vw, 90vw"
+                    className="object-cover"
+                  />
+                </div>
+                <a href={slide.mediaAsset.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-medium text-indigo-600">Open current image</a>
+              </div>
               <input name="alt" defaultValue={slide.alt} className={inputClass} placeholder="Alt text" required />
               <input type="number" name="sortOrder" defaultValue={slide.sortOrder} className={inputClass} aria-label="Slide order" />
               <StorefrontTargetFields categories={data.categories} products={data.products} item={slide} />

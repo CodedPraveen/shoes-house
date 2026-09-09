@@ -37,7 +37,7 @@ export default async function ShoesPage() {
   })));
 
   return (
-    <main>
+    <main className="overflow-x-clip bg-white">
       {heroSection?.enabled === false ? null : <HeroSection slides={storefront.slides} />}
       {configuredSections.filter((section) => section.enabled).map((section) => (
         <Suspense key={section.key} fallback={<ProductGridSkeleton count={6} />}>

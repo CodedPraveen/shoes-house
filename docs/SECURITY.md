@@ -40,7 +40,7 @@ Never accept an arbitrary customer/admin `userId` when the server can derive it.
 - Storefront lists exclude products containing missing or unsupported images; new-admin retains and reports those records for repair.
 - `SafeImage` validates before rendering `next/image` and switches to a local fallback after remote request failure.
 - Failed finalization removes staged inputs and only outputs created by that failed attempt.
-- Historical Cloudinary URLs remain readable but are not accepted by the new upload path.
+- Legacy external image URLs are neither accepted by the upload path nor fetched by storefront image components.
 
 ## Payments and inventory
 

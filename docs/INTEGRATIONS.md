@@ -17,7 +17,7 @@ The webhook uses Svix verification before user synchronization.
 
 New product and hero-banner images are not sent to an external image provider. Next.js stages validated JPG/PNG files, Redis/BullMQ delivers jobs to the existing worker, and Sharp writes WebP files under `IMAGE_STORAGE_ROOT`. Next.js and the worker must mount the same persistent path. See [IMAGE_STORAGE.md](./IMAGE_STORAGE.md).
 
-Historical Cloudinary URLs remain supported when reading existing database records; Cloudinary is not part of the active upload or finalization path.
+Legacy external URL fields are not used by storefront rendering. The active upload and finalization path uses only persistent local/VPS storage.
 
 ## Razorpay
 

@@ -3,11 +3,12 @@ import { notDeleted } from "@/lib/prisma-helpers";
 import { cartInclude } from "@/lib/cart-include";
 import { buildCartSummary } from "@/lib/cart-utils";
 import { getCache, setCache, deleteCache } from "@/lib/redis/cache";
+import { productImageSource } from "@/lib/mappers/product-mapper";
 
 function mapCartItemRow(item) {
   const images = item.product.images || [];
   const primary =
-    images.find((i) => !i.isHover)?.url ?? images[0]?.url ?? "";
+    productImageSource(images.find((i) => !i.isHover) ?? images[0]);
 
   return {
     id: item.id,

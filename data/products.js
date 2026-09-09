@@ -53,7 +53,7 @@ export const categories = [
     title: "Lifestyle",
     href: "/shoes?category=footwear",
     image:
-    "https://res.cloudinary.com/dtgdnok1h/image/upload/q_auto/f_auto/v1780143418/samples/ecommerce/shoes.png",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "cat-sports1",

@@ -10,7 +10,6 @@ import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { formatPrice } from "@/lib/format-price";
 import SafeImage from "./ui/safe-image";
-import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { getProductPath } from "@/lib/product-routes";
 import LoadingButton from "@/components/ui/loading-button";
 
@@ -131,10 +130,6 @@ function ProductCard({
     });
   };
 
-  const optimizedImage = optimizeCloudinaryImage(
-    product.image,
-  );
-
   return (
     <Link
       href={productPath}
@@ -175,7 +170,7 @@ function ProductCard({
 
           {/* Main Product Image */}
           <SafeImage
-            src={optimizedImage}
+            src={product.image}
             alt={product.name}
             fill
             quality={80}
