@@ -1,4 +1,8 @@
-import { bannerImageJobSchema, productImageJobSchema } from "../schemas/queue.schema.js";
+import {
+  bannerImageJobSchema,
+  categoryImageJobSchema,
+  productImageJobSchema,
+} from "../schemas/queue.schema.js";
 import { getProductImageQueue } from "./image.queue.js";
 
 export function productImageJobId(payload) {
@@ -43,5 +47,16 @@ export async function enqueueBannerImage(payload) {
   const parsed = bannerImageJobSchema.parse({ ...payload, type: "banner" });
   return getProductImageQueue().add("finalize-banner-image", parsed, {
     jobId: `banner-image-${parsed.bannerId}-${parsed.image.imageId}`,
+  });
+}
+
+export function categoryImageJobId(payload) {
+  return `category-image-${payload.categoryId}-${payload.image.imageId}`;
+}
+
+export async function enqueueCategoryImage(payload) {
+  const parsed = categoryImageJobSchema.parse({ ...payload, type: "category" });
+  return getProductImageQueue().add("finalize-category-image", parsed, {
+    jobId: categoryImageJobId(parsed),
   });
 }

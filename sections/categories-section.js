@@ -1,4 +1,3 @@
-import Link from "next/link";
 import SectionReveal from "@/components/section-reveal";
 import CategoryCarousel from "@/components/shoes/category-carousel";
 export default function CategoriesSection({ categories = [], title = "Shop by lifestyle." }) {

@@ -219,17 +219,71 @@ async function processBannerImageJob(data) {
   return { bannerId: data.bannerId, storagePath: converted.storagePath };
 }
 
+async function processCategoryImageJob(data) {
+  const category = await prisma.category.findUnique({
+    where: { id: data.categoryId },
+    select: { id: true, deletedAt: true, imageStoragePath: true },
+  });
+  if (!category || category.deletedAt) {
+    throw new UnrecoverableError("Category no longer exists");
+  }
+
+  const expectedPath = buildImageStoragePath("categories", data.categoryId, data.image.imageId);
+  if (category.imageStoragePath === expectedPath) {
+    await cleanupStaged([data.image]);
+    return { categoryId: data.categoryId, skipped: true, reason: "already-ready" };
+  }
+
+  const converted = await convertStagedImage("categories", data.categoryId, data.image.imageId);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.category.findUnique({
+        where: { id: data.categoryId },
+        select: { id: true, deletedAt: true, imageStoragePath: true },
+      });
+      if (!current || current.deletedAt) {
+        throw new UnrecoverableError("Category was deleted while processing");
+      }
+
+      await tx.category.update({
+        where: { id: data.categoryId },
+        data: {
+          imageUrl: null,
+          imageStoragePath: converted.storagePath,
+          imageWidth: converted.width,
+          imageHeight: converted.height,
+        },
+      });
+    });
+  } catch (error) {
+    if (converted.created) await removeStoredImage(converted.storagePath).catch(() => {});
+    throw error;
+  }
+
+  if (category.imageStoragePath && category.imageStoragePath !== converted.storagePath) {
+    await removeStoredImage(category.imageStoragePath).catch(() => {});
+  }
+
+  await cleanupStaged([data.image]);
+  return {
+    categoryId: data.categoryId,
+    storagePath: converted.storagePath,
+    width: converted.width,
+    height: converted.height,
+  };
+}
+
 export async function processImageJob(job) {
   const parsed = imageJobSchema.safeParse(job.data);
   if (!parsed.success) throw new UnrecoverableError("Invalid image job payload");
-  return parsed.data.type === "banner"
-    ? processBannerImageJob(parsed.data)
-    : processProductImageJob(parsed.data);
+  if (parsed.data.type === "banner") return processBannerImageJob(parsed.data);
+  if (parsed.data.type === "category") return processCategoryImageJob(parsed.data);
+  return processProductImageJob(parsed.data);
 }
 
 export async function cleanupFailedImageJob(data) {
   const parsed = imageJobSchema.safeParse(data);
   if (!parsed.success) return;
-  const images = parsed.data.type === "banner" ? [parsed.data.image] : parsed.data.images;
+  const images = parsed.data.type === "product" ? parsed.data.images : [parsed.data.image];
   await cleanupStaged(images);
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getCache, setCache } from "@/lib/redis/cache";
+import { publicImageUrl } from "@/lib/image-storage";
 
 export async function getAllCategories() {
     const key = "categories:all";
@@ -81,6 +82,7 @@ export const categoryService = {
                         slug: true,
                         parentId: true,
                         imageUrl: true,
+                        imageStoragePath: true,
                     },
                 },
             },
@@ -90,7 +92,10 @@ export const categoryService = {
             id: item.id,
             name: item.name,
             slug: item.slug,
-            image: item.imageUrl ?? null,
+            image:
+                publicImageUrl(item.imageStoragePath) ??
+                item.imageUrl ??
+                null,
         }));
 
         await setCache(key, result, 3600);
