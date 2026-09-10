@@ -170,18 +170,18 @@ export const categoryAdminService = {
     });
   },
 
-  async setImageProcessingJobId(categoryId, jobId) {
-    return prisma.category.update({
-      where: {
-        id: categoryId,
-      },
-      data: {
-        imageProcessingJobId: String(jobId),
-      },
-      select: {
-        id: true,
-        imageProcessingJobId: true,
-      },
-    });
-  },
+  // async setImageProcessingJobId(categoryId, jobId) {
+  //   return prisma.category.update({
+  //     where: {
+  //       id: categoryId,
+  //     },
+  //     data: {
+  //       imageProcessingJobId: String(jobId),
+  //     },
+  //     select: {
+  //       id: true,
+  //       imageProcessingJobId: true,
+  //     },
+  //   });
+  // },
 };

@@ -125,10 +125,10 @@ export async function createCategoryAction(
           stagingRecord: imageResult.image.url,
         });
 
-        await categoryAdminService.setImageProcessingJobId(
-          category.id,
-          job.id,
-        );
+        // await categoryAdminService.setImageProcessingJobId(
+        //   category.id,
+        //   job.id,
+        // );
       } catch (error) {
         console.error("[admin-categories] image enqueue failed", {
           categoryId: category.id,
@@ -225,10 +225,10 @@ export async function updateCategoryAction(
           stagingRecord: imageResult.image.url,
         });
 
-        await categoryAdminService.setImageProcessingJobId(
-          category.id,
-          job.id,
-        );
+        // await categoryAdminService.setImageProcessingJobId(
+        //   category.id,
+        //   job.id,
+        // );
       } catch (error) {
         console.error("[admin-categories] image enqueue failed", {
           categoryId: category.id,
