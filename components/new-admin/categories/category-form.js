@@ -87,7 +87,7 @@ export function CreateCategoryForm({ collection }) {
   return (
     <form
       action={action}
-      encType="multipart/form-data"
+      // encType="multipart/form-data"
       className="grid gap-3 sm:grid-cols-2"
     >
       <input
@@ -137,7 +137,7 @@ export function EditCategoryForm({ category }) {
   return (
     <form
       action={action}
-      encType="multipart/form-data"
+      // encType="multipart/form-data"
       className="grid gap-3 sm:grid-cols-2"
     >
       <input
