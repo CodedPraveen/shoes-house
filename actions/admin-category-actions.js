@@ -10,10 +10,11 @@ import {
   createCategorySchema,
   updateCategorySchema,
 } from "@/schemas/category.schema";
+
 import { CategoryAdminError, categoryAdminService } from "@/services/category-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
 import { imageIdFromStagingUrl, isStagingImageUrl } from "@/lib/image-storage";
-import { enqueueCategoryImage } from "@/schemas/product.schema";
+import { enqueueCategoryImage } from "@/queues";
 
 const initialResult = { ok: false, error: null, message: null };
 
