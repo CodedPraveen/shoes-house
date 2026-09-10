@@ -13,7 +13,6 @@ import {
 
 import { CategoryAdminError, categoryAdminService } from "@/services/category-admin-service";
 import { imageUploadService } from "@/services/upload/image-upload-service";
-import { imageIdFromStagingUrl, isStagingImageUrl } from "@/lib/image-storage";
 import { enqueueCategoryImage } from "@/queues";
 
 const initialResult = { ok: false, error: null, message: null };
@@ -116,7 +115,7 @@ export async function createCategoryAction(
 
     if (imageResult.image) {
       try {
-        const job = await enqueueCategoryImage({
+        await enqueueCategoryImage({
           categoryId: category.id,
           image: {
             imageId: imageResult.image.imageId,
@@ -216,7 +215,7 @@ export async function updateCategoryAction(
 
     if (imageResult.image) {
       try {
-        const job = await enqueueCategoryImage({
+        await enqueueCategoryImage({
           categoryId: category.id,
           image: {
             imageId: imageResult.image.imageId,

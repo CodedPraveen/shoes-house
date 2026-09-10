@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { publicImageUrl } from "@/lib/image-storage";
 import { slugify } from "@/lib/slugify-text";
 
 export class CategoryAdminError extends Error {
@@ -24,7 +25,7 @@ function categorySlug(name) {
 
 export const categoryAdminService = {
   async list(collection) {
-    return prisma.category.findMany({
+    const categories = await prisma.category.findMany({
       where: {
         collection,
         parentId: { not: null },
@@ -48,6 +49,14 @@ export const categoryAdminService = {
         },
       },
     });
+
+    return categories.map((category) => ({
+      ...category,
+      imageUrl:
+        publicImageUrl(category.imageStoragePath) ??
+        category.imageUrl ??
+        null,
+    }));
   },
 
   async create({ name, collection }) {
@@ -169,19 +178,4 @@ export const categoryAdminService = {
       },
     });
   },
-
-  // async setImageProcessingJobId(categoryId, jobId) {
-  //   return prisma.category.update({
-  //     where: {
-  //       id: categoryId,
-  //     },
-  //     data: {
-  //       imageProcessingJobId: String(jobId),
-  //     },
-  //     select: {
-  //       id: true,
-  //       imageProcessingJobId: true,
-  //     },
-  //   });
-  // },
 };
