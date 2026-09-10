@@ -28,7 +28,6 @@ export default function NewAdminProductForm({
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState(subCategories ?? []);
 
@@ -39,8 +38,6 @@ export default function NewAdminProductForm({
     brand: initial?.brand ?? "Post Mart",
     price: initial?.price ?? "",
 
-    // Product-level stock.
-    // This is the single inventory value for the product.
     stock: initial?.stock ?? 3,
 
     sizes: initial?.sizes?.join(", ") ?? "7, 8, 9, 10, 11",
@@ -58,22 +55,18 @@ export default function NewAdminProductForm({
     isNew: initial?.isNew ?? true,
     isTrending: initial?.isTrending ?? false,
 
-    imageUrls: initial?.images ?? [],
+    images: (initial?.images ?? []).map((url) => ({
+      type: "existing",
+      url,
+    })),
   });
 
- 
-  /*
-   * Load subcategories whenever collection changes.
-   */
-  
   useEffect(() => {
     let active = true;
 
     async function loadSubCategories() {
       try {
-        const items = await getSubCategoriesAction(
-          form.collection,
-        );
+        const items = await getSubCategoriesAction(form.collection);
 
         if (!active) return;
 
@@ -125,18 +118,17 @@ export default function NewAdminProductForm({
     });
   }
 
-  function handleImagesChange(urls) {
+  function handleImagesChange(images) {
     setError("");
 
-    if (urls.length > MAX_PRODUCT_IMAGES) {
+    if (images.length > MAX_PRODUCT_IMAGES) {
       setError(
         `Maximum ${MAX_PRODUCT_IMAGES} product images are allowed.`,
       );
-
       return;
     }
 
-    update("imageUrls", urls);
+    update("images", images);
   }
 
   async function submit(event) {
@@ -144,12 +136,12 @@ export default function NewAdminProductForm({
 
     setError("");
 
-    if (!form.imageUrls.length) {
+    if (!form.images.length) {
       setError("Add at least one product image.");
       return;
     }
 
-    if (form.imageUrls.length > MAX_PRODUCT_IMAGES) {
+    if (form.images.length > MAX_PRODUCT_IMAGES) {
       setError(
         `Maximum ${MAX_PRODUCT_IMAGES} product images are allowed.`,
       );
@@ -172,36 +164,37 @@ export default function NewAdminProductForm({
     }
 
     const price = Number(form.price);
+
     if (!Number.isFinite(price) || price <= 0) {
       setError("Price must be a valid number greater than 0.");
-      return;
-    }
-
-    if (uploading) {
-      setError("Wait for the image upload to finish before saving.");
       return;
     }
 
     const stock = Number(form.stock);
 
     if (!Number.isFinite(stock) || stock < 0) {
-      setError("Stock must be a valid number greater than or equal to 0.");
+      setError(
+        "Stock must be a valid number greater than or equal to 0.",
+      );
       return;
     }
 
     if (saving) return;
+
     setSaving(true);
 
     try {
-      const payload = {
-        ...form,
-
-        price: Number(form.price),
-
-        // Product-level stock.
+      const productFields = {
+        name: form.name,
+        slug: form.slug,
+        description: form.description,
+        brand: form.brand,
+        price,
         stock: Math.floor(stock),
-
-        imageUrls: form.imageUrls,
+        collection: form.collection,
+        categorySlug: form.categorySlug,
+        isNew: form.isNew,
+        isTrending: form.isTrending,
 
         sizes: form.sizes
           .split(",")
@@ -212,13 +205,50 @@ export default function NewAdminProductForm({
           ),
       };
 
+      const formData = new FormData();
+
+      formData.append(
+        "product",
+        JSON.stringify(productFields),
+      );
+
+      const imageOrder = [];
+
+      let newFileIndex = 0;
+
+      for (const image of form.images) {
+        if (image.type === "existing") {
+          imageOrder.push({
+            type: "existing",
+            url: image.url,
+          });
+          continue;
+        }
+
+        if (image.type === "new") {
+          formData.append("files", image.file);
+
+          imageOrder.push({
+            type: "file",
+            index: newFileIndex,
+          });
+
+          newFileIndex += 1;
+        }
+      }
+
+      formData.append(
+        "imageOrder",
+        JSON.stringify(imageOrder),
+      );
+
       const result =
         mode === "edit"
           ? await updateProductAction(
             productId,
-            payload,
+            formData,
           )
-          : await createProductAction(payload);
+          : await createProductAction(formData);
 
       if (!result?.ok) {
         throw new Error(
@@ -231,6 +261,7 @@ export default function NewAdminProductForm({
           ? "/new-admin/products"
           : "/new-admin/products?created=processing",
       );
+
       router.refresh();
     } catch (saveError) {
       console.error(
@@ -256,6 +287,7 @@ export default function NewAdminProductForm({
     }
 
     if (deleting) return;
+
     setDeleting(true);
     setError("");
 
@@ -285,13 +317,14 @@ export default function NewAdminProductForm({
         onSubmit={submit}
         className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
       >
-        {/* LEFT */}
         <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            {/* Product name */}
             <label className="sm:col-span-2">
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Product name <span className="text-rose-600" aria-hidden="true">*</span>
+                Product name{" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <input
@@ -299,18 +332,17 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.name}
                 onChange={(event) =>
-                  update(
-                    "name",
-                    event.target.value,
-                  )
+                  update("name", event.target.value)
                 }
               />
             </label>
 
-            {/* Slug */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Slug <span className="text-rose-600" aria-hidden="true">*</span>
+                Slug{" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <input
@@ -318,18 +350,17 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.slug}
                 onChange={(event) =>
-                  update(
-                    "slug",
-                    event.target.value,
-                  )
+                  update("slug", event.target.value)
                 }
               />
             </label>
 
-            {/* Brand */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Brand <span className="text-rose-600" aria-hidden="true">*</span>
+                Brand{" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <input
@@ -337,15 +368,11 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.brand}
                 onChange={(event) =>
-                  update(
-                    "brand",
-                    event.target.value,
-                  )
+                  update("brand", event.target.value)
                 }
               />
             </label>
 
-            {/* Collection */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
                 Collection
@@ -355,10 +382,7 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.collection}
                 onChange={(event) =>
-                  update(
-                    "collection",
-                    event.target.value,
-                  )
+                  update("collection", event.target.value)
                 }
               >
                 {collections.map((item) => (
@@ -372,10 +396,12 @@ export default function NewAdminProductForm({
               </select>
             </label>
 
-            {/* Category */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Category <span className="text-rose-600" aria-hidden="true">*</span>
+                Category{" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <select
@@ -406,10 +432,12 @@ export default function NewAdminProductForm({
               </select>
             </label>
 
-            {/* Description */}
             <label className="sm:col-span-2">
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Description <span className="text-rose-600" aria-hidden="true">*</span>
+                Description{" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <textarea
@@ -428,13 +456,14 @@ export default function NewAdminProductForm({
           </div>
         </div>
 
-        {/* RIGHT */}
         <div className="space-y-5">
           <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            {/* Price */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Price (₹) <span className="text-rose-600" aria-hidden="true">*</span>
+                Price (₹){" "}
+                <span className="text-rose-600" aria-hidden="true">
+                  *
+                </span>
               </span>
 
               <input
@@ -444,15 +473,11 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.price}
                 onChange={(event) =>
-                  update(
-                    "price",
-                    event.target.value,
-                  )
+                  update("price", event.target.value)
                 }
               />
             </label>
 
-            {/* Product stock */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
                 Stock
@@ -465,10 +490,7 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.stock}
                 onChange={(event) =>
-                  update(
-                    "stock",
-                    event.target.value,
-                  )
+                  update("stock", event.target.value)
                 }
               />
 
@@ -477,7 +499,6 @@ export default function NewAdminProductForm({
               </p>
             </label>
 
-            {/* Sizes */}
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
                 Sizes
@@ -488,10 +509,7 @@ export default function NewAdminProductForm({
                 value={form.sizes}
                 placeholder="7, 8, 9, 10, 11"
                 onChange={(event) =>
-                  update(
-                    "sizes",
-                    event.target.value,
-                  )
+                  update("sizes", event.target.value)
                 }
               />
 
@@ -500,52 +518,45 @@ export default function NewAdminProductForm({
               </p>
             </label>
 
-            {/* Product images */}
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">
-                  Product images <span className="text-rose-600" aria-hidden="true">*</span>
+                  Product images{" "}
+                  <span className="text-rose-600" aria-hidden="true">
+                    *
+                  </span>
                 </span>
 
                 <span className="text-xs text-slate-500">
-                  {form.imageUrls.length} /{" "}
-                  {MAX_PRODUCT_IMAGES}
+                  {form.images.length} / {MAX_PRODUCT_IMAGES}
                 </span>
               </div>
 
               <AdminImageUpload
-                imageUrls={form.imageUrls}
+                images={form.images}
                 onChange={handleImagesChange}
-                onUploadingChange={setUploading}
-                uploadContext={{
-                  collection: form.collection,
-                  categorySlug: form.categorySlug,
-                }}
               />
 
               <p className="mt-2 text-xs text-slate-500">
-                Upload up to {MAX_PRODUCT_IMAGES} images
-                from your device. JPG and PNG files are
-                converted to WebP without resizing.
+                Select up to {MAX_PRODUCT_IMAGES} images from
+                your device. JPG and PNG files are converted to
+                WebP without resizing after the product is
+                created.
               </p>
 
               <p className="mt-1 text-xs text-slate-500">
-                The server validates the selected collection
-                and category before staging the upload.
+                Images are uploaded to the server only when you
+                create or save the product.
               </p>
             </div>
 
-            {/* Product flags */}
             <div className="flex flex-wrap gap-4 text-sm">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.isNew}
                   onChange={(event) =>
-                    update(
-                      "isNew",
-                      event.target.checked,
-                    )
+                    update("isNew", event.target.checked)
                   }
                 />
 
@@ -569,19 +580,20 @@ export default function NewAdminProductForm({
             </div>
           </section>
 
-          {/* Error */}
           {error ? (
-            <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700" role="alert">
+            <p
+              className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700"
+              role="alert"
+            >
               {error}
             </p>
           ) : null}
 
-          {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <LoadingButton
               type="submit"
               loading={saving}
-              disabled={deleting || uploading}
+              disabled={deleting}
               className={buttonClass}
             >
               {mode === "edit"
@@ -594,7 +606,7 @@ export default function NewAdminProductForm({
                 type="button"
                 onClick={remove}
                 loading={deleting}
-                disabled={saving || uploading}
+                disabled={saving}
                 className="h-10 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50"
               >
                 Delete product

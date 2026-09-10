@@ -1,92 +1,111 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  discardProductImageUploadsAction,
-  uploadNewAdminProductImageAction,
-  uploadProductImageAction,
-} from "@/actions/admin-product-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import SafeImage from "@/components/ui/safe-image";
-import { isStagingProductImage } from "@/lib/product-image";
 
-export default function AdminImageUpload({ imageUrls, onChange, uploadContext, onUploadingChange }) {
+const MAX_PRODUCT_IMAGES = 8;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_TYPES = new Set(["image/jpeg", "image/png"]);
+
+export default function AdminImageUpload({
+  images,
+  onChange,
+}) {
   const fileRef = useRef(null);
-  const imageUrlsRef = useRef(imageUrls);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    imageUrlsRef.current = imageUrls;
-  }, [imageUrls]);
+    return () => {
+      for (const image of images) {
+        if (image?.type === "new" && image.preview) {
+          URL.revokeObjectURL(image.preview);
+        }
+      }
+    };
+  }, []);
 
-  function setUploadState(value) {
-    setUploading(value);
-    onUploadingChange?.(value);
-  }
-
-  async function handleFile(event) {
+  function handleFile(event) {
     const files = Array.from(event.target.files || []);
+
     if (!files.length) return;
 
-    const remainingSlots = 8 - imageUrlsRef.current.length;
+    setError("");
+
+    const remainingSlots = MAX_PRODUCT_IMAGES - images.length;
+
     if (remainingSlots <= 0) {
       setError("Maximum 8 product images are allowed.");
       event.target.value = "";
       return;
     }
 
-    setError("");
-    setUploadState(true);
-    try {
-      const results = await Promise.all(files.slice(0, remainingSlots).map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        if (uploadContext) {
-          formData.append("collection", uploadContext.collection);
-          formData.append("categorySlug", uploadContext.categorySlug);
-        }
-        return uploadContext
-          ? uploadNewAdminProductImageAction(formData)
-          : uploadProductImageAction(formData);
-      }));
+    const selectedFiles = files.slice(0, remainingSlots);
+    const nextImages = [...images];
+    const rejected = [];
 
-      const successful = results.filter((result) => result?.ok && isStagingProductImage(result.url));
-      const nextUrls = [
-        ...imageUrlsRef.current,
-        ...successful.map((result) => result.url),
-      ].slice(0, 8);
-      imageUrlsRef.current = nextUrls;
-      onChange(nextUrls);
+    for (const file of selectedFiles) {
+      if (!SUPPORTED_TYPES.has(file.type)) {
+        rejected.push(`${file.name}: only JPG and PNG images are supported.`);
+        continue;
+      }
 
-      const failed = results.length - successful.length;
-      if (failed) setError(`${failed} image${failed === 1 ? "" : "s"} could not be staged.`);
-      if (files.length > remainingSlots) setError(`Only ${remainingSlots} more image${remainingSlots === 1 ? "" : "s"} can be added.`);
-    } catch (uploadError) {
-      setError(uploadError?.message || "One or more images could not be staged.");
-    } finally {
-      setUploadState(false);
-      if (fileRef.current) fileRef.current.value = "";
+      if (file.size <= 0) {
+        rejected.push(`${file.name}: the file is empty.`);
+        continue;
+      }
+
+      if (file.size > MAX_IMAGE_BYTES) {
+        rejected.push(`${file.name}: maximum size is 10 MB.`);
+        continue;
+      }
+
+      const preview = URL.createObjectURL(file);
+
+      nextImages.push({
+        type: "new",
+        file,
+        preview,
+      });
     }
+
+    onChange(nextImages);
+
+    if (files.length > remainingSlots) {
+      setError(
+        `Only ${remainingSlots} more image${remainingSlots === 1 ? "" : "s"
+        } can be added.`,
+      );
+    } else if (rejected.length) {
+      setError(rejected.join(" "));
+    }
+
+    event.target.value = "";
   }
 
-  async function removeUrl(url) {
-    const nextUrls = imageUrlsRef.current.filter((item) => item !== url);
-    imageUrlsRef.current = nextUrls;
-    onChange(nextUrls);
-    if (isStagingProductImage(url)) await discardProductImageUploadsAction([url]);
+  function removeImage(index) {
+    const image = images[index];
+
+    if (image?.type === "new" && image.preview) {
+      URL.revokeObjectURL(image.preview);
+    }
+
+    const nextImages = images.filter((_, imageIndex) => imageIndex !== index);
+
+    onChange(nextImages);
+    setError("");
   }
 
   return (
     <div className="space-y-3">
       <LoadingButton
         type="button"
-        loading={uploading}
         onClick={() => fileRef.current?.click()}
         className="rounded-xl border border-black/15 px-4 py-2 text-xs"
       >
         Upload JPG/PNG
       </LoadingButton>
+
       <input
         ref={fileRef}
         type="file"
@@ -95,21 +114,37 @@ export default function AdminImageUpload({ imageUrls, onChange, uploadContext, o
         onChange={handleFile}
         multiple
       />
-      {error ? <p className="text-xs text-red-600" role="alert">{error}</p> : null}
+
+      {error ? (
+        <p className="text-xs text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       <ul className="flex flex-wrap gap-2">
-        {imageUrls.map((url) => (
-          <li key={url} className="relative">
-            <SafeImage
-              width={64}
-              height={64}
-              src={url}
-              alt=""
-              unoptimized={isStagingProductImage(url)}
-              className="h-16 w-16 rounded-lg border border-black/10 object-cover"
-            />
+        {images.map((image, index) => (
+          <li key={image.type === "new" ? image.preview : image.url} className="relative">
+            {image.type === "new" ? (
+              <img
+                src={image.preview}
+                alt=""
+                width={64}
+                height={64}
+                className="h-16 w-16 rounded-lg border border-black/10 object-cover"
+              />
+            ) : (
+              <SafeImage
+                width={64}
+                height={64}
+                src={image.url}
+                alt=""
+                className="h-16 w-16 rounded-lg border border-black/10 object-cover"
+              />
+            )}
+
             <button
               type="button"
-              onClick={() => void removeUrl(url)}
+              onClick={() => removeImage(index)}
               className="absolute -right-1 -top-1 rounded-full bg-black px-1.5 text-[10px] text-white"
               aria-label="Remove image"
             >

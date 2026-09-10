@@ -1,10 +1,14 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
   experimental: {
     serverActions: {
-      // Keep room for multipart headers while actions enforce a 10 MB file limit.
-      bodySizeLimit: "11mb",
+      // Total Server Action request size.
+      bodySizeLimit: "100mb",
     },
+
+    // Proxy has its own 10 MB default limit.
+    proxyClientMaxBodySize: "100mb",
   },
 
   images: {
@@ -18,6 +22,7 @@ const nextConfig = {
         hostname: "res.cloudinary.com",
       },
     ],
+
     qualities: [75, 80, 85],
   },
 
