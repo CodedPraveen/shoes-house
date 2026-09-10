@@ -1,10 +1,10 @@
+
 import {
   bannerImageJobSchema,
   categoryImageJobSchema,
-  productImageJobSchema,
-} from "../schemas/queue.schema.js";
-
-import { getProductImageQueue } from "./image.queue.js";
+  productImageJobSchema
+} from "./queue.schema";
+// import { bannerImageJobSchema } from "./queue.schema";
 
 export function productImageJobId(payload) {
   return `product-images-${payload.productId}-${payload.images[0].imageId}`;
