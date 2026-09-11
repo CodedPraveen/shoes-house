@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 
 import {
   createCategoryAction,
@@ -51,7 +52,9 @@ function ImageField({ currentImage, label = "Category image" }) {
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
         {currentImage ? (
           <div className="mb-3 overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <img
+            <Image
+            height={128}
+            width={128}
               src={currentImage}
               alt=""
               className="h-32 w-full object-cover"
