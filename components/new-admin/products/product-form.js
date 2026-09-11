@@ -533,9 +533,10 @@ export default function NewAdminProductForm({
                 className={inputClass}
                 value={form.slug}
                 placeholder="product-slug"
-                onChange={(event) =>
+                onChange={(event) => {
+                  setSlugManuallyEdited(true);
                   update("slug", event.target.value)
-                }
+                }}
               />
             </label>
 
