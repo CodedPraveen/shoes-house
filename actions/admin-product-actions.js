@@ -245,17 +245,27 @@ export async function createProductAction(formData) {
       "product",
     );
 
-    const uploadSessionId =
+    const uploadSessionIdValue =
       formData.get("uploadSessionId");
 
-    const imageOrderValue =
-      formData.get("imageOrder");
-
-    const imageOrder =
-      typeof imageOrderValue === "string" &&
-        imageOrderValue.trim()
-        ? JSON.parse(imageOrderValue)
+    const uploadSessionId =
+      typeof uploadSessionIdValue === "string" &&
+        uploadSessionIdValue.trim()
+        ? uploadSessionIdValue.trim()
         : null;
+
+    let imageOrder = null;
+
+    if (!uploadSessionId) {
+      const imageOrderValue =
+        formData.get("imageOrder");
+
+      imageOrder =
+        typeof imageOrderValue === "string" &&
+          imageOrderValue.trim()
+          ? JSON.parse(imageOrderValue)
+          : null;
+    }
 
     const validation =
       productCreationFieldsSchema.safeParse(
@@ -270,9 +280,12 @@ export async function createProductAction(formData) {
     }
 
     if (
-      !Array.isArray(imageOrder) ||
-      imageOrder.length < 1 ||
-      imageOrder.length > MAX_PRODUCT_IMAGES
+      !uploadSessionId &&
+      (
+        !Array.isArray(imageOrder) ||
+        imageOrder.length < 1 ||
+        imageOrder.length > MAX_PRODUCT_IMAGES
+      )
     ) {
       return {
         ok: false,
@@ -282,10 +295,7 @@ export async function createProductAction(formData) {
 
     let orderedSources = [];
 
-    if (
-      typeof uploadSessionId === "string" &&
-      uploadSessionId.trim()
-    ) {
+    if (uploadSessionId) {
       const uploadSession =
         await getProductUploadSession(
           uploadSessionId,
@@ -294,6 +304,7 @@ export async function createProductAction(formData) {
       if (!uploadSession) {
         return {
           ok: false,
+          code: "UPLOAD_SESSION_EXPIRED",
           error:
             "Upload session expired. Please upload the images again.",
         };
@@ -302,6 +313,7 @@ export async function createProductAction(formData) {
       if (uploadSession.userId !== user.id) {
         return {
           ok: false,
+          code: "UPLOAD_SESSION_INVALID",
           error: "Invalid upload session.",
         };
       }
@@ -309,11 +321,26 @@ export async function createProductAction(formData) {
       if (
         !Array.isArray(uploadSession.images) ||
         uploadSession.images.length < 1 ||
-        uploadSession.images.length >
-        MAX_PRODUCT_IMAGES
+        uploadSession.images.length > MAX_PRODUCT_IMAGES ||
+        uploadSession.images.some(
+          (reference) => !isStagingImageUrl(reference),
+        ) ||
+        new Set(uploadSession.images).size !==
+          uploadSession.images.length
       ) {
+        await cleanupStagedReferences(
+          Array.isArray(uploadSession.images)
+            ? uploadSession.images
+            : [],
+        );
+
+        await deleteProductUploadSession(
+          uploadSessionId,
+        );
+
         return {
           ok: false,
+          code: "UPLOAD_SESSION_INVALID",
           error:
             "Upload between 1 and 8 product images.",
         };
@@ -385,8 +412,17 @@ export async function createProductAction(formData) {
     if (!fullValidation.success) {
       await cleanupStagedReferences(stagedReferences);
 
+      if (uploadSessionId) {
+        await deleteProductUploadSession(
+          uploadSessionId,
+        );
+      }
+
       return {
         ok: false,
+        ...(uploadSessionId
+          ? { code: "UPLOAD_SESSION_INVALID" }
+          : {}),
         error: formatZodError(fullValidation.error),
       };
     }
@@ -428,22 +464,33 @@ export async function createProductAction(formData) {
 
       await cleanupStagedReferences(stagedReferences);
 
+      if (uploadSessionId) {
+        await deleteProductUploadSession(
+          uploadSessionId,
+        );
+      }
+
       return {
         ok: false,
+        code: "PRODUCT_QUEUE_FAILED",
         productId: product.id,
         error:
           "The product was saved as failed because image processing could not be queued.",
       };
     }
 
-    await revalidateProductPaths(product.slug);
-
-    if (
-      typeof uploadSessionId === "string" &&
-      uploadSessionId.trim()
-    ) {
+    if (uploadSessionId) {
       await deleteProductUploadSession(
         uploadSessionId,
+      );
+    }
+
+    try {
+      await revalidateProductPaths(product.slug);
+    } catch (error) {
+      console.error(
+        "[PRODUCT CREATE] cache revalidation failed",
+        error,
       );
     }
 
@@ -460,9 +507,11 @@ export async function createProductAction(formData) {
       error,
     );
 
-    await cleanupStagedReferences(
-      stagedReferences,
-    );
+    if (!uploadSessionId) {
+      await cleanupStagedReferences(
+        stagedReferences,
+      );
+    }
 
     return {
       ok: false,

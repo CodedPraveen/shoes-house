@@ -1,5 +1,4 @@
 import {
-    deleteProductUploadSession,
     getProductUploadSession,
     setProductUploadImages,
 } from "@/lib/product-upload-session";
@@ -9,6 +8,8 @@ import {
 } from "@/services/upload/image-upload-service";
 
 const MAX_PRODUCT_IMAGES = 8;
+
+export const runtime = "nodejs";
 
 async function cleanupReferences(references) {
     if (!references.length) {
@@ -55,6 +56,20 @@ export async function POST(request) {
                         "Upload session expired. Please try again.",
                 },
                 { status: 410 },
+            );
+        }
+
+        if (
+            Array.isArray(session.images) &&
+            session.images.length > 0
+        ) {
+            return Response.json(
+                {
+                    ok: false,
+                    error:
+                        "This upload session has already been used.",
+                },
+                { status: 409 },
             );
         }
 
@@ -110,10 +125,35 @@ export async function POST(request) {
             stagedReferences.push(result.url);
         }
 
-        await setProductUploadImages(
+        const storeResult = await setProductUploadImages(
             sessionId,
             stagedReferences,
         );
+
+        if (!storeResult.ok) {
+            await cleanupReferences(stagedReferences);
+            stagedReferences = [];
+
+            if (storeResult.reason === "reused") {
+                return Response.json(
+                    {
+                        ok: false,
+                        error:
+                            "This upload session has already been used.",
+                    },
+                    { status: 409 },
+                );
+            }
+
+            return Response.json(
+                {
+                    ok: false,
+                    error:
+                        "Upload session expired. Please try again.",
+                },
+                { status: 410 },
+            );
+        }
 
         return Response.json({
             ok: true,
