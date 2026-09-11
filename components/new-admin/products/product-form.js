@@ -21,6 +21,7 @@ import {
 import { slugify } from "@/lib/slugify-text";
 import ProductFormFields from "@/components/new-admin/products/product-form-fields";
 import ProductFormInventory from "@/components/new-admin/products/product-form-inventory";
+import ProductFormImages from "@/components/new-admin/products/product-form-images";
 
 const MAX_PRODUCT_IMAGES = 8;
 
@@ -513,134 +514,16 @@ export default function NewAdminProductForm({
         </div>
 
         <div className="space-y-5">
-          {/* <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Price (₹){" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <input
-                required
-                type="number"
-                min="1"
-                className={inputClass}
-                value={form.price}
-                placeholder="Price in INR"
-                onChange={(event) =>
-                  update("price", event.target.value)
-                }
-              />
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Stock
-              </span>
-
-              <input
-                type="number"
-                min="0"
-                step="1"
-                className={inputClass}
-                value={form.stock}
-                placeholder="Stock quantity"
-                onChange={(event) =>
-                  update("stock", event.target.value)
-                }
-              />
-
-              <p className="mt-1 text-xs text-slate-500">
-                Total stock available for this product.
-              </p>
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Sizes
-              </span>
-
-              <input
-                className={inputClass}
-                value={form.sizes}
-                placeholder="7, 8, 9, 10, 11"
-                onChange={(event) =>
-                  update("sizes", event.target.value)
-                }
-              />
-
-              <p className="mt-1 text-xs text-slate-500">
-                Enter sizes separated by commas.
-              </p>
-            </label>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">
-                  Product images{" "}
-                  <span className="text-rose-600" aria-hidden="true">
-                    *
-                  </span>
-                </span>
-
-                <span className="text-xs text-slate-500">
-                  {form.images.length} / {MAX_PRODUCT_IMAGES}
-                </span>
-              </div>
-
-              <AdminImageUpload
-                images={form.images}
-                onChange={handleImagesChange}
-              />
-
-              <p className="mt-2 text-xs text-slate-500">
-                Select up to {MAX_PRODUCT_IMAGES} images from
-                your device. JPG and PNG files are converted to
-                WebP without resizing after the product is
-                created.
-              </p>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Images are uploaded to the server only when you
-                create or save the product.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4 text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.isNew}
-                  onChange={(event) =>
-                    update("isNew", event.target.checked)
-                  }
-                />
-
-                New arrival
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.isTrending}
-                  onChange={(event) =>
-                    update(
-                      "isTrending",
-                      event.target.checked,
-                    )
-                  }
-                />
-
-                Trending
-              </label>
-            </div>
-          </section> */}
-          <ProductFormInventory
-            form={form}
-            update={update}
-          />
+            <ProductFormInventory
+              form={form}
+              update={update}
+            />
+          <section className="sclspace-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <ProductFormImages
+              images={form.images}
+              onChange={handleImagesChange}
+            />
+          </section>
 
           {error ? (
             <p
