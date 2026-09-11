@@ -37,6 +37,8 @@ export default function NewAdminProductForm({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState(subCategories ?? []);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
 
   const [form, setForm] = useState({
     name: initial?.name ?? "",
@@ -116,7 +118,7 @@ export default function NewAdminProductForm({
       if (
         key === "name" &&
         mode === "create" &&
-        !current.slug
+        !slugManuallyEdited
       ) {
         next.slug = slugify(value);
       }
@@ -511,6 +513,7 @@ export default function NewAdminProductForm({
                 required
                 className={inputClass}
                 value={form.name}
+                placeholder="Product name"
                 onChange={(event) =>
                   update("name", event.target.value)
                 }
@@ -529,6 +532,7 @@ export default function NewAdminProductForm({
                 required
                 className={inputClass}
                 value={form.slug}
+                placeholder="product-slug"
                 onChange={(event) =>
                   update("slug", event.target.value)
                 }
@@ -547,6 +551,7 @@ export default function NewAdminProductForm({
                 required
                 className={inputClass}
                 value={form.brand}
+                placeholder="Brand name"
                 onChange={(event) =>
                   update("brand", event.target.value)
                 }
@@ -561,6 +566,7 @@ export default function NewAdminProductForm({
               <select
                 className={inputClass}
                 value={form.collection}
+                placeholder="Select a collection"
                 onChange={(event) =>
                   update("collection", event.target.value)
                 }
@@ -588,6 +594,7 @@ export default function NewAdminProductForm({
                 required
                 className={inputClass}
                 value={form.categorySlug}
+                placeholder="Select a category"
                 onChange={(event) => {
                   const value = event.target.value;
 
@@ -625,6 +632,7 @@ export default function NewAdminProductForm({
                 rows={6}
                 className={`${inputClass} h-auto py-3`}
                 value={form.description}
+                placeholder="Product description"
                 onChange={(event) =>
                   update(
                     "description",
@@ -652,6 +660,7 @@ export default function NewAdminProductForm({
                 min="1"
                 className={inputClass}
                 value={form.price}
+                placeholder="Price in INR"
                 onChange={(event) =>
                   update("price", event.target.value)
                 }
@@ -669,6 +678,7 @@ export default function NewAdminProductForm({
                 step="1"
                 className={inputClass}
                 value={form.stock}
+                placeholder="Stock quantity"
                 onChange={(event) =>
                   update("stock", event.target.value)
                 }
