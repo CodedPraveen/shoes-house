@@ -129,7 +129,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(
-    Boolean(pendingFulfillment?.saveAddress),
+    pendingFulfillment?.saveAddress ?? true,
   );
   const touchedFieldsRef = useRef(new Set());
   const pendingFulfillmentRef = useRef(pendingFulfillment);
