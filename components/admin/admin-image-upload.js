@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import LoadingButton from "@/components/ui/loading-button";
 import SafeImage from "@/components/ui/safe-image";
@@ -238,7 +239,7 @@ export default function AdminImageUpload({
 
             <div className="relative">
               {image.type === "new" ? (
-                <img
+                <Image
                   src={image.preview}
                   alt={`Product image ${index + 1}`}
                   width={96}

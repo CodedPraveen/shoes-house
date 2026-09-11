@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
 import {
@@ -364,7 +365,9 @@ export default function ProductDetailClient({ product }) {
                 {/* Main image */}
                 <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-auto lg:max-h-[600px]">
                   {currentImage ? (
-                    <img
+                    <Image
+                    height={600}
+                    width={600}
                       src={currentImage}
                       alt={product.name}
                       className="h-auto max-h-[600px] w-full select-none object-contain"
@@ -423,7 +426,9 @@ export default function ProductDetailClient({ product }) {
                         activeImage === index
                       }
                     >
-                      <img
+                      <Image
+                      height={76}
+                      width={76}
                         src={image}
                         alt={`${product.name} ${index + 1
                           }`}
@@ -455,7 +460,9 @@ export default function ProductDetailClient({ product }) {
                     aria-label={`View image ${index + 1
                       }`}
                   >
-                    <img
+                    <Image
+                      height={76}
+                      width={76}
                       src={image}
                       alt={`${product.name} ${index + 1
                         }`}

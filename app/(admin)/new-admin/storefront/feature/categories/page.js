@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   CreateCategoryForm,
@@ -118,7 +119,7 @@ export default async function CategoryManagementPage({
                 className="rounded-xl border border-slate-200 p-4"
               >
                 <div className="mb-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                  <img
+                  <Image
                     src={category.imageUrl || "/placeholder.svg"}
                     alt={category.name}
                     className="h-48 w-full object-cover"
