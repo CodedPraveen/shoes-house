@@ -54,3 +54,6 @@ public/svg/
 public/shoes/home-banner-mobile.png
 public/shoes/*
 .vercel
+
+# old admin files
+app/(admin)/admin

@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import {
+  createProductAction,
+  createProductUploadSessionAction,
+  deleteProductAction,
+  getSubCategoriesAction,
+  updateProductAction,
+} from "@/actions/admin-product-actions";
 
 import {
   createProductAction,
@@ -25,6 +33,7 @@ export default function NewAdminProductForm({
   subCategories,
 }) {
   const router = useRouter();
+  const { getToken } = useAuth();
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);

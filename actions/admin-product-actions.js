@@ -16,6 +16,11 @@ import {
   imageIdFromStagingUrl,
   isStagingImageUrl,
 } from "@/lib/image-storage";
+import {
+  createProductUploadSession,
+  deleteProductUploadSession,
+  getProductUploadSession,
+} from "@/lib/product-upload-session";
 import { productImageSource } from "@/lib/mappers/product-mapper";
 
 const MAX_PRODUCT_IMAGES = 8;
@@ -217,7 +222,7 @@ export async function getAdminProductForEditAction(id) {
 }
 
 export async function createProductAction(formData) {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   await assertRateLimit({
     prefix: "admin-product-create",
@@ -240,10 +245,17 @@ export async function createProductAction(formData) {
       "product",
     );
 
-    const imageOrder = parseJsonField(
-      formData,
-      "imageOrder",
-    );
+    const uploadSessionId =
+      formData.get("uploadSessionId");
+
+    const imageOrderValue =
+      formData.get("imageOrder");
+
+    const imageOrder =
+      typeof imageOrderValue === "string" &&
+        imageOrderValue.trim()
+        ? JSON.parse(imageOrderValue)
+        : null;
 
     const validation =
       productCreationFieldsSchema.safeParse(
@@ -268,13 +280,82 @@ export async function createProductAction(formData) {
       };
     }
 
-    const files = getProductFiles(formData);
+    let orderedSources = [];
 
-    if (!files.length) {
-      return {
-        ok: false,
-        error: "Add at least one product image.",
-      };
+    if (
+      typeof uploadSessionId === "string" &&
+      uploadSessionId.trim()
+    ) {
+      const uploadSession =
+        await getProductUploadSession(
+          uploadSessionId,
+        );
+
+      if (!uploadSession) {
+        return {
+          ok: false,
+          error:
+            "Upload session expired. Please upload the images again.",
+        };
+      }
+
+      if (uploadSession.userId !== user.id) {
+        return {
+          ok: false,
+          error: "Invalid upload session.",
+        };
+      }
+
+      if (
+        !Array.isArray(uploadSession.images) ||
+        uploadSession.images.length < 1 ||
+        uploadSession.images.length >
+        MAX_PRODUCT_IMAGES
+      ) {
+        return {
+          ok: false,
+          error:
+            "Upload between 1 and 8 product images.",
+        };
+      }
+
+      orderedSources = uploadSession.images;
+
+      stagedReferences = [
+        ...uploadSession.images,
+      ];
+    } else {
+      const files = getProductFiles(formData);
+
+      if (!files.length) {
+        return {
+          ok: false,
+          error: "Add at least one product image.",
+        };
+      }
+
+      if (
+        !Array.isArray(imageOrder) ||
+        imageOrder.length < 1 ||
+        imageOrder.length > MAX_PRODUCT_IMAGES
+      ) {
+        return {
+          ok: false,
+          error:
+            "A valid product image order is required.",
+        };
+      }
+
+      const staged = await stageProductFiles(
+        files,
+        imageOrder,
+      );
+
+      stagedReferences =
+        staged.stagedReferences;
+
+      orderedSources =
+        staged.orderedSources;
     }
 
     const category =
@@ -291,16 +372,9 @@ export async function createProductAction(formData) {
       };
     }
 
-    const staged = await stageProductFiles(
-      files,
-      imageOrder,
-    );
-
-    stagedReferences = staged.stagedReferences;
-
     const fullInput = {
       ...validation.data,
-      imageUrls: staged.orderedSources,
+      imageUrls: orderedSources,
     };
 
     const fullValidation =
@@ -364,6 +438,15 @@ export async function createProductAction(formData) {
 
     await revalidateProductPaths(product.slug);
 
+    if (
+      typeof uploadSessionId === "string" &&
+      uploadSessionId.trim()
+    ) {
+      await deleteProductUploadSession(
+        uploadSessionId,
+      );
+    }
+
     return {
       ok: true,
       queued: true,
@@ -388,6 +471,26 @@ export async function createProductAction(formData) {
         "Unable to create product.",
     };
   }
+}
+
+export async function createProductUploadSessionAction() {
+  const user = await requireAdmin();
+
+  await assertRateLimit({
+    prefix: "admin-product-upload-session",
+    limit: 20,
+    windowMs: 60_000,
+  });
+
+  const sessionId =
+    await createProductUploadSession(
+      user.id,
+    );
+
+  return {
+    ok: true,
+    uploadSessionId: sessionId,
+  };
 }
 
 export async function updateProductAction(
