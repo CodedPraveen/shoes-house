@@ -12,6 +12,7 @@ import { getAddressesAction } from "@/actions/address-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
+import { useAuthSafe } from "@/hooks/use-auth-safe";
 import SafeImage from "./ui/safe-image";
 import AddressFields from "@/components/address-fields";
 import {
@@ -19,6 +20,9 @@ import {
   mergeGeocodedAddress,
   validateAddressInput,
 } from "@/lib/address-validation";
+
+const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const fulfillmentStorageKey = "buy-now-fulfillment";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -37,6 +41,7 @@ function loadRazorpayScript() {
 const emptyForm = {
   label: "Home",
   fullName: "",
+  email: "",
   phone: "",
   line1: "",
   landmark: "",
@@ -47,10 +52,11 @@ const emptyForm = {
   pincode: "",
 };
 
-function addressToForm(address) {
+function addressToForm(address, email = "") {
   return {
     label: address.label || "Home",
     fullName: address.fullName,
+    email,
     phone: address.phone,
     line1: address.line1,
     landmark: address.landmark || "",
@@ -62,11 +68,39 @@ function addressToForm(address) {
   };
 }
 
+function readPendingFulfillment() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const value = window.sessionStorage.getItem(fulfillmentStorageKey);
+    if (!value) return null;
+
+    const pending = JSON.parse(value);
+    return pending?.form && typeof pending.form === "object" ? pending : null;
+  } catch {
+    window.sessionStorage.removeItem(fulfillmentStorageKey);
+    return null;
+  }
+}
+
+function savePendingFulfillment(value) {
+  window.sessionStorage.setItem(fulfillmentStorageKey, JSON.stringify(value));
+}
+
+function clearPendingFulfillment() {
+  window.sessionStorage.removeItem(fulfillmentStorageKey);
+}
+
 export default function CheckoutBuyNowClient({ lineItem }) {
   const { user } = useUser();
+  const { isLoaded, isSignedIn } = useAuthSafe();
   const customerName =
     user?.fullName ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+  const customerEmail =
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.emailAddresses?.[0]?.emailAddress ||
+    "";
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
@@ -77,18 +111,28 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const shippingCost = calculateShipping(subtotal);
   const total = subtotal + shippingCost;
 
+  const [pendingFulfillment] = useState(readPendingFulfillment);
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [addressMode, setAddressMode] = useState("saved");
+  const [addressMode, setAddressMode] = useState(
+    pendingFulfillment ? "new" : "saved",
+  );
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(
+    pendingFulfillment?.form ? { ...emptyForm, ...pendingFulfillment.form } : emptyForm,
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState(
+    pendingFulfillment?.paymentMethod || "razorpay",
+  );
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [saveAddress, setSaveAddress] = useState(false);
+  const [saveAddress, setSaveAddress] = useState(
+    Boolean(pendingFulfillment?.saveAddress),
+  );
   const touchedFieldsRef = useRef(new Set());
+  const pendingFulfillmentRef = useRef(pendingFulfillment);
   const [showMobileAddressFields, setShowMobileAddressFields] = useState(false);
 
   useEffect(() => {
@@ -97,7 +141,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         const rows = await getAddressesAction();
         setSavedAddresses(rows);
         if (rows.length > 0) {
-          if (touchedFieldsRef.current.size === 0) {
+          if (!pendingFulfillmentRef.current && touchedFieldsRef.current.size === 0) {
             const def = rows.find((a) => a.isDefault) ?? rows[0];
             setSelectedAddressId(def.id);
             setForm(addressToForm(def));
@@ -129,10 +173,14 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     e.preventDefault();
     setError("");
 
-    const validation = validateAddressInput({
-      ...form,
-      fullName: form.fullName || customerName,
-    });
+    const validation = validateAddressInput(
+      {
+        ...form,
+        fullName: form.fullName || customerName,
+        email: form.email || customerEmail,
+      },
+      { requireEmail: true },
+    );
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       setError(firstAddressError(validation.errors));
@@ -147,12 +195,32 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     }
 
     setFieldErrors({});
+
+    if (hasClerk && !isLoaded) {
+      setError("Authentication is still loading. Please try again.");
+      return;
+    }
+
+    if (hasClerk && !isSignedIn) {
+      savePendingFulfillment({
+        form: validation.address,
+        paymentMethod,
+        saveAddress,
+      });
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(
+          `${window.location.pathname}${window.location.search}`,
+        )}`,
+      );
+      return;
+    }
+
     setLoading(true);
 
     const addressPayload =
       addressMode === "saved" && selectedAddressId
-        ? { addressId: selectedAddressId }
-        : { ...form, fullName: form.fullName || customerName };
+        ? { addressId: selectedAddressId, email: validation.address.email }
+        : validation.address;
 
     try {
       const result = await createBuyNowCheckoutSessionAction({
@@ -169,6 +237,8 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         setLoading(false);
         return;
       }
+
+      clearPendingFulfillment();
 
       if (paymentMethod === "cod") {
         router.push(`/orders/${result.orderId}?status=confirmed`);
@@ -237,7 +307,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     if (!address) return;
 
     setSelectedAddressId(id);
-    setForm(addressToForm(address));
+    setForm(addressToForm(address, form.email || customerEmail));
     touchedFieldsRef.current.clear();
     setFieldErrors({});
     setSelectedCoordinates(null);
@@ -250,6 +320,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     setForm((previous) => ({
       ...emptyForm,
       fullName: previous.fullName || customerName,
+      email: previous.email || customerEmail,
     }));
     touchedFieldsRef.current.clear();
     setFieldErrors({});
@@ -339,6 +410,30 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           </div>
         ) : null}
 
+        {addressMode === "saved" && selectedAddressId ? (
+          <label>
+            <span className="mb-1.5 block text-xs font-medium text-black/70">
+              Email <span className="text-red-600" aria-hidden="true">*</span>
+            </span>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={form.email || customerEmail}
+              onChange={(event) => updateField("email", event.target.value)}
+              placeholder="you@example.com"
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "buy-now-email-error" : undefined}
+              className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none ${fieldErrors.email ? "border-red-500" : "border-black/10"}`}
+            />
+            {fieldErrors.email ? (
+              <p id="buy-now-email-error" className="mt-1 text-xs text-red-600" role="alert">
+                {fieldErrors.email}
+              </p>
+            ) : null}
+          </label>
+        ) : null}
+
         {(addressMode === "new" || savedAddresses.length === 0) && (
           <div className="flex flex-wrap items-center gap-2">
             <GoogleLocationPicker
@@ -379,6 +474,28 @@ export default function CheckoutBuyNowClient({ lineItem }) {
                 {fieldErrors.fullName ? (
                   <p id="buy-now-name-error" className="mt-1 text-xs text-red-600" role="alert">
                     {fieldErrors.fullName}
+                  </p>
+                ) : null}
+              </label>
+
+              <label className="col-span-2">
+                <span className="mb-1.5 block text-xs font-medium text-black/70">
+                  Email <span className="text-red-600" aria-hidden="true">*</span>
+                </span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={form.email || customerEmail}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  placeholder="you@example.com"
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? "buy-now-email-error" : undefined}
+                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none ${fieldErrors.email ? "border-red-500" : "border-black/10"}`}
+                />
+                {fieldErrors.email ? (
+                  <p id="buy-now-email-error" className="mt-1 text-xs text-red-600" role="alert">
+                    {fieldErrors.email}
                   </p>
                 ) : null}
               </label>
@@ -447,9 +564,10 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             {/* Desktop: existing complete address form */}
             <div className="hidden sm:block">
               <AddressFields
-                form={{ ...form, fullName: form.fullName || customerName }}
+                form={{ ...form, fullName: form.fullName || customerName, email: form.email || customerEmail }}
                 errors={fieldErrors}
                 onChange={updateField}
+                showEmailField
               />
             </div>
 

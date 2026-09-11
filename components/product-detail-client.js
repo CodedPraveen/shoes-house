@@ -288,17 +288,15 @@ export default function ProductDetailClient({ product }) {
       return;
     }
 
-    requireAuth(() => {
-      const q = new URLSearchParams({
-        productId: product.id,
-        size: String(size),
-        quantity: String(quantity),
-      });
-
-      router.push(
-        `/checkout/buy-now?${q.toString()}`,
-      );
+    const q = new URLSearchParams({
+      productId: product.id,
+      size: String(size),
+      quantity: String(quantity),
     });
+
+    router.push(
+      `/checkout/buy-now?${q.toString()}`,
+    );
   };
 
   const wishlistActive = optimisticWishlist;

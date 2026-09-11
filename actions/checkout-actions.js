@@ -15,16 +15,20 @@ import { razorpayService } from "@/services/payment/razorpay-service";
 import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
 import { revalidatePath } from "next/cache";
 
-async function resolveShippingAddress(userId, { addressId, ...manual }) {
+async function resolveShippingAddress(
+  userId,
+  { addressId, ...manual },
+  options,
+) {
   let candidate = manual;
 
   if (addressId) {
     const saved = await addressService.getByIdForUser(userId, addressId);
     if (!saved) throw new Error("Saved address not found");
-    candidate = toCheckoutAddress(saved);
+    candidate = { ...toCheckoutAddress(saved), email: manual.email };
   }
 
-  const result = validateAddressInput(candidate);
+  const result = validateAddressInput(candidate, options);
   if (!result.isValid) {
     throw new Error(firstAddressError(result.errors));
   }
@@ -37,7 +41,9 @@ export async function createBuyNowCheckoutSessionAction(input) {
 
   try {
     await assertRateLimit({ prefix: "checkout-buy-now", limit: 8, windowMs: 60_000 });
-    const shipping = await resolveShippingAddress(user.id, input);
+    const shipping = await resolveShippingAddress(user.id, input, {
+      requireEmail: true,
+    });
     shipping.saveShippingAddress = Boolean(input.saveShippingAddress && !input.addressId);
     const { productId, size, quantity = 1, paymentMethod = "razorpay" } = input;
 
