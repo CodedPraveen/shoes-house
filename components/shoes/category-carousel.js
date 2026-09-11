@@ -46,7 +46,7 @@ export default function CategoryCarousel({ categories }) {
                                 className="group relative block overflow-hidden rounded-3xl"
                             > */}
                                 <Link
-                                    href={`/shoes?category=${category.slug}`}
+                                    href={`/category/${category.slug}`}
                                     className="group relative block overflow-hidden rounded-3xl"
                                 >
                                     <SafeImage
