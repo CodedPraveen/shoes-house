@@ -12,16 +12,11 @@ import {
   updateProductAction,
 } from "@/actions/admin-product-actions";
 
-import AdminImageUpload from "@/components/admin/admin-image-upload";
-import LoadingButton from "@/components/ui/loading-button";
-import {
-  buttonClass,
-  inputClass,
-} from "@/components/new-admin/ui";
 import { slugify } from "@/lib/slugify-text";
 import ProductFormFields from "@/components/new-admin/products/product-form-fields";
 import ProductFormInventory from "@/components/new-admin/products/product-form-inventory";
 import ProductFormImages from "@/components/new-admin/products/product-form-images";
+import ProductFormActions from "./product-form-actions";
 
 const MAX_PRODUCT_IMAGES = 8;
 
@@ -534,30 +529,12 @@ export default function NewAdminProductForm({
             </p>
           ) : null}
 
-          <div className="flex flex-wrap gap-3">
-            <LoadingButton
-              type="submit"
-              loading={saving}
-              disabled={deleting}
-              className={buttonClass}
-            >
-              {mode === "edit"
-                ? "Save changes"
-                : "Create product"}
-            </LoadingButton>
-
-            {mode === "edit" ? (
-              <LoadingButton
-                type="button"
-                onClick={remove}
-                loading={deleting}
-                disabled={saving}
-                className="h-10 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50"
-              >
-                Delete product
-              </LoadingButton>
-            ) : null}
-          </div>
+          <ProductFormActions
+            mode={mode}
+            saving={saving}
+            deleting={deleting}
+            onDelete={remove}
+          />
         </div>
       </form>
     </>
