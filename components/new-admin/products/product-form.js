@@ -19,6 +19,7 @@ import {
   inputClass,
 } from "@/components/new-admin/ui";
 import { slugify } from "@/lib/slugify-text";
+import ProductFormFields from "@/components/new-admin/products/product-form-fields";
 
 const MAX_PRODUCT_IMAGES = 8;
 
@@ -37,6 +38,8 @@ export default function NewAdminProductForm({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState(subCategories ?? []);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
 
   const [form, setForm] = useState({
     name: initial?.name ?? "",
@@ -116,7 +119,7 @@ export default function NewAdminProductForm({
       if (
         key === "name" &&
         mode === "create" &&
-        !current.slug
+        !slugManuallyEdited
       ) {
         next.slug = slugify(value);
       }
@@ -498,142 +501,14 @@ export default function NewAdminProductForm({
         className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
       >
         <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="sm:col-span-2">
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Product name{" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <input
-                required
-                className={inputClass}
-                value={form.name}
-                onChange={(event) =>
-                  update("name", event.target.value)
-                }
-              />
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Slug{" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <input
-                required
-                className={inputClass}
-                value={form.slug}
-                onChange={(event) =>
-                  update("slug", event.target.value)
-                }
-              />
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Brand{" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <input
-                required
-                className={inputClass}
-                value={form.brand}
-                onChange={(event) =>
-                  update("brand", event.target.value)
-                }
-              />
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Collection
-              </span>
-
-              <select
-                className={inputClass}
-                value={form.collection}
-                onChange={(event) =>
-                  update("collection", event.target.value)
-                }
-              >
-                {collections.map((item) => (
-                  <option
-                    key={item.id}
-                    value={item.collection}
-                  >
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Category{" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <select
-                required
-                className={inputClass}
-                value={form.categorySlug}
-                onChange={(event) => {
-                  const value = event.target.value;
-
-                  update("categorySlug", value);
-
-                  if (mode !== "edit") {
-                    window.localStorage.setItem(
-                      "admin-product-category",
-                      value,
-                    );
-                  }
-                }}
-              >
-                {categories.map((item) => (
-                  <option
-                    key={item.id}
-                    value={item.slug}
-                  >
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="sm:col-span-2">
-              <span className="mb-1.5 block text-xs font-medium text-slate-500">
-                Description{" "}
-                <span className="text-rose-600" aria-hidden="true">
-                  *
-                </span>
-              </span>
-
-              <textarea
-                required
-                rows={6}
-                className={`${inputClass} h-auto py-3`}
-                value={form.description}
-                onChange={(event) =>
-                  update(
-                    "description",
-                    event.target.value,
-                  )
-                }
-              />
-            </label>
-          </div>
+          <ProductFormFields
+            form={form}
+            update={update}
+            collections={collections}
+            categories={categories}
+            mode={mode}
+            setSlugManuallyEdited={setSlugManuallyEdited}
+          />
         </div>
 
         <div className="space-y-5">
@@ -652,6 +527,7 @@ export default function NewAdminProductForm({
                 min="1"
                 className={inputClass}
                 value={form.price}
+                placeholder="Price in INR"
                 onChange={(event) =>
                   update("price", event.target.value)
                 }
@@ -669,6 +545,7 @@ export default function NewAdminProductForm({
                 step="1"
                 className={inputClass}
                 value={form.stock}
+                placeholder="Stock quantity"
                 onChange={(event) =>
                   update("stock", event.target.value)
                 }
