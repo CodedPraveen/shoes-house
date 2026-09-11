@@ -20,6 +20,7 @@ import {
 } from "@/components/new-admin/ui";
 import { slugify } from "@/lib/slugify-text";
 import ProductFormFields from "@/components/new-admin/products/product-form-fields";
+import ProductFormInventory from "@/components/new-admin/products/product-form-inventory";
 
 const MAX_PRODUCT_IMAGES = 8;
 
@@ -512,7 +513,7 @@ export default function NewAdminProductForm({
         </div>
 
         <div className="space-y-5">
-          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          {/* <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <label>
               <span className="mb-1.5 block text-xs font-medium text-slate-500">
                 Price (₹){" "}
@@ -635,7 +636,11 @@ export default function NewAdminProductForm({
                 Trending
               </label>
             </div>
-          </section>
+          </section> */}
+          <ProductFormInventory
+            form={form}
+            update={update}
+          />
 
           {error ? (
             <p
