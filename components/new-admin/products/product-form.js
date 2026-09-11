@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 import {
   createProductAction,
+  createProductUploadSessionAction,
   deleteProductAction,
   getSubCategoriesAction,
   updateProductAction,
@@ -12,7 +14,10 @@ import {
 
 import AdminImageUpload from "@/components/admin/admin-image-upload";
 import LoadingButton from "@/components/ui/loading-button";
-import { buttonClass, inputClass } from "@/components/new-admin/ui";
+import {
+  buttonClass,
+  inputClass,
+} from "@/components/new-admin/ui";
 import { slugify } from "@/lib/slugify-text";
 
 const MAX_PRODUCT_IMAGES = 8;
@@ -25,6 +30,8 @@ export default function NewAdminProductForm({
   subCategories,
 }) {
   const router = useRouter();
+  const { getToken } = useAuth();
+  const pendingUploadRef = useRef(null);
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -195,7 +202,6 @@ export default function NewAdminProductForm({
         categorySlug: form.categorySlug,
         isNew: form.isNew,
         isTrending: form.isTrending,
-
         sizes: form.sizes
           .split(",")
           .map((value) => Number(value.trim()))
@@ -205,61 +211,235 @@ export default function NewAdminProductForm({
           ),
       };
 
-      const formData = new FormData();
+      /*
+       * EDIT FLOW
+       *
+       * Keep edit behavior exactly as it is today.
+       */
+      if (mode === "edit") {
+        const formData = new FormData();
 
-      formData.append(
+        formData.append(
+          "product",
+          JSON.stringify(productFields),
+        );
+
+        const imageOrder = [];
+        let newFileIndex = 0;
+
+        for (const image of form.images) {
+          if (image.type === "existing") {
+            imageOrder.push({
+              type: "existing",
+              url: image.url,
+            });
+            continue;
+          }
+
+          if (image.type === "new") {
+            formData.append("files", image.file);
+
+            imageOrder.push({
+              type: "file",
+              index: newFileIndex,
+            });
+
+            newFileIndex += 1;
+          }
+        }
+
+        formData.append(
+          "imageOrder",
+          JSON.stringify(imageOrder),
+        );
+
+        const result = await updateProductAction(
+          productId,
+          formData,
+        );
+
+        if (!result?.ok) {
+          throw new Error(
+            result?.error || "Unable to save product.",
+          );
+        }
+
+        router.push("/new-admin/products");
+        router.refresh();
+
+        return;
+      }
+
+      const selectedFiles = form.images
+        .filter(
+          (image) => image.type === "new" && image.file,
+        )
+        .map((image) => image.file);
+
+      if (selectedFiles.length !== form.images.length) {
+        throw new Error(
+          "Choose between 1 and 8 product images from your device.",
+        );
+      }
+
+      const pendingUpload = pendingUploadRef.current;
+
+      let uploadSessionId =
+        pendingUpload &&
+          pendingUpload.files.length === selectedFiles.length &&
+          pendingUpload.files.every(
+            (file, index) => file === selectedFiles[index],
+          )
+          ? pendingUpload.uploadSessionId
+          : null;
+
+      if (!uploadSessionId) {
+        /*
+         * CREATE FLOW
+         *
+         * 1. Refresh Clerk token immediately for the small
+         *    authenticated Server Action request.
+         */
+        await getToken({
+          skipCache: true,
+        });
+
+        /*
+         * 2. Create a short-lived upload session.
+         *    This request is tiny and authenticated.
+         */
+        const sessionResult =
+          await createProductUploadSessionAction();
+
+        if (!sessionResult?.ok) {
+          throw new Error(
+            sessionResult?.error ||
+            "Unable to start image upload.",
+          );
+        }
+
+        uploadSessionId =
+          sessionResult.uploadSessionId;
+
+        if (!uploadSessionId) {
+          throw new Error(
+            "Upload session was not created.",
+          );
+        }
+
+        /*
+         * 3. Send the actual image files to the dedicated
+         *    upload route.
+         *
+         *    IMPORTANT:
+         *    Do NOT send Clerk token manually here.
+         */
+        const uploadFormData = new FormData();
+
+        uploadFormData.append(
+          "uploadSessionId",
+          uploadSessionId,
+        );
+
+        for (const file of selectedFiles) {
+          uploadFormData.append("files", file);
+        }
+
+        let uploadResponse;
+
+        try {
+          uploadResponse = await fetch(
+            "/api/admin/product-upload",
+            {
+              method: "POST",
+              body: uploadFormData,
+            },
+          );
+        } catch {
+          throw new Error(
+            "The image upload could not reach the server. Check your connection and try again.",
+          );
+        }
+
+        let uploadResult;
+
+        try {
+          uploadResult = await uploadResponse.json();
+        } catch {
+          throw new Error(
+            "The image upload returned an invalid response. Please try again.",
+          );
+        }
+
+        if (
+          !uploadResponse.ok ||
+          !uploadResult?.ok
+        ) {
+          throw new Error(
+            uploadResult?.error ||
+            `Unable to upload product images (HTTP ${uploadResponse.status}).`,
+          );
+        }
+
+        if (
+          !Array.isArray(uploadResult.images) ||
+          uploadResult.images.length !== selectedFiles.length
+        ) {
+          throw new Error(
+            "The image upload response was incomplete. Please try again.",
+          );
+        }
+
+        pendingUploadRef.current = {
+          uploadSessionId,
+          files: selectedFiles,
+        };
+      }
+
+      /*
+       * 4. Send only small product JSON + upload session ID
+       *    through the Clerk-protected Server Action.
+       */
+      const productFormData = new FormData();
+
+      productFormData.append(
         "product",
         JSON.stringify(productFields),
       );
 
-      const imageOrder = [];
-
-      let newFileIndex = 0;
-
-      for (const image of form.images) {
-        if (image.type === "existing") {
-          imageOrder.push({
-            type: "existing",
-            url: image.url,
-          });
-          continue;
-        }
-
-        if (image.type === "new") {
-          formData.append("files", image.file);
-
-          imageOrder.push({
-            type: "file",
-            index: newFileIndex,
-          });
-
-          newFileIndex += 1;
-        }
-      }
-
-      formData.append(
-        "imageOrder",
-        JSON.stringify(imageOrder),
+      productFormData.append(
+        "uploadSessionId",
+        uploadSessionId,
       );
 
+      await getToken({
+        skipCache: true,
+      });
+
       const result =
-        mode === "edit"
-          ? await updateProductAction(
-            productId,
-            formData,
-          )
-          : await createProductAction(formData);
+        await createProductAction(
+          productFormData,
+        );
 
       if (!result?.ok) {
+        if (
+          result?.code === "UPLOAD_SESSION_EXPIRED" ||
+          result?.code === "UPLOAD_SESSION_INVALID" ||
+          result?.code === "PRODUCT_QUEUE_FAILED"
+        ) {
+          pendingUploadRef.current = null;
+        }
+
         throw new Error(
-          result?.error || "Unable to save product.",
+          result?.error ||
+          "Unable to create product.",
         );
       }
 
+      pendingUploadRef.current = null;
+
       router.push(
-        mode === "edit"
-          ? "/new-admin/products"
-          : "/new-admin/products?created=processing",
+        "/new-admin/products?created=processing",
       );
 
       router.refresh();
