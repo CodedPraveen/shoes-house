@@ -8,6 +8,7 @@ export default function ProductFormActions({
     saving,
     deleting,
     onDelete,
+    onDiscard,
 }) {
     return (
         <div className="flex flex-wrap gap-3">
@@ -21,6 +22,17 @@ export default function ProductFormActions({
                     ? "Save changes"
                     : "Create product"}
             </LoadingButton>
+
+            {mode === "edit" ? (
+                <LoadingButton
+                    type="button"
+                    onClick={onDiscard}
+                    disabled={saving || deleting}
+                    className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                    Discard
+                </LoadingButton>
+            ) : null}
 
             {mode === "edit" ? (
                 <LoadingButton

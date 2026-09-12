@@ -13,12 +13,39 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
+function productListReturnTo(value) {
+  const returnTo = Array.isArray(value) ? value[0] : value;
+
+  if (typeof returnTo !== "string") {
+    return "/new-admin/products";
+  }
+
+  try {
+    const url = new URL(returnTo, "http://new-admin.local");
+
+    if (
+      url.origin !== "http://new-admin.local" ||
+      url.pathname !== "/new-admin/products"
+    ) {
+      return "/new-admin/products";
+    }
+
+    url.searchParams.delete("focusProduct");
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return "/new-admin/products";
+  }
+}
+
 export default async function NewAdminEditProductPage({
   params,
+  searchParams,
 }) {
   await requireNewAdminPage();
 
   const { id } = await params;
+  const query = await searchParams;
+  const returnTo = productListReturnTo(query.returnTo);
 
   const [product, productRecord] = await Promise.all([
     productAdminService.getForEdit(id),
@@ -78,7 +105,7 @@ export default async function NewAdminEditProductPage({
         description="Changes use the existing product service and inventory movement rules."
         action={
           <Link
-            href="/new-admin/products"
+            href={returnTo}
             className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium"
           >
             Back to products
@@ -92,6 +119,7 @@ export default async function NewAdminEditProductPage({
         initial={initial}
         collections={collections}
         subCategories={subCategories}
+        returnTo={returnTo}
       />
     </div>
   );

@@ -26,6 +26,7 @@ export default function NewAdminProductForm({
   initial,
   collections,
   subCategories,
+  returnTo = "/new-admin/products",
 }) {
   const router = useRouter();
   const { getToken } = useAuth();
@@ -263,7 +264,10 @@ export default function NewAdminProductForm({
           );
         }
 
-        router.push("/new-admin/products");
+        const destination = new URL(returnTo, window.location.origin);
+        destination.searchParams.set("focusProduct", productId);
+
+        router.push(`${destination.pathname}${destination.search}`);
         router.refresh();
 
         return;
@@ -293,20 +297,11 @@ export default function NewAdminProductForm({
           : null;
 
       if (!uploadSessionId) {
-        /*
-         * CREATE FLOW
-         *
-         * 1. Refresh Clerk token immediately for the small
-         *    authenticated Server Action request.
-         */
+
         await getToken({
           skipCache: true,
         });
 
-        /*
-         * 2. Create a short-lived upload session.
-         *    This request is tiny and authenticated.
-         */
         const sessionResult =
           await createProductUploadSessionAction();
 
@@ -326,13 +321,6 @@ export default function NewAdminProductForm({
           );
         }
 
-        /*
-         * 3. Send the actual image files to the dedicated
-         *    upload route.
-         *
-         *    IMPORTANT:
-         *    Do NOT send Clerk token manually here.
-         */
         const uploadFormData = new FormData();
 
         uploadFormData.append(
@@ -395,10 +383,6 @@ export default function NewAdminProductForm({
         };
       }
 
-      /*
-       * 4. Send only small product JSON + upload session ID
-       *    through the Clerk-protected Server Action.
-       */
       const productFormData = new FormData();
 
       productFormData.append(
@@ -490,6 +474,13 @@ export default function NewAdminProductForm({
     }
   }
 
+  function discard() {
+    const destination = new URL(returnTo, window.location.origin);
+    destination.searchParams.set("focusProduct", productId);
+
+    router.push(`${destination.pathname}${destination.search}`);
+  }
+
   return (
     <>
       <form
@@ -533,6 +524,7 @@ export default function NewAdminProductForm({
             saving={saving}
             deleting={deleting}
             onDelete={remove}
+            onDiscard={discard}
           />
         </div>
       </form>
