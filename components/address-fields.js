@@ -60,6 +60,7 @@ export default function AddressFields({
   onChange,
   showLabel = false,
   showContactFields = true,
+  showEmailField = false,
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -105,6 +106,20 @@ export default function AddressFields({
             autoComplete="tel"
           />
         </>
+      ) : null}
+      {showEmailField ? (
+        <AddressField
+          field="email"
+          label="Email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={onChange}
+          error={errors.email}
+          required
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+        />
       ) : null}
       <AddressField
         field="line1"

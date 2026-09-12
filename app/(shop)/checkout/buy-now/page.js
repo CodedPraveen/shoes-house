@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import CheckoutBuyNowClient from "@/components/checkout-buy-now-client";
 import { productService } from "@/services/product-service";
@@ -26,17 +25,15 @@ export default async function BuyNowCheckoutPage({ searchParams }) {
   };
 
   return (
-    <AuthGate>
-      <main className="pt-20">
-        <PageHeader
-          eyebrow="Buy Now"
-          title="Complete your purchase"
-          description="Single-item checkout — your cart stays unchanged."
-        />
-        <Suspense fallback={<p className="px-5 text-sm text-black/60">Loading…</p>}>
-          <CheckoutBuyNowClient lineItem={lineItem} />
-        </Suspense>
-      </main>
-    </AuthGate>
+    <main className="pt-20">
+      <PageHeader
+        eyebrow="Buy Now"
+        title="Complete your purchase"
+        description="Single-item checkout — your cart stays unchanged."
+      />
+      <Suspense fallback={<p className="px-5 text-sm text-black/60">Loading…</p>}>
+        <CheckoutBuyNowClient lineItem={lineItem} />
+      </Suspense>
+    </main>
   );
 }
