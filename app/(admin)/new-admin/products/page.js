@@ -8,14 +8,40 @@ import Pagination from "@/components/new-admin/pagination";
 import { requireNewAdminPage } from "@/lib/admin-auth";
 import LoadingButton from "@/components/ui/loading-button";
 import { retryProductImageProcessingAction } from "@/actions/admin-product-actions";
+import { productImageSource } from "@/lib/mappers/product-mapper";
+import FocusProductRow from "@/components/new-admin/products/focus-product-row";
 
 export const metadata = { title: "Products" };
 export const dynamic = "force-dynamic";
+
+function productListHref(params) {
+  const search = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value === undefined || value === null || key === "focusProduct") {
+      continue;
+    }
+
+    for (const item of Array.isArray(value) ? value : [value]) {
+      search.append(key, String(item));
+    }
+  }
+
+  const query = search.toString();
+  return query ? `/new-admin/products?${query}` : "/new-admin/products";
+}
 
 export default async function NewAdminProductsPage({ searchParams }) {
   await requireNewAdminPage();
   const params = await searchParams;
   const data = await getProductsPage(params);
+  const returnTo = productListHref(params);
+  const focusProduct = Array.isArray(params.focusProduct)
+    ? params.focusProduct[0]
+    : params.focusProduct;
+  const editHref = (productId) =>
+    `/new-admin/products/${productId}/edit?${new URLSearchParams({ returnTo }).toString()}`;
+
   return (
     <div className="space-y-8">
       <PageHeader eyebrow="Catalog" title="Products" description="Search, filter, create, and maintain the live product catalog." action={<Link href="/new-admin/products/new" className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white"><PackagePlus className="size-4" />Add product</Link>} />
@@ -43,7 +69,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
           </div>
           <div className="divide-y divide-amber-200">
             {data.failedProducts.map((product) => (
-              <div key={product.id} className="grid gap-3 px-4 py-4 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-center sm:px-5">
+              <div id={`product-${product.id}`} key={product.id} className="grid gap-3 px-4 py-4 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-center sm:px-5">
                 <div>
                   <p className="font-semibold text-amber-950">{product.name}</p>
                   <p className="mt-1 text-xs text-amber-700">{product.slug}</p>
@@ -58,7 +84,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
                       </LoadingButton>
                     </form>
                   ) : null}
-                  <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">Fix images</Link>
+                  <Link href={editHref(product.id)} className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-center font-medium text-amber-950 hover:bg-amber-100">Fix images</Link>
                 </div>
               </div>
             ))}
@@ -70,8 +96,8 @@ export default async function NewAdminProductsPage({ searchParams }) {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="divide-y divide-slate-100">
             {data.products.map((product) => (
-              <div key={product.id} className="grid gap-4 p-4 sm:grid-cols-[4rem_1fr_auto] sm:items-center lg:grid-cols-[4rem_1.5fr_1fr_1fr_1fr_auto]">
-                <div className="relative size-16 overflow-hidden rounded-xl bg-slate-100"><SafeImage src={product.images[0]?.url} alt={product.name} fill sizes="64px" className="object-cover" /></div>
+              <div id={`product-${product.id}`} key={product.id} className="grid gap-4 p-4 sm:grid-cols-[4rem_1fr_auto] sm:items-center lg:grid-cols-[4rem_1.5fr_1fr_1fr_1fr_auto]">
+                <div className="relative size-16 overflow-hidden rounded-xl bg-slate-100"><SafeImage src={productImageSource(product.images[0])} alt={product.name} fill sizes="64px" className="object-cover" /></div>
                 <div className="min-w-0"><p className="truncate font-semibold">{product.name}</p><p className="mt-1 text-xs text-slate-500">{product.brand} · {product.collection}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Category</p><p className="text-sm font-medium">{product.category.name}</p></div>
                 <div className="hidden lg:block"><p className="text-xs text-slate-400">Price</p><p className="text-sm font-semibold">{formatPrice(product.price)}</p></div>
@@ -81,7 +107,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
                     {product.processingStatus === "PROCESSING" ? "Processing" : product.processingStatus === "FAILED" ? "Failed" : "Ready"}
                   </StatusBadge>
                   <StatusBadge tone={product.stock === 0 ? "rose" : product.stock <= 5 ? "amber" : "emerald"}>{product.stock} stock</StatusBadge>
-                  <Link href={`/new-admin/products/${product.id}/edit`} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">Edit</Link>
+                  <Link href={editHref(product.id)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium hover:bg-slate-50">Edit</Link>
                 </div>
               </div>
             ))}
@@ -89,6 +115,7 @@ export default async function NewAdminProductsPage({ searchParams }) {
         </div>
       ) : <EmptyState title="No matching products" description="Try a different catalog filter." />}
       <Pagination basePath="/new-admin/products" params={params} page={data.page} pageCount={data.pageCount} total={data.total} />
+      <FocusProductRow productId={focusProduct} />
     </div>
   );
 }
