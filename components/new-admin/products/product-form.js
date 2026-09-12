@@ -115,7 +115,6 @@ export default function NewAdminProductForm({
 
       if (
         key === "name" &&
-        mode === "create" &&
         !slugManuallyEdited
       ) {
         next.slug = slugify(value);
