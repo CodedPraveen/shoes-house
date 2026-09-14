@@ -7,13 +7,31 @@ import SectionReveal from "@/components/section-reveal";
 import ProductCarouselSkeleton from "@/components/product-carousel-skeleton";
 
 const TrendingTabs = dynamic(() => import("@/components/trending-tabs"), {
-  loading: () => <ProductCarouselSkeleton count={4} />,
+  loading: () => <TrendingTabsLoading />,
 });
 
 const DEFAULT_SECTION = {
   title: "Most wanted right now.",
   subtitle: null,
 };
+
+function TrendingTabsLoading() {
+  return (
+    <>
+      <div className="flex gap-3 overflow-x-auto px-5 scrollbar-none" aria-label="Most wanted categories">
+        {["all", "running", "football", "casual", "basketball"].map((tab) => (
+          <span
+            key={tab}
+            className={`shrink-0 border px-5 py-2 text-sm ${tab === "all" ? "bg-black text-white" : "bg-white text-black"}`}
+          >
+            {tab}
+          </span>
+        ))}
+      </div>
+      <ProductCarouselSkeleton count={4} />
+    </>
+  );
+}
 
 export default function DeferredTrendingSection() {
   const markerRef = useRef(null);
@@ -30,7 +48,7 @@ export default function DeferredTrendingSection() {
       startedRef.current = true;
 
       fetch("/api/homepage/sections/trending", { credentials: "same-origin" })
-        .then((response) => (response.ok ? response.json() : Promise.reject()))
+        .then((response) => (response.ok ? response.json() : Promise.reject(new Error("Trending request failed"))))
         .then((payload) => {
           setSection({ ...DEFAULT_SECTION, ...payload.section });
           setProducts(payload.products ?? []);
@@ -62,7 +80,7 @@ export default function DeferredTrendingSection() {
           </div>
           <Link href="/trending" className="no54123-full border border-black/15 px-5 py-2 text-sm transition hover:bg-black hover:text-white">View All</Link>
         </div>
-        {products === null ? <ProductCarouselSkeleton count={4} /> : <TrendingTabs initialProducts={products.slice(0, 16)} />}
+        <TrendingTabs initialProducts={products ?? []} isLoading={products === null} />
       </div>
     </SectionReveal>
   );
