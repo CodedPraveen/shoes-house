@@ -22,6 +22,9 @@ export default function HeroSection({ slides = [] }) {
   const [isPaused, setIsPaused] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const nextSlideIndex = slides.length > 1
+    ? (selectedIndex + 1) % slides.length
+    : 0;
 
   const draggedRef = useRef(false);
   const pointerStartRef = useRef(null);
@@ -224,7 +227,13 @@ export default function HeroSection({ slides = [] }) {
                     alt={slide.alt}
                     fill
                     priority={index === 0}
-                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={
+                      index === selectedIndex
+                        ? "high"
+                        : index === nextSlideIndex
+                          ? "auto"
+                          : "low"
+                    }
                     sizes="(min-width: 1024px) 30vw, (min-width: 640px) 60vw, 85vw"
                     draggable={false}
                     className="pointer-events-none object-cover object-center"

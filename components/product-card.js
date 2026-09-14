@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
@@ -22,6 +22,7 @@ function ProductCard({
   product,
   showRank = false,
   showNewBadge = false,
+  imageLoading = "lazy",
 }) {
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -32,6 +33,9 @@ function ProductCard({
     new Set(),
   );
   const [actionError, setActionError] = useState("");
+  const [supportsHover, setSupportsHover] = useState(false);
+  const [hoverImageRequested, setHoverImageRequested] = useState(false);
+  const [hoverImageLoaded, setHoverImageLoaded] = useState(false);
 
   const [optimisticWishlist, setOptimisticWishlist] = useState(
     isInWishlist(product.id)
@@ -135,31 +139,42 @@ function ProductCard({
     product.image,
   );
 
+  useEffect(() => {
+    const hoverMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const updateHoverSupport = () => setSupportsHover(hoverMedia.matches);
+    updateHoverSupport();
+    hoverMedia.addEventListener("change", updateHoverSupport);
+    return () => hoverMedia.removeEventListener("change", updateHoverSupport);
+  }, []);
+
   return (
     <Link
       href={productPath}
       className="block h-full"
     >
-      <article className="group flex h-full flex-col border border-black/5 bg-white shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10">
+      <article
+        className="group flex h-full flex-col border border-black/5 bg-white shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10"
+        onMouseEnter={() => {
+          if (supportsHover) setHoverImageRequested(true);
+        }}
+      >
         {/* =========================
             PRODUCT IMAGE
             FIXED 2:3 RATIO
         ========================== */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-100">
           {/* Hover Image */}
-          <SafeImage
-            src={product.hoverImage}
-            alt=""
-            fill
-            sizes="
-              (max-width: 640px) 50vw,
-              (max-width: 768px) 33vw,
-              (max-width: 1024px) 25vw,
-              (max-width: 1280px) 25vw,
-              20vw
-            "
-            className="h-full w-full object-cover"
-          />
+          {hoverImageRequested && product.hoverImage !== product.image ? (
+            <SafeImage
+              src={product.hoverImage}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+              className="h-full w-full object-cover"
+              loading="lazy"
+              onLoad={() => setHoverImageLoaded(true)}
+            />
+          ) : null}
 
           {/* Ranking */}
           {showRank && product.rank && (
@@ -186,16 +201,17 @@ function ProductCard({
               (max-width: 1280px) 25vw,
               20vw
             "
-            className="
+            className={`
               h-full
               w-full
               object-cover
               transition
               duration-500
               group-hover:scale-105
-              group-hover:opacity-0
-            "
-            loading="lazy"
+              ${hoverImageLoaded ? "group-hover:opacity-0" : ""}
+            `}
+            loading={imageLoading}
+            showPlaceholder
           />
 
           {/* Wishlist */}
@@ -324,7 +340,8 @@ export default memo(
       prevProps.showRank ===
       nextProps.showRank &&
       prevProps.showNewBadge ===
-      nextProps.showNewBadge
+      nextProps.showNewBadge &&
+      prevProps.imageLoading === nextProps.imageLoading
     );
   },
 );

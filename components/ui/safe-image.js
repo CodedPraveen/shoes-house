@@ -11,6 +11,8 @@ export default function SafeImage({
     alt,
     fallback = DEFAULT_FALLBACK,
     onError,
+    onLoad,
+    showPlaceholder = false,
     ...props
 }) {
     const sourceValidation = validateImageSource(src, { allowLocal: true });
@@ -22,22 +24,33 @@ export default function SafeImage({
     const [failedSource, setFailedSource] = useState(null);
     const isFallback = !sourceUrl || failedSource === sourceUrl;
     const imageSrc = isFallback ? fallbackSrc : sourceUrl;
+    const [loadedSource, setLoadedSource] = useState(null);
+    const isLoaded = loadedSource === imageSrc;
 
     return (
-        <Image
-            {...props}
-            src={imageSrc}
-            alt={alt || ""}
-            onError={(event) => {
-                if (!isFallback && sourceUrl) {
-                    setFailedSource(sourceUrl);
-                }
-                try {
-                    onError?.(event);
-                } catch {
-                    // Image failures must never escape this rendering boundary.
-                }
-            }}
-        />
+        <>
+            {showPlaceholder && !isLoaded ? (
+                <span className="absolute inset-0 animate-pulse bg-zinc-200/70" aria-hidden />
+            ) : null}
+            <Image
+                {...props}
+                src={imageSrc}
+                alt={alt || ""}
+                onLoad={(event) => {
+                    setLoadedSource(imageSrc);
+                    onLoad?.(event);
+                }}
+                onError={(event) => {
+                    if (!isFallback && sourceUrl) {
+                        setFailedSource(sourceUrl);
+                    }
+                    try {
+                        onError?.(event);
+                    } catch {
+                        // Image failures must never escape this rendering boundary.
+                    }
+                }}
+            />
+        </>
     );
 }
