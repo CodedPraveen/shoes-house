@@ -4,6 +4,7 @@ import SectionReveal from "@/components/section-reveal";
 
 export default function FeaturedProducts({
   products,
+  children,
   title = "Curated for quiet luxury.",
   subtitle = "Featured Products",
 }) {
@@ -29,7 +30,7 @@ export default function FeaturedProducts({
           </Link>
         </div>
 
-        <ProductCarousel products={products} />
+        {children ?? <ProductCarousel products={products} />}
       </div>
     </SectionReveal>
   );

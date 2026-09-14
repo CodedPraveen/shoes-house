@@ -97,6 +97,57 @@ export async function getStorefrontConfig(collection) {
   };
 }
 
+/**
+ * The above-the-fold homepage payload deliberately excludes product section
+ * items. Those can contain full product relations and should not delay the
+ * hero while the page is being streamed.
+ */
+export async function getHomepageHeroConfig(collection) {
+  const [heroSection, slides] = await Promise.all([
+    prisma.storefrontSection.findFirst({
+      where: { collection, key: "HERO" },
+      select: { enabled: true },
+    }),
+    prisma.heroSlide.findMany({
+      where: { collection, enabled: true },
+      orderBy: { sortOrder: "asc" },
+      include: { mediaAsset: true, category: true, product: true },
+    }),
+  ]);
+
+  return {
+    enabled: heroSection?.enabled !== false,
+    slides: slides.map((slide) => ({
+      id: slide.id,
+      image: mediaAssetSource(slide.mediaAsset),
+      alt: slide.alt || slide.mediaAsset?.alt || "Post Mart campaign",
+      href: targetHref(slide, collection),
+    })),
+  };
+}
+
+/** Fetch one product section only, so lower homepage sections stay deferred. */
+export async function getHomepageProductSection(collection, key) {
+  const fallback = STOREFRONT_SECTION_DEFAULTS.find((section) => section.key === key) ?? {
+    key,
+    title: key,
+    subtitle: null,
+    sortOrder: 100,
+  };
+  const section = await prisma.storefrontSection.findFirst({
+    where: { collection, key },
+    include: {
+      items: {
+        where: { enabled: true },
+        orderBy: { sortOrder: "asc" },
+        include: { product: { include: productInclude } },
+      },
+    },
+  });
+
+  return { ...fallback, enabled: true, items: [], ...section };
+}
+
 export async function getConfiguredProducts(section, fallback) {
   const selected = section?.items?.map((item) => item.product).filter(
     (product) => product && !product.deletedAt && product.processingStatus === "READY",

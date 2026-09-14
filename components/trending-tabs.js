@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProductCard from "@/components/product-card";
+import ProductCarouselSkeleton from "@/components/product-carousel-skeleton";
 
 const tabs = [
     "all",
@@ -23,7 +24,7 @@ function chunkProducts(products, size) {
     return chunks;
 }
 
-export default function TrendingTabs({ initialProducts }) {
+export default function TrendingTabs({ initialProducts = [], isLoading = false }) {
     const [activeTab, setActiveTab] = useState("all");
 
     const filteredProducts =
@@ -64,7 +65,9 @@ export default function TrendingTabs({ initialProducts }) {
             {/* =========================
           STACKED PRODUCT PANELS
       ========================== */}
-            {productPanels.length > 0 ? (
+            {isLoading ? (
+                <ProductCarouselSkeleton count={4} />
+            ) : productPanels.length > 0 ? (
                 <div className="mt-8 px-5">
                     <div className="relative">
                         {productPanels.map((panelProducts, panelIndex) => {
@@ -192,6 +195,7 @@ export default function TrendingTabs({ initialProducts }) {
                                                         showRank={
                                                             globalIndex < 3
                                                         }
+                                                        imageLoading={globalIndex < 4 ? "eager" : "lazy"}
                                                     />
                                                 );
                                             },

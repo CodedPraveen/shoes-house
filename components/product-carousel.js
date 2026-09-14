@@ -78,7 +78,7 @@ export default function ProductCarousel({ products = [] }) {
                 className="overflow-hidden"
             >
                 <div className="flex">
-                    {validProducts.map((item) => (
+                    {validProducts.map((item, index) => (
                         <div
                             key={item.id}
                             className="
@@ -99,7 +99,7 @@ export default function ProductCarousel({ products = [] }) {
                 xl:w-[23%]
               "
                         >
-                            <ProductCard product={item} />
+                            <ProductCard product={item} imageLoading={index < 2 ? "eager" : "lazy"} />
                         </div>
                     ))}
                 </div>
