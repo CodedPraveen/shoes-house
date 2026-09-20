@@ -16,6 +16,8 @@ FROM dependencies AS source
 COPY . .
 
 FROM source AS builder
+ARG DEPLOYMENT_VERSION
+ENV DEPLOYMENT_VERSION=$DEPLOYMENT_VERSION
 RUN --mount=type=secret,id=app_env,target=/app/.env,required=true npm run build
 
 FROM dependencies AS production-dependencies
@@ -23,7 +25,9 @@ RUN npm prune --omit=dev \
     && npm cache clean --force
 
 FROM base AS nextjs
+ARG DEPLOYMENT_VERSION
 ENV NODE_ENV=production \
+    DEPLOYMENT_VERSION=$DEPLOYMENT_VERSION \
     HOSTNAME=0.0.0.0 \
     PORT=3000
 RUN mkdir -p /data/ecommerce/images \

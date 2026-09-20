@@ -6,9 +6,9 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
 import {
-  createCheckoutSessionAction,
-  verifyRazorpayPaymentAction,
-} from "@/actions/checkout-actions";
+  createCartCheckoutSessionRequest,
+  verifyRazorpayPaymentRequest,
+} from "@/lib/checkout-api-client";
 import { getAddressesAction } from "@/actions/address-actions";
 import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
@@ -170,7 +170,7 @@ export default function CheckoutClient() {
         : { ...form, fullName: form.fullName || customerName };
 
     try {
-      const result = await createCheckoutSessionAction({
+      const result = await createCartCheckoutSessionRequest({
         ...payload,
         paymentMethod,
         saveShippingAddress: addressMode === "new" && saveAddress,
@@ -208,7 +208,7 @@ export default function CheckoutClient() {
           setLoading(true);
           setError("");
           try {
-            const persisted = await verifyRazorpayPaymentAction({
+            const persisted = await verifyRazorpayPaymentRequest({
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,

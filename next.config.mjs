@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  // Use an immutable release value (normally the Git commit SHA) so Next.js can
+  // detect clients that still have assets from the previous container image.
+  deploymentId: process.env.DEPLOYMENT_VERSION,
+
   experimental: {
     serverActions: {
       // Total Server Action request size.
@@ -29,7 +33,7 @@ const nextConfig = {
   allowedDevOrigins: [
     "192.168.31.89",
     "*.trycloudflare.com",
-    "10.161.145.155",
+    "10.23.12.155",
   ],
 };
 
