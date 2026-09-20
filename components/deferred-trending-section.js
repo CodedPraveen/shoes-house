@@ -63,7 +63,7 @@ export default function DeferredTrendingSection() {
           observer.disconnect();
         }
       },
-      { rootMargin: "1600px 1000px" },
+      { rootMargin: "800px 0px" },
     );
 
     observer.observe(marker);
@@ -71,7 +71,7 @@ export default function DeferredTrendingSection() {
   }, []);
 
   return (
-    <SectionReveal id="trending" className="sm:px-8 lg:pb-10">
+    <section id="trending" className="sm:px-8 lg:pb-10">
       <div ref={markerRef} className="mx-auto w-full max-w-350 space-y-10">
         <div className="mb-0 flex flex-wrap items-end justify-between gap-4 px-5 pb-8">
           <div className="space-y-3">
@@ -82,6 +82,6 @@ export default function DeferredTrendingSection() {
         </div>
         <TrendingTabs initialProducts={products ?? []} isLoading={products === null} />
       </div>
-    </SectionReveal>
+    </section>
   );
 }
