@@ -15,14 +15,24 @@ The worker validates `DATABASE_URL` at startup. The application also needs its e
 Build and start all services:
 
 ```sh
+export DEPLOYMENT_VERSION="$(git rev-parse HEAD)"
 docker compose up --build
 ```
 
 Run them in the background:
 
 ```sh
+export DEPLOYMENT_VERSION="$(git rev-parse HEAD)"
 docker compose up --build -d
 ```
+
+Use the immutable commit SHA as the deployment identifier on every production
+build. This lets Next.js detect browsers that still hold assets from the prior
+container and reload them instead of sending stale Server Action identifiers.
+Keep `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in `.env` stable across releases; it
+must be a base64-encoded 16, 24, or 32-byte AES key. Generate it once with
+`openssl rand -base64 32`, store it as a secret, and do not regenerate it for
+routine deployments.
 
 Open the application at <http://localhost:3000>.
 
@@ -41,6 +51,7 @@ docker compose down
 Rebuild after dependency or source changes:
 
 ```sh
+export DEPLOYMENT_VERSION="$(git rev-parse HEAD)"
 docker compose build --no-cache
 docker compose up -d
 ```

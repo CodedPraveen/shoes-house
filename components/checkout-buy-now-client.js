@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatPrice } from "@/lib/format-price";
 import { calculateShipping } from "@/lib/shipping";
 import {
-  createBuyNowCheckoutSessionAction,
-  verifyRazorpayPaymentAction,
-} from "@/actions/checkout-actions";
+  createBuyNowCheckoutSessionRequest,
+  verifyRazorpayPaymentRequest,
+} from "@/lib/checkout-api-client";
 import { getAddressesAction } from "@/actions/address-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import GoogleLocationPicker from "@/components/google-location-picker";
@@ -223,7 +223,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         : validation.address;
 
     try {
-      const result = await createBuyNowCheckoutSessionAction({
+      const result = await createBuyNowCheckoutSessionRequest({
         ...addressPayload,
         productId,
         size,
@@ -269,7 +269,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
           setLoading(true);
           setError("");
           try {
-            const persisted = await verifyRazorpayPaymentAction({
+            const persisted = await verifyRazorpayPaymentRequest({
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,

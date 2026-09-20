@@ -65,6 +65,8 @@ The actual deployed topology must be verified in the hosting project.
 
 ### Server-only
 
+- `DEPLOYMENT_VERSION` (unique immutable release value, normally the Git commit SHA)
+- `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (stable base64-encoded 16, 24, or 32-byte key)
 - `DATABASE_URL`, `DIRECT_URL`
 - `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`
 - `ADMIN_EMAILS`, `ADMIN_URL`
@@ -92,6 +94,10 @@ Configure the corresponding signing secrets in the deployment environment. Test 
 
 ## Release checklist
 
+- Before building, set `DEPLOYMENT_VERSION` to the commit being deployed. Keep
+  `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` stable across builds and all Next.js
+  containers. Compose exposes `.env` to the Docker build, so both values are
+  available when Next.js compiles the application.
 - Apply migrations before serving code that depends on them.
 - Verify Clerk roles and both administrator experiences.
 - Verify one-image and multi-image queue processing, WebP serving, and shared-volume persistence.

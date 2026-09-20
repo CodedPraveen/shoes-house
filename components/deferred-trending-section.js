@@ -63,7 +63,7 @@ export default function DeferredTrendingSection() {
           observer.disconnect();
         }
       },
-      { rootMargin: "800px 0px" },
+      { rootMargin: "1600px 1000px" },
     );
 
     observer.observe(marker);
