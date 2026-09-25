@@ -1,4 +1,5 @@
 import { productService } from "@/services/product-service";
+import { withAbsoluteProductImages } from "@/lib/mobile-product-images";
 
 const ALLOWED_SORTS = new Set(["latest", "popular", "price-asc", "price-desc"]);
 
@@ -35,7 +36,7 @@ export async function GET(request) {
     }, sort);
     const start = (page - 1) * pageSize;
     return Response.json({
-      items: products.slice(start, start + pageSize),
+      items: products.slice(start, start + pageSize).map((product) => withAbsoluteProductImages(product)),
       page,
       pageSize,
       total: products.length,
