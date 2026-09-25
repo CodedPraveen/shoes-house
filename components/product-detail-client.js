@@ -364,8 +364,8 @@ export default function ProductDetailClient({ product }) {
                 <div className="aspect-[2/3] w-full sm:aspect-[4/5] lg:aspect-auto lg:max-h-[600px]">
                   {currentImage ? (
                     <Image
-                    height={600}
-                    width={600}
+                      height={600}
+                      width={600}
                       src={currentImage}
                       alt={product.name}
                       className="h-auto max-h-[600px] w-full select-none object-contain"
@@ -425,8 +425,8 @@ export default function ProductDetailClient({ product }) {
                       }
                     >
                       <Image
-                      height={76}
-                      width={76}
+                        height={76}
+                        width={76}
                         src={image}
                         alt={`${product.name} ${index + 1
                           }`}
@@ -514,11 +514,6 @@ export default function ProductDetailClient({ product }) {
                 ) : null}
               </div>
             </div>
-
-            {/* Description */}
-            <p className="max-w-xl text-sm leading-6 text-black/60 sm:text-base sm:leading-7">
-              {product.description}
-            </p>
 
             {isSoldOut ? (
               <div className="space-y-4 border-y border-black/10 py-6" role="status">
@@ -666,7 +661,7 @@ export default function ProductDetailClient({ product }) {
                 </button>
               </div>
             ) : null}
-                
+
             {!isSoldOut && actionError && size ? (
               <p
                 className="text-sm text-red-600"
