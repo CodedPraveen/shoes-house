@@ -53,8 +53,8 @@ export async function createBuyNowCheckoutSession(input) {
   }
 }
 
-export async function createCartCheckoutSession(input) {
-  const user = await requireDbUser();
+export async function createCartCheckoutSession(input, authenticatedUser = null) {
+  const user = authenticatedUser ?? await requireDbUser();
 
   try {
     await assertRateLimit({ prefix: "checkout", limit: 8, windowMs: 60_000 });
@@ -81,8 +81,8 @@ export async function createCartCheckoutSession(input) {
   }
 }
 
-export async function verifyRazorpayPayment(input) {
-  const user = await requireDbUser();
+export async function verifyRazorpayPayment(input, authenticatedUser = null) {
+  const user = authenticatedUser ?? await requireDbUser();
 
   try {
     await assertRateLimit({ prefix: "checkout-verify", limit: 12, windowMs: 60_000 });
