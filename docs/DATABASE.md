@@ -2,7 +2,7 @@
 
 The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to PostgreSQL/Supabase.
 
-## Core models
+## Current core models
 
 ### Identity and customer data
 
@@ -27,9 +27,9 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 
 ### Checkout, orders, and payments
 
-- `CheckoutSession` snapshots totals, mode, shipping information, expiry, Razorpay order, and resulting order.
+- `CheckoutSession` currently requires `userId` and snapshots totals, mode, shipping information, expiry, Razorpay order, and resulting order.
 - `CheckoutSessionItem` snapshots product and variant details for checkout.
-- `Order` stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, checkpoints, and status history.
+- `Order` currently requires `userId` and stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, checkpoints, and status history.
 - `OrderStatusHistory` records each operational status transition, its previous/new state, a server-derived actor identifier, timestamp, and optional note.
 - `MediaAsset` supports a nullable historical URL or current relative storage path plus dimensions; `HeroSlide`, `StorefrontSection`, `StorefrontSectionItem`, and `NavbarItem` provide the lightweight storefront CMS.
 - `OrderItem` snapshots name, image, SKU, price, color, size, and quantity so catalog edits do not rewrite order history.
@@ -58,6 +58,22 @@ InventoryMovementType: SALE, RESTOCK, ADMIN_ADJUSTMENT, REFUND
 
 `WebhookLogStatus` includes invalid signature, duplicate event, amount mismatch, out-of-stock, fulfilled, failed, and ignored outcomes.
 
+## Guest checkout schema impact — planned, not migrated
+
+The current `Order.userId` and `CheckoutSession.userId` fields are required. Guest checkout cannot be implemented safely by changing UI alone.
+
+The likely migration direction is:
+
+- Make `Order.userId` nullable while retaining historical values and the relation for existing customer orders.
+- Make `CheckoutSession.userId` nullable while preserving user-linked sessions.
+- Store validated guest contact details needed for fulfillment and communication.
+- Store only a one-way hash of a high-entropy private order-access token, with expiry/revocation metadata.
+- Add indexes and constraints that match actual query and uniqueness requirements.
+
+This is a design outline, not a migration specification. Before implementation, inspect every use of these fields, relation behavior, admin reports, exports, webhook fulfillment, cleanup jobs, and mobile API dependencies. Decide whether token data belongs on `Order` or a separate token model. Do not store raw tokens.
+
+Do not remove `User`, Clerk identity fields, customer history, or unrelated cart/address/wishlist/review relations as part of this change. Do not fabricate Clerk users for guests.
+
 ## Category seed
 
 Parent categories:
@@ -76,3 +92,4 @@ Seeded jewellery children: Necklaces, Earrings, Rings, Bracelets, Mangalsutra, B
 - Use atomic stock mutations and write matching inventory movements.
 - Apply schema changes through migrations for production.
 - Do not access Prisma directly from Client Components.
+- Never reset or truncate production data to introduce guest checkout.

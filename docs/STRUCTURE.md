@@ -1,46 +1,47 @@
 # Repository Structure
 
-## Top-level directories
+## Main directories
 
 ```text
-app/          Next.js App Router pages, layouts, route handlers, and webhooks
-components/   Storefront, admin, new-admin, documentation, and shared UI
-actions/      Server Actions and their authentication/input boundaries
-services/     Business logic, Prisma operations, and third-party integrations
-lib/          Authorization, validation, cache, mapping, database, and utilities
-prisma/       Prisma schema, migrations, and seed
-context/      Cart, wishlist, search, and recently viewed client state
+app/          Next.js App Router pages, layouts, route handlers and webhooks
+actions/      Server Actions and input/auth boundaries
+components/   Storefront, admin, new-admin and shared UI
+services/     Business logic, Prisma operations and integrations
+lib/          Auth guards, validation, cache, database and utilities
+prisma/       Schema, migrations and seed
+context/      Client cart, wishlist, search and recently viewed state
 hooks/        Shared React hooks
-data/         Seed/catalog source data
+workers/      Background image processing
+queues/       BullMQ queue definitions
 public/       Static assets
-docs/         Repository-level technical documentation
+docs/         Technical documentation
 ```
 
 ## Route groups
 
 | Path | Responsibility |
-| --- | --- |
-| `app/(shop)/` | Customer storefront and account flows |
-| `app/(auth)/` | Clerk sign-in and sign-up pages |
-| `app/(admin)/admin/` | Existing admin system; preserve its behavior |
-| `app/(admin)/new-admin/` | Newer operations system with independent authorization |
-| `app/api/` | Active route handlers and webhooks |
-| `app/docs/` | Developer-facing web documentation page |
+|---|---|
+| `app/(shop)/` | Public storefront and guest shopping |
+| `app/(auth)/` | Existing Clerk auth pages; customer-facing use should be removed/redirected as part of guest-only work while preserving admin access |
+| `app/(admin)/admin/` | Existing admin system |
+| `app/(admin)/new-admin/` | New operations system |
+| `app/api/` | APIs and webhooks |
+| `app/docs/` | Developer-facing docs route |
 
-## Important components
+## Guest-only target routes
 
-- `components/admin/` contains existing admin UI and the shared staged image uploader.
-- `components/new-admin/` contains the newer operations shell, tables, product form, and order actions.
-- `components/docs/` renders the searchable `/docs` web page.
-- Shared storefront components live directly under `components/` or in collection-specific folders.
+The exact route structure must be confirmed during implementation. The customer experience needs:
+- Guest checkout routes for CART and BUY_NOW.
+- A private order page/route that validates the per-order token.
+- Optional public track-order landing page only if it does not imply OTP/account login.
 
 ## Server boundaries
 
-- `actions/admin-product-actions.js` owns administrator product actions, staged image uploads, queue submission, retries, and cleanup.
-- `actions/new-admin-order-actions.js` owns new-admin order mutations.
-- Customer mutations live in purpose-specific action files such as cart, checkout, address, wishlist, and review actions.
-- `services/*` should contain reusable business logic. UI components must not duplicate Prisma workflows.
+- Actions/routes validate input and enforce authorization.
+- Services implement reusable business logic.
+- Prisma access remains server-side.
+- Admin routes and mutations preserve their current guards.
 
 ## Duplicate route warning
 
-The repository contains older top-level `api/` files as well as active App Router handlers under `app/api/`. Next.js routing uses `app/api/`; inspect call sites before changing or removing older files.
+The repository may contain legacy top-level API files as well as active App Router handlers under `app/api/`. Next.js uses `app/api/`; inspect call sites before changing/removing older files.

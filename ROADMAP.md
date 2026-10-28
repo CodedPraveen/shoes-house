@@ -1,39 +1,47 @@
-# Post Mart Roadmap
+# Shoes House Roadmap
 
-## Completed
+Statuses in this document are planning guidance. Update status only after implementation and verification.
 
-- [x] Phase 0–1: Prisma schema, seed, slug URLs, product reads
-- [x] Phase 4: Razorpay, orders, invoices, addresses, webhooks
-- [x] Pre-Phase 5 hardening: InventoryMovement, webhook idempotency, refunds foundation
-- [x] Phase 5: Admin product CRUD, Cloudinary, newsletter
-- [x] Performance audit: cart speed, Buy Now isolation, caching, recommendations
+## P0 — Guest-only customer experience
 
-## Phase 6 — Reviews
+| Work | Status | Notes |
+|---|---|---|
+| Remove customer login/signup and profile UI | Planned | Keep Clerk and admin login intact |
+| Guest CART checkout | Planned | Use browser cart; validate all lines server-side |
+| Guest BUY_NOW checkout | Planned | Preserve current cart |
+| Guest order persistence | Planned | Preserve historical user-linked orders |
+| Private per-order access token | Planned | High entropy; store hash only; no OTP |
+| Guest order confirmation page | Planned | Display order confirmation and private link |
+| Secure order detail/tracking endpoint | Planned | Token authorizes exactly one order |
+| COD inventory correctness | Planned/verify | Atomic stock behavior; avoid duplicate decrement |
+| Razorpay guest payment fulfilment | Planned | Signature, amount, idempotency, webhook recovery |
 
-- [ ] Review submission UI (PDP)
-- [ ] `submitReviewAction` + Prisma Review
-- [ ] Aggregate rating on admin (optional)
+## P1 — Transactional email
 
-## Phase 7 — Admin product polish
+| Work | Status | Notes |
+|---|---|---|
+| Resend integration | Planned | Server-only API key and verified sender |
+| Order confirmation email | Planned | Send after order is persisted |
+| Shipment/status notification | Planned | Trigger on meaningful state transitions |
+| Email retry/observability | Planned | Email failure must not reverse a successful order |
 
-- [ ] Variant-level stock edit (RESTOCK movements)
-- [ ] Bulk import/export
-- [ ] Image reorder in admin
+## P1 — Security and testing
 
-## Phase 8 — Production hardening
+- Test private-link token entropy, hashing, expiry/revocation strategy, and leakage controls.
+- Test that order ID/order number alone returns no customer data.
+- Test cross-order token access denial.
+- Test email links, redirects, referrer policy, and query/path token redaction from logs.
+- Test guest COD and Razorpay end-to-end.
+- Test admin access to guest orders and historical orders.
+- Test webhook duplicates and payment recovery.
+- Verify migrations against a copy of existing data.
 
-- [ ] Redis rate limiting (Upstash)
-- [ ] Prisma Accelerate / pool tuning
-- [ ] Security audit
-- [ ] E2E test suite
-- [ ] Vercel preview + production env separation
-- [ ] Admin refund UI wired to `refund-service`
+## P2 — Existing product and operations work
 
-## Performance targets (ongoing)
-
-| Metric | Target |
-|--------|--------|
-| Add to cart | <500ms |
-| Remove from cart | <500ms |
-| Razorpay open | <1s |
-| PDP repeat visit | Cache hit (120s) |
+- Complete COD inventory accounting if not resolved by guest checkout work.
+- Complete review submission/display.
+- Complete refund administration workflow.
+- Add audited variant stock adjustment.
+- Replace per-process rate limiting with a shared strategy.
+- Add automated browser E2E coverage.
+- Decide whether to migrate historical Cloudinary assets.

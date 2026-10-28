@@ -4,14 +4,27 @@ Only environment variable names are documented. Never copy real values here.
 
 ## Clerk
 
-Purpose: authentication, session handling, sign-in/sign-up UI, and user lifecycle webhooks.
+Purpose: authentication, session handling, administrator sign-in/authorization, and existing user lifecycle webhooks. The current application also uses Clerk for customer authentication; removing customer login from the storefront must not remove Clerk because both administrator interfaces depend on it.
 
 Important variables:
 
 - Public: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, Clerk route/redirect variables.
 - Server-only: `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`.
 
-The webhook uses Svix verification before user synchronization.
+The webhook uses Svix verification before user synchronization. Review customer-related webhook behavior only after inspecting all mobile and historical-user dependencies.
+
+## Resend — selected, integration pending
+
+Resend is the selected initial provider for transactional order emails. It is not documented as a live integration yet.
+
+Planned uses include sending the order confirmation and private order-access link after an order has been safely persisted. Email failure must not roll back verified payment fulfillment. Implement durable retry/idempotency and delivery-status handling before production rollout.
+
+Expected server-only configuration names (confirm against implementation before adding to `.env.example`):
+
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
+
+Verify the sending domain and sender identity. Never expose the API key through `NEXT_PUBLIC_*`, client code, logs, or API responses.
 
 ## Image storage
 
@@ -29,7 +42,7 @@ Variables:
 - `RAZORPAY_KEY_SECRET`
 - `RAZORPAY_WEBHOOK_SECRET`
 
-The server verifies browser payment signatures, fetches payment status, matches amounts, enforces checkout ownership, and processes webhooks idempotently.
+The server verifies browser payment signatures, fetches payment status, matches amounts, enforces checkout/session linkage, and processes webhooks idempotently. Guest checkout must preserve these controls and must not trust browser-submitted totals.
 
 ## AfterShip
 
@@ -57,7 +70,7 @@ Purpose: BullMQ image jobs, checkout locks, and cache helpers.
 
 Variable: `REDIS_URL`.
 
-Rate limiting is currently in-memory and is not automatically made multi-instance by Redis being present.
+Rate limiting is currently in-memory and is not automatically made multi-instance by Redis being present. Guest order-token endpoints and email retries need appropriate shared/durable controls before production.
 
 ## Google Maps Platform
 

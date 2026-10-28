@@ -1,55 +1,42 @@
 # Services
 
-Services contain reusable business and data-access logic. Search this directory before creating another service.
+Search for existing implementations before creating new services. The list below describes current responsibilities and target additions.
 
 ## Catalog and products
 
-- `product-service.js` — storefront product reads.
-- `product-admin-service.js` — administrator product creation, update, image reconciliation, variants, stock totals, categories, and soft deletion.
-- `category-service.js` — category reads.
-- `inventory-read-service.js` — inventory read models.
-- `inventory-service.js` — atomic decrement, increment, refund, restock, and administrator adjustment primitives.
+- `product-service.js`: storefront reads.
+- `product-admin-service.js`: administrator product CRUD, image reconciliation and variants.
+- `category-service.js`: category reads.
+- `inventory-service.js`: stock mutation primitives and audit records.
+- `inventory-read-service.js`: inventory read models.
 
-## Checkout, payment, and fulfillment
+## Checkout, payment and fulfilment
 
-- `checkout-service.js` — line building, stock validation, CART/BUY_NOW sessions, Razorpay setup, and COD order creation.
-- `order-fulfillment-service.js` — idempotent paid fulfillment, ownership/amount validation, orders, payments, stock movements, and cart clearing.
-- `services/payment/razorpay-service.js` — Razorpay client and signature checks.
-- `services/payment/payment-idempotency.js` — duplicate-payment detection and logging.
-- `services/payment/webhook-service.js` — Razorpay webhook event handling.
-- `services/payment/webhook-log-service.js` — webhook audit persistence.
-- `refund-service.js` — refund/restock foundation; no finished admin UI.
+- `checkout-service.js`: CART/BUY_NOW line building, stock validation, checkout sessions, Razorpay setup and COD order creation.
+- `checkout-flow-service.js`: current orchestration; currently user-bound and must be adapted for guest checkout.
+- `order-fulfillment-service.js`: paid order fulfilment, idempotency, payment records and inventory updates.
+- `services/payment/razorpay-service.js`: Razorpay client/signature verification.
+- `services/payment/payment-idempotency.js`: duplicate-payment handling.
+- `services/payment/webhook-service.js`: webhook processing.
+- `refund-service.js`: refund foundation.
 
 ## Orders and operations
 
-New production-safe operational services:
-
-- `order-workflow-service.js` validates conditional transitions and writes status-history audit records.
-- `storefront-service.js` builds ordered product-section, hero, selected-product, and navbar read models; legacy non-product section rows are retained but excluded from product-section rendering.
-
-- `order-service.js` — order reads, tracking attachment, refresh, and tracking synchronization.
-- `new-admin-service.js` — dashboards, filtered orders, exports, products, inventory, customers, and newsletter read models.
-- `invoice-service.js` — invoice data and HTML generation.
-- `tracking-service.js` — AfterShip create/get/delete requests for India Post.
+- `order-service.js`: order reads, tracking attachment and synchronization.
+- `order-workflow-service.js`: conditional status transitions and audit history.
+- `invoice-service.js`: invoice data and HTML generation.
+- `tracking-service.js`: AfterShip requests.
+- `new-admin-service.js`: admin dashboards, order/product/customer read models and exports.
+- `storefront-service.js`: storefront CMS read models.
 
 ## Customer state
 
-- `cart-service.js` — persisted cart reads and mutations.
-- `wishlist-service.js` — wishlist persistence.
-- `address-service.js` — owned addresses and checkout-address conversion.
-- `user-service.js` — Clerk-to-Prisma user synchronization and lookups.
-- `review-service.js` — review data foundation.
-- `newsletter-service.js` — subscriptions and admin subscriber reads.
+Cart persistence is being moved to the guest browser flow for the approved storefront. Existing user-scoped cart/address/wishlist services may remain for admin/history/other integrations only if still needed; remove dead paths after call-site audit.
 
-## Media and location
+## Target additions
 
-- `services/upload/image-upload-service.js` — validated JPG/PNG staging and cleanup for the shared filesystem/BullMQ image flow.
-- `google-geolocation-service.js` and related helpers — Google location integrations.
+- Guest order access service: token generation, hash persistence, validation, rotation/revocation.
+- Guest checkout service or extension: server-side cart/product/variant validation and order creation.
+- Email service: Resend client, templates, and retry-safe send orchestration.
 
-## Service rules
-
-- Services do not make a client trustworthy; actions/routes must still authorize callers.
-- Prefer transactions for multi-model business mutations.
-- Preserve idempotency for payment and webhook operations.
-- Keep cache invalidation adjacent to successful mutations.
-- Do not duplicate Prisma queries inside Client Components.
+Do not send email from the database transaction. Keep provider failures separate from order/payment persistence.

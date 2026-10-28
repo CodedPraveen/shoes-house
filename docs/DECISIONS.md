@@ -10,7 +10,7 @@ Use `/product/[slug]` rather than numeric product IDs for readable, stable custo
 
 ## ADR-003: Razorpay verification is authoritative
 
-Browser payment success alone is not trusted. The server verifies signature, captured status, amount, ownership, and idempotency. Razorpay webhooks share the fulfillment path.
+Browser payment success alone is not trusted. The server verifies signature, captured status, amount, ownership/session linkage, and idempotency. Razorpay webhooks share the fulfillment path.
 
 ## ADR-004: Immutable order snapshots
 
@@ -51,3 +51,15 @@ Catalog/search reads use explicit caching and mutation invalidation. Carts, sess
 ## ADR-013: Source code outranks documentation
 
 Documentation accelerates discovery but is not an excuse to skip implementation inspection. Update docs when verified code changes make them stale.
+
+## ADR-014: Guest storefront checkout without customer accounts (approved direction; implementation pending)
+
+The customer-facing storefront is intended to support checkout without customer sign-in, sign-up, or customer OTP. Customers access an individual order through a high-entropy private link delivered by transactional email. An order ID alone is not authorization.
+
+Clerk remains required for `/admin`, `/new-admin`, and server-side administrator authorization. This decision does not authorize removing Clerk middleware/provider or administrator guards.
+
+The current schema and checkout implementation still require a Clerk-backed customer. The decision is not considered implemented until an additive database migration, guest checkout, private token authorization, email integration, tests, and production rollout are complete.
+
+## ADR-015: Resend for initial transactional email (selected; integration pending)
+
+Resend is selected for initial transactional order email, including delivery of private order links. Keep API credentials server-only. Implement reliable retry/idempotency and failure handling so email delivery failure cannot undo a verified payment or order fulfillment.

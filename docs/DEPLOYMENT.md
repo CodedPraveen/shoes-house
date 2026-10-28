@@ -4,104 +4,102 @@
 
 ```bash
 npm install
-# Create a local .env using an example as a guide.
-# Fill values locally; never commit real credentials.
 npm run setup
 npm run dev
 ```
 
-`npm run setup` performs Prisma generation, development schema push, and seed execution.
+Use `.env.example` as the environment reference. Never commit real values.
 
-## Database commands
+## Database
 
 ```bash
 npm run db:generate
-npm run db:push
-npm run db:migrate
-npm run db:deploy
+npm run db:push       # development only
+npm run db:migrate    # create/review migration
+npm run db:deploy     # apply committed migrations
 npm run db:seed
 npm run db:studio
 ```
 
-- Use `db:push` only for development synchronization.
-- Create and review migrations with `db:migrate`.
-- Apply committed production migrations with `db:deploy`.
+Guest-order schema changes must be additive and tested against a copy of existing data before production rollout. Never reset production data.
 
-## Validation commands
+## Validation
 
 ```bash
 npm run lint
 npm run build
 ```
 
-The build script generates Prisma Client before the Next.js build. On Windows, a running process can lock Prisma's query-engine DLL; stop processes using the generated client before regenerating it.
-
-## Expected production topology
+## Expected application topology
 
 ```text
-Git repository
-  → Docker Compose
-     → Next.js
-     → BullMQ worker
-     → Redis
-     → shared image-data volume at /data/ecommerce/images
-  → Supabase PostgreSQL
-  → Clerk
-  → Razorpay
-  → AfterShip
+Next.js application
+  ├─ guest storefront and checkout
+  ├─ Clerk-protected admin systems
+  └─ API routes/webhooks
+BullMQ worker + Redis
+Shared persistent image volume
+PostgreSQL/Supabase
+Razorpay
+AfterShip
+Resend (when implemented)
 ```
 
-The actual deployed topology must be verified in the hosting project.
+Verify the actual production topology in the hosting provider before release; repository configuration alone does not prove deployment state.
 
-## Environment variables
+## Environment groups
 
-### Application/public
-
+### Application
 - `NEXT_PUBLIC_APP_URL`
+- Existing public analytics/maps variables as required.
+
+### Clerk — administrator authentication
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- Clerk public sign-in/sign-up/redirect paths
-- Public Google Maps variables
-- `NEXT_PUBLIC_FACEBOOK_PIXEL_ID`
+- `CLERK_SECRET_KEY`
+- `CLERK_WEBHOOK_SECRET`
+- `ADMIN_EMAILS`
+- `ADMIN_URL`
 
-### Server-only
+Do not remove Clerk variables while admin routes depend on them.
 
-- `DEPLOYMENT_VERSION` (unique immutable release value, normally the Git commit SHA)
-- `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (stable base64-encoded 16, 24, or 32-byte key)
-- `DATABASE_URL`, `DIRECT_URL`
-- `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`
-- `ADMIN_EMAILS`, `ADMIN_URL`
-- `IMAGE_STORAGE_ROOT` (server-only; `/data/ecommerce/images` in Docker)
-- Razorpay server variables
-- AfterShip server variables
-- Server Google variables
-- `REDIS_URL`, `PERF_LOG`
+### Database
+- `DATABASE_URL`
+- `DIRECT_URL`
 
-Required new-admin path:
+### Payments
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
 
+### Tracking
+- `AFTERSHIP_API_KEY`
+- `AFTERSHIP_WEBHOOK_SECRET`
+
+### Redis/images
+- `REDIS_URL`
+- `IMAGE_STORAGE_ROOT`
+- Existing BullMQ tuning variables where configured.
+
+### Resend — add only when integration is implemented
 ```env
-ADMIN_URL=/new-admin
+RESEND_API_KEY=
+EMAIL_FROM=
 ```
 
-## Webhook setup
+`EMAIL_FROM` must use a sender/domain verified with Resend. The API key is server-only.
 
-Register production endpoints for:
+## Webhooks
 
-- `/api/webhooks/clerk`
-- `/api/webhooks/razorpay`
-- `/api/webhooks/aftership`
-
-Configure the corresponding signing secrets in the deployment environment. Test invalid signatures and duplicate delivery behavior before launch.
+Retain the endpoints and signing secrets required by active Clerk admin sync, Razorpay and AfterShip integrations. Verify invalid signatures and duplicate deliveries before release.
 
 ## Release checklist
 
-- Before building, set `DEPLOYMENT_VERSION` to the commit being deployed. Keep
-  `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` stable across builds and all Next.js
-  containers. Compose exposes `.env` to the Docker build, so both values are
-  available when Next.js compiles the application.
-- Apply migrations before serving code that depends on them.
-- Verify Clerk roles and both administrator experiences.
-- Verify one-image and multi-image queue processing, WebP serving, and shared-volume persistence.
-- Verify Razorpay test and production modes are not mixed.
-- Verify AfterShip carrier/webhook configuration.
-- Run owner/non-owner order access tests.
-- Confirm secrets are not included in client bundles or logs.
+- Apply migrations before deploying code that requires them.
+- Confirm both admin systems still authenticate and authorize correctly.
+- Test guest CART and BUY_NOW.
+- Test COD stock behavior and Razorpay payment/webhook idempotency.
+- Test order access with valid, invalid, expired/revoked and cross-order tokens.
+- Confirm order ID alone reveals no customer data.
+- Verify Resend sender domain and real delivery when enabled.
+- Verify worker, Redis and persistent image volume.
+- Confirm no secrets or raw order tokens appear in client bundles/logs.

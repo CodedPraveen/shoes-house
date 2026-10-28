@@ -1,76 +1,45 @@
-# Post Mart — Project Context
+# Shoes House — Project Context
 
-## What this is
+## Purpose
 
-Premium sneaker ecommerce (**Post Mart**) built with Next.js 16 App Router, JavaScript, Tailwind CSS.
+Shoes House is a Next.js e-commerce application for shoes and jewellery with storefront, checkout, payment, fulfilment, tracking, and admin operations.
 
 ## Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js App Router, React 19, Tailwind 4, Framer Motion |
-| Auth | Clerk (Svix webhooks → User sync) |
-| Database | Supabase PostgreSQL |
-| ORM | Prisma 6.19 |
-| Payments | Razorpay (webhook = source of truth) |
-| Media | Cloudinary (admin uploads) |
-| Deploy | Vercel |
+- Next.js 16 App Router, React 19, JavaScript, Tailwind CSS 4
+- Prisma 6 with PostgreSQL/Supabase
+- Clerk for administrator authentication only
+- Razorpay for online payments
+- AfterShip for shipment tracking
+- Persistent image filesystem + BullMQ + Redis + Sharp
+- Resend selected for initial transactional email integration (pending implementation)
+- Google Maps Platform for location assistance
 
-## Key directories
+## Customer model — approved target
 
-```
-app/(shop)/          Storefront
-app/(admin)/admin/   Admin dashboard
-app/api/             Webhooks, invoice, admin API
-actions/             Server Actions
-services/            Business logic (Prisma)
-lib/                 Helpers, cache, perf, cart utils
-components/          UI (do not redesign without approval)
-context/             Cart, wishlist, search, recently viewed
-prisma/schema.prisma Database schema
-```
+- No customer login or signup.
+- No customer profile UI.
+- No customer OTP or password.
+- Guest cart in browser storage.
+- Guest checkout for CART and BUY_NOW.
+- Customer views an individual order through a private, unguessable order link.
+- The private link grants access only to its associated order. No OTP is required.
+- Email confirmation and order-status messages use Resend after integration is implemented.
 
-## Data flow
+## Administrator model
 
-```
-UI → Server Actions / Server Components → services/* → Prisma → PostgreSQL
-```
+Clerk remains enabled for administrator login. Existing `/admin` and `/new-admin` authorization must continue to work.
 
-## Auth model
+## Important architecture rules
 
-- **Guest:** cart + wishlist in localStorage
-- **Signed-in:** cart + wishlist in DB via server actions
-- **Admin:** `ADMIN_EMAILS` or Clerk `publicMetadata.role = admin`
+- Never trust client-submitted price, stock, user ID, role, order status, or payment state.
+- Validate product/variant/quantity and recalculate totals on the server.
+- Verify Razorpay payments server-side and preserve idempotent fulfilment.
+- Private order tokens must be high entropy; persist only a cryptographic hash.
+- Do not expose order data by order number or ID alone.
+- Preserve historical orders and admin reporting during schema migration.
+- Use additive, reviewed migrations; never reset production data.
 
-## Checkout architecture
+## Documentation
 
-| Flow | Session mode | Clears cart? |
-|------|--------------|--------------|
-| Cart checkout | `CART` | Yes (after webhook) |
-| Buy Now | `BUY_NOW` | No |
-
-Stock is **never** reserved until Razorpay webhook verifies payment.
-
-## Product URLs
-
-Slug-based: `/product/aero-one`
-
-## Commands
-
-```bash
-npx prisma generate                                                                                                                         
-npm run db:push       
-npm run db:seed
-npm run dev
-```
-
-## Env
-
-See `.env`
-
-## Related docs
-
-- `ARCHITECTURE.md` — diagrams
-- `PERFORMANCE_REPORT.md` — measured bottlenecks
-- `ROADMAP.md` — phases
-- `DECISIONS.md` — ADRs
+See `docs/README.md` for the documentation index and status conventions.
