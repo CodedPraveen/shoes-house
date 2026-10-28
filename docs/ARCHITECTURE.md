@@ -3,59 +3,46 @@
 ## Layered flow
 
 ```text
-Browser
-  → Next.js App Router pages and components
-  → Server Components / Server Actions / Route Handlers
+Customer browser (guest)
+  → Next.js App Router
+  → guest cart / checkout / private order access
   → services/*
   → Prisma
-  → Supabase PostgreSQL
+  → PostgreSQL
 
-External systems: Clerk, Razorpay, AfterShip, Google Maps
-Image processing: Next.js staging → Redis/BullMQ → worker/Sharp → shared persistent filesystem
+Administrator browser
+  → Clerk session
+  → admin page/action/API guards
+  → services/*
+  → Prisma
 ```
+
+External systems: Razorpay (payments), AfterShip (tracking), Resend (planned transactional email), Google Maps (address assistance), Redis/BullMQ/Sharp (image processing).
 
 ## Responsibilities
 
-### Browser and UI
-
-Client Components own interaction state, optimistic UI, file selection, and browser-only integrations. They are not trusted authorization boundaries.
-
-### Server Components
-
-Server Components fetch data for pages. Sensitive new-admin pages call `requireNewAdminPage()` before service or Prisma access because layouts and pages may begin rendering in parallel.
-
-### Server Actions
-
-Server Actions are remotely callable server boundaries. Sensitive actions authenticate and authorize internally before invoking services.
-
-### Route handlers
-
-Route handlers own HTTP response codes, webhook verification, resource authorization, CSV export, invoice output, and tracking APIs.
-
-### Services
-
-Services implement business operations and data access. Examples include product administration, checkout, fulfillment, inventory, orders, tracking, invoices, newsletters, users, and refunds.
-
-### Prisma and PostgreSQL
-
-Prisma models relational state, unique constraints, soft deletion, immutable order snapshots, payment idempotency, and inventory movements. Supabase provides PostgreSQL through `DATABASE_URL` and `DIRECT_URL`.
+- Client Components: interaction state only; never trusted for price, stock, role, or access.
+- Server Components: page data and server rendering.
+- Server Actions: validate and authorize each mutation.
+- Route handlers: HTTP boundaries, webhooks, public private-token access, invoice responses and admin APIs.
+- Services: checkout, fulfilment, order, inventory, email, tracking and catalog business logic.
+- Prisma/PostgreSQL: persistence, unique constraints, snapshots, idempotency and audit history.
+- Worker: long-running image conversion/finalization.
 
 ## Authentication boundaries
 
-- Clerk authenticates customers and administrators.
-- Customer resources derive the Clerk identity server-side and resolve the corresponding Prisma user.
-- New-admin pages use `requireNewAdminPage()`.
-- New-admin APIs and mutations use `requireAdmin()` independently.
-- Resource routes such as order and invoice APIs enforce owner-or-admin access.
+- Customers do not authenticate.
+- Admins authenticate with Clerk.
+- Admin role checks remain server-side.
+- Guest order access uses a private per-order token; no OTP.
+- A token authorizes one order only and is stored as a hash.
 
-See [AUTH.md](./AUTH.md) and [SECURITY.md](./SECURITY.md).
+## Checkout rules
 
-## Data mutation principle
+CART and BUY_NOW remain distinct. Server-side product, variant, stock, shipping, and total validation is mandatory. Razorpay signature/capture/amount verification and webhook idempotency remain mandatory.
 
-Business mutations should follow this direction:
+## Image pipeline
 
-```text
-UI → authenticated action/route → service → Prisma transaction → cache invalidation
-```
+Admin upload → validated staging → BullMQ/Redis → Sharp worker → persistent shared volume → relative storage metadata. Legacy Cloudinary URLs remain read-compatible only.
 
-Do not call third-party APIs with secrets from Client Components. Do not process image binaries in the Next.js request process beyond validation and staging.
+See `AUTH.md`, `FLOWS.md`, `DATABASE.md`, and `SECURITY.md`.

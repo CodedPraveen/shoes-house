@@ -1,68 +1,40 @@
-# Post Mart — Architecture Decisions
+# Shoes House — Architecture Decisions
 
 ## ADR-001: Slug-based product URLs
+Use `/product/[slug]` for readable and stable product URLs.
 
-**Decision:** `/product/[slug]` not numeric ID.  
-**Reason:** SEO, readable URLs, stable links after DB migration.
+## ADR-002: Separate checkout modes
+`CheckoutSessionMode` distinguishes `CART` and `BUY_NOW`. Buy Now must not add to or clear the existing cart.
 
-## ADR-002: No inventory reservation before payment
+## ADR-003: Razorpay server verification is authoritative
+Browser payment success alone is not trusted. Verify signature, captured state, amount, session association, and idempotency. Razorpay webhooks remain an authoritative recovery/fulfilment path.
 
-**Decision:** Stock decrements only after Razorpay webhook `payment.captured`.  
-**Reason:** Abandoned carts must not lock inventory.
+## ADR-004: Immutable order snapshots
+Copy product name, image, SKU, price, variant attributes, and shipping details into order records so later catalog/address changes do not rewrite historical orders.
 
-## ADR-003: Webhook as payment authority
+## ADR-005: Atomic inventory mutation
+Use database predicates/transactions for stock changes and write corresponding `InventoryMovement` audit records. COD must not bypass oversell protection.
 
-**Decision:** Frontend Razorpay success is not authoritative.  
-**Reason:** Prevent tampering; idempotent fulfillment via webhook.
+## ADR-006: Service-oriented business logic
+Actions and route handlers own input validation and trust boundaries. Services own reusable business logic and Prisma transactions.
 
-## ADR-004: Separate CheckoutSession modes
+## ADR-007: Persistent image processing
+New uploads use validated staging, BullMQ, Sharp, and a shared persistent filesystem. Historical Cloudinary URLs remain readable only.
 
-**Decision:** `CheckoutSessionMode`: `CART` | `BUY_NOW`.  
-**Reason:** Buy Now must not add to cart or checkout entire cart.
+## ADR-008: Separate administrator interfaces
+`/admin` and `/new-admin` remain distinct UI systems. Shared backend changes must preserve both.
 
-## ADR-005: Order snapshots
+## ADR-009: Customer accounts are not part of the storefront
+The approved customer experience is guest-only: no customer sign-in, signup, profile, password, or OTP login. Clerk remains for administrators.
 
-**Decision:** Copy product name, SKU, price, image onto `OrderItem`; shipping onto `Order`.  
-**Reason:** Historical orders/invoices must not change when catalog updates.
+## ADR-010: Private order links replace customer order accounts
+A customer receives a high-entropy private access link for each order. The token is scoped to one order; only its hash is stored. Order ID/number alone never authorizes access. No OTP is required to view the order.
 
-## ADR-006: Optimistic cart updates
+## ADR-011: Resend is the initial transactional email provider
+Use Resend for order confirmation and relevant shipment/status notifications. Keep provider calls server-side and isolate email failure from order/payment success. Resend integration is not considered live until credentials, sender domain, and delivery are verified.
 
-**Decision:** Client updates cart state immediately; server reconciles.  
-**Reason:** Sub-500ms perceived latency; no `revalidatePath` on cart.
+## ADR-012: Additive schema changes
+Guest-order support must preserve existing user-linked orders, payments, inventory movements, and admin reporting. Use reviewed migrations; do not reset production data.
 
-## ADR-007: Caching
-
-| Resource | Mechanism | TTL | Invalidate |
-|----------|-----------|-----|------------|
-| Product by slug | `unstable_cache` | 120s | `revalidateTag('products')` |
-| Search catalog | `unstable_cache` | 300s | `revalidateTag('search-catalog')` |
-| Cart | None | — | Real-time |
-| User session | Clerk | — | — |
-
-**Decision:** Remove catalog from shop layout; lazy-load search catalog.  
-**Reason:** Layout was loading full catalog on every navigation (major TTFB regression).
-
-## ADR-008: Slim cart queries
-
-**Decision:** `lib/cart-include.js` — select only fields needed for cart UI.  
-**Reason:** Full `productInclude` on cart caused multi-second queries.
-
-## ADR-009: Rate limiting
-
-**Decision:** In-memory sliding window per IP (`lib/rate-limit.js`).  
-**Reason:** Simple for single-region; upgrade to Redis for multi-instance.
-
-## ADR-010: Clerk webhook verification
-
-**Decision:** Svix signature verification with `CLERK_WEBHOOK_SECRET`.  
-**Reason:** Prevent forged user sync events.
-
-## ADR-011: InventoryMovement audit trail
-
-**Decision:** Every stock change writes `InventoryMovement`.  
-**Reason:** Debugging, ERP readiness, oversell investigations.
-
-## ADR-012: Atomic stock decrement
-
-**Decision:** `updateMany` with `stock: { gte: qty }`; fail if `count !== 1`.  
-**Reason:** Race-safe oversell protection at DB level.
+## ADR-013: Source code outranks documentation
+Inspect source before changing code. Update docs only when implementation status is verified.

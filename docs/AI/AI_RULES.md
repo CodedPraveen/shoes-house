@@ -1,80 +1,59 @@
 # AI Development Rules
 
-These rules apply to AI assistants and code-generation agents working in this repository.
-
 ## Before changing code
 
-- Read `docs/README.md` first.
-- Read `docs/PROJECT.md`, `docs/STRUCTURE.md`, and `docs/ARCHITECTURE.md`.
-- Read documentation relevant to the requested feature.
-- Inspect the actual implementation before planning changes.
-- Treat source code as the final source of truth.
-- Preserve unrelated user changes in a dirty worktree.
+- Read `docs/README.md`, `PROJECT.md`, `STRUCTURE.md`, and `ARCHITECTURE.md`.
+- Read the feature-specific docs.
+- Inspect current source, schema, migrations, call sites and tests.
+- Distinguish current implementation from approved target behavior.
+- Preserve unrelated worktree changes.
 
-## Reuse before creation
+## Customer experience
 
-Before creating a service, helper, action, API, component, schema pattern, or integration layer:
+- Customer storefront is guest-only by design.
+- Do not add customer login, signup, profile, password, or OTP.
+- Do not route checkout/order viewing through Clerk customer auth.
+- Use a private per-order token for customer order access; persist only a hash.
+- Never expose an order using order ID/number alone.
+- Keep Clerk for administrators.
 
-1. Search the repository for an existing implementation.
-2. Understand its callers and security boundary.
-3. Reuse or safely extend it when appropriate.
-4. Do not create duplicate business logic.
+## Admin systems
 
-## Administrator systems
+- Preserve `/admin` and `/new-admin`.
+- Protect each page/action/API server-side.
+- Do not rely on hidden UI or client-side roles.
 
-- `/admin` is the existing administrator system.
-- `/new-admin` is the newer operations system.
-- Do not modify `/admin` when working on `/new-admin` unless explicitly required.
-- Shared backend changes must preserve established `/admin` behavior.
-- Protect new-admin pages, route handlers, and Server Actions independently.
+## Checkout and payments
 
-## Product images
-
-- New product and banner images use the shared staged filesystem, BullMQ queue, and Sharp worker flow.
-- Do not introduce pasted or arbitrary external product-image URLs in new-admin.
-- Use generated image IDs and relative storage paths; never accept arbitrary filesystem paths or original filenames as permanent identity.
-- Preserve selected image order and existing edit images unless explicitly removed.
-- Store controlled relative paths, never absolute VPS paths or browser blob URLs.
+- Never trust client price, totals, stock, payment state, role or user ID.
+- Validate product/variant/quantity and calculate totals on the server.
+- Preserve CART/BUY_NOW isolation.
+- Verify Razorpay signature, captured state, amount and session association.
+- Preserve idempotency and webhook verification.
+- Use transactions and atomic inventory conditions.
+- Email failure must not roll back a successful order.
 
 ## Database
 
-- Use Prisma through existing service/data-access boundaries.
-- Do not duplicate Prisma business logic in UI components.
-- Preserve soft-delete rules, order snapshots, ownership, idempotency, and inventory audit history.
-- Use transactions for multi-model mutations.
-- Do not run destructive migrations or data operations without explicit scope and verification.
+- Preserve historical orders, payment IDs, inventory history and snapshots.
+- Use additive migrations; never reset production data.
+- Inspect nullable ownership implications before modifying `User` relations.
 
-## Authentication and authorization
+## Resend
 
-- Authenticate and authorize protected operations server-side.
-- Never trust client-provided `userId`, administrator role, hidden fields, localStorage, query parameters, or public environment variables.
-- Derive identity from Clerk server APIs.
-- Enforce resource ownership to prevent IDOR.
-- A protected layout does not replace action, API, or close-to-resource page checks.
+- Keep API key server-only.
+- Do not log private order links.
+- Send only after durable order persistence.
+- Make notifications retry-safe and separate from checkout transaction.
 
-## UI
+## Images
 
-- Preserve existing UI unless the task explicitly requests a redesign.
-- Keep mobile-first and responsive behavior.
-- Follow existing naming, styling, route, and component conventions.
-- Avoid adding large dependencies for functionality supported by the existing stack.
-
-## Security
-
-Never expose:
-
-- passwords, tokens, or private keys;
-- database credentials or connection URLs;
-- Clerk, Razorpay, AfterShip, Redis, or server Google secrets;
-- webhook signing secrets;
-- server-only environment values through `NEXT_PUBLIC_*`, logs, documentation, responses, or client bundles.
-
-Verify webhook signatures before processing. Validate identifiers and inputs before resource operations. Return only fields required by the caller.
+- Use validated staging, generated IDs, relative storage paths, BullMQ and Sharp.
+- Do not introduce arbitrary external upload URLs or absolute filesystem paths.
 
 ## Validation and handoff
 
-- Run focused lint for changed files.
-- Run the applicable build and tests.
-- Report unrelated pre-existing failures separately.
-- Do not claim live authentication, database, payment, upload, or webhook behavior was verified unless it was actually exercised.
-- Update the relevant documentation when code changes make it stale.
+- Run focused lint, Prisma validation, build and relevant tests.
+- Test guest and admin access boundaries.
+- Do not claim live payment, email, database, webhook or deployment verification unless actually performed.
+- Update docs only to reflect verified implementation.

@@ -57,3 +57,7 @@ public/shoes/*
 
 # old admin files
 app/(admin)/admin
+
+
+# txt
+*.txt

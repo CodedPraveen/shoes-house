@@ -8,7 +8,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 | --- | --- | --- | --- | --- |
 | COD inventory accounting | Planned | P0 | Atomically decrement stock and write SALE movements for COD without double-decrementing later | Checkout/order lifecycle decision |
 | Product variant edit safety | Planned | P0 | Preserve referenced variants and inventory history during product edits | Schema/service migration design |
-| Authentication integration tests | Planned | P1 | Test logged-out, customer, and admin page/API/action behavior | Clerk test identities |
+| Authentication integration tests | Planned | P1 | Test logged-out, customer, and admin page/API/action behavior, including the retained admin-only Clerk boundary | Clerk test identities |
 | Product upload integration tests | Partial | P1 | Automate one/multiple images, ordering, edit preservation, persistence, and cleanup | Isolated DB and Docker stack |
 | Shared rate limiting | Planned | P1 | Replace per-process limits with Redis/Upstash-backed limits | Production Redis choice |
 | E2E suite | Planned | P1 | Cover checkout, payment, orders, tracking, and admin access | Stable test environment |
@@ -26,9 +26,10 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 | Feature | Status | Priority | Description | Dependencies |
 | --- | --- | --- | --- | --- |
+| Guest checkout without customer accounts | Planned | P0 | Complete CART and BUY_NOW checkout without customer login, signup, or OTP | Guest-compatible checkout/order schema and services |
+| Private order access link | Planned | P0 | Replace customer owner-session access with high-entropy private token access; retain admin authorization | Token hash storage, expiry/revocation, security tests |
+| Resend order email | Planned | P1 | Send order confirmation and private order link with durable retry/idempotency | Verified sender domain and email service |
 | Review submission/display | Partial | P1 | Finish the existing Review foundation | Moderation/product UI |
-| Order notifications | Planned | P2 | Notify on confirmation, shipment, and delivery | Provider and consent choice |
-| Wishlist/account polish | Planned | P2 | Improve signed-in synchronization and account UX | Customer UX review |
 | Search/filter improvements | Planned | P2 | Extend verified catalog discovery | Search data strategy |
 
 ## Phase 4 — Operations
@@ -58,3 +59,4 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 - Review and refund workflows are unfinished.
 - New-admin inventory is read-only.
 - No automated test suite was found.
+- Guest checkout, private order access, and Resend delivery are not implemented in the current baseline; required schema and service changes remain.
