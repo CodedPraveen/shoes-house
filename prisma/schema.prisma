@@ -411,21 +411,21 @@ model Order {
 }
 
 model OrderEmailOutbox {
-  id             String   @id @default(cuid())
-  orderId        String   @unique
+  id             String    @id @default(cuid())
+  orderId        String    @unique
   recipient      String
-  template       String   @default("ORDER_CONFIRMATION")
-  status         String   @default("PENDING")
-  attempts       Int      @default(0)
-  nextAttemptAt  DateTime @default(now())
+  template       String    @default("ORDER_CONFIRMATION")
+  status         String    @default("PENDING")
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime  @default(now())
   sentAt         DateTime?
   lastError      String?
   providerId     String?
-  idempotencyKey String   @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  idempotencyKey String    @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
   @@index([recipient, createdAt])
