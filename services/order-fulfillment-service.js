@@ -1,7 +1,7 @@
+
 import { prisma } from "@/lib/db";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { cartService } from "@/services/cart-service";
-import { notDeleted } from "@/lib/prisma-helpers";
 import { fromPaise } from "@/lib/shipping";
 import {
   findProcessedPayment,
@@ -16,10 +16,6 @@ import {
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
 
-/**
- * Verified-payment fulfillment: create Order, Payment PAID, decrement stock, clear cart.
- * Idempotent on razorpayPaymentId + checkout session status lock.
- */
 export async function fulfillPaidCheckout({
   razorpayOrderId,
   razorpayPaymentId,
@@ -30,24 +26,28 @@ export async function fulfillPaidCheckout({
   webhookEventId = null,
   expectedUserId = null,
 }) {
-
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
+
   if (existingPayment) {
     if (expectedUserId && existingPayment.order?.userId !== expectedUserId) {
       throw new Error("Payment does not belong to this user");
     }
 
     const backfill = {};
+
     if (!existingPayment.razorpaySignature && razorpaySignature) {
       backfill.razorpaySignature = razorpaySignature;
     }
+
     if (!existingPayment.webhookEventId && webhookEventId) {
       backfill.webhookEventId = webhookEventId;
     }
+
     if (!existingPayment.rawPayload && rawPayload) {
       backfill.rawPayload = rawPayload;
     }
-    if (Object.keys(backfill).length > 0) {
+
+    if (Object.keys(backfill).length) {
       await prisma.payment.update({
         where: { id: existingPayment.id },
         data: backfill,
@@ -61,6 +61,7 @@ export async function fulfillPaidCheckout({
       orderId: existingPayment.orderId,
       orderNumber: existingPayment.order?.orderNumber,
     });
+
     return {
       ok: true,
       duplicate: true,
@@ -69,22 +70,23 @@ export async function fulfillPaidCheckout({
     };
   }
 
-  if (!fromWebhook) {
-    if (
+  if (
+    !fromWebhook &&
+    (
       !razorpaySignature ||
       !razorpayService.verifyPaymentSignature({
         razorpayOrderId,
         razorpayPaymentId,
         signature: razorpaySignature,
       })
-    ) {
-      throw new Error("Invalid Razorpay payment signature");
-    }
+    )
+  ) {
+    throw new Error("Invalid Razorpay payment signature");
   }
 
   const session = await prisma.checkoutSession.findFirst({
     where: { razorpayOrderId },
-    include: { items: true, user: true },
+    include: { items: true },
   });
 
   if (!session) {
@@ -102,10 +104,16 @@ export async function fulfillPaidCheckout({
       webhookEventId,
       orderId: session.orderId,
     });
-    return { ok: true, duplicate: true, orderId: session.orderId };
+
+    return {
+      ok: true,
+      duplicate: true,
+      orderId: session.orderId,
+    };
   }
 
   const paidRupees = fromPaise(amountPaise);
+
   if (paidRupees !== session.total) {
     throw new PaymentAmountMismatchError("Payment amount mismatch", {
       expected: session.total,
@@ -115,26 +123,39 @@ export async function fulfillPaidCheckout({
     });
   }
 
-  const user = await prisma.user.findFirst({
-    where: { id: session.userId, ...notDeleted },
-  });
-  if (!user) {
-    throw new Error("User not found");
+  if (session.userId) {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: session.userId,
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new Error("Checkout user no longer exists");
+    }
+  } else if (!session.guestEmail || !session.guestAccessTokenHash) {
+    throw new Error("Guest checkout access information is missing");
   }
 
-  const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  const orderNumber = `ORD-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 11)
+    .toUpperCase()}`;
 
   const redisLocks = [];
 
   try {
+    const productIds = [
+      ...new Set(session.items.map((item) => item.productId)),
+    ].sort();
 
-    const productIds = [...new Set(session.items.map((item) => item.productId))].sort();
     for (const productId of productIds) {
       const key = `product:${productId}`;
+      const acquired = await acquireLock(key, 30);
 
-      const ok = await acquireLock(key, 30);
-
-      if (!ok) {
+      if (!acquired) {
         throw new Error("Product is currently being processed.");
       }
 
@@ -151,23 +172,35 @@ export async function fulfillPaidCheckout({
           data: { updatedAt: new Date() },
         });
 
-        if (locked.count === 0) {
+        if (!locked.count) {
           const completed = await tx.checkoutSession.findUnique({
             where: { id: session.id },
             select: { orderId: true, status: true },
           });
+
           if (completed?.status === "COMPLETED" && completed.orderId) {
-            return { duplicate: true, orderId: completed.orderId };
+            return {
+              duplicate: true,
+              orderId: completed.orderId,
+            };
           }
+
           throw new Error("Checkout session is not available for fulfillment");
         }
 
         const paidAgain = await tx.payment.findFirst({
-          where: { razorpayPaymentId, status: "PAID", deletedAt: null },
+          where: {
+            razorpayPaymentId,
+            status: "PAID",
+            deletedAt: null,
+          },
         });
 
         if (paidAgain) {
-          return { duplicate: true, orderId: paidAgain.orderId };
+          return {
+            duplicate: true,
+            orderId: paidAgain.orderId,
+          };
         }
 
         const order = await tx.order.create({
@@ -187,6 +220,14 @@ export async function fulfillPaidCheckout({
             shipCity: session.shipCity,
             shipCountry: session.shipCountry,
             shipPincode: session.shipPincode,
+            guestEmail: session.guestEmail,
+
+            // Transfer the original session token hash.
+            // Do not generate a different token here.
+            guestAccessTokenHash: session.guestAccessTokenHash,
+            guestAccessExpiresAt: session.guestAccessExpiresAt,
+            guestAccessRevokedAt: session.guestAccessRevokedAt,
+
             items: {
               create: session.items.map((line) => ({
                 productId: line.productId,
@@ -204,7 +245,6 @@ export async function fulfillPaidCheckout({
         });
 
         for (const line of session.items) {
-
           if (!line.variantId) {
             throw new Error(`Missing variant for ${line.productSku}`);
           }
@@ -234,42 +274,51 @@ export async function fulfillPaidCheckout({
           },
         });
 
-        if (session.saveShippingAddress) await saveShippingAddressForUser(tx, session.userId, {
-          label: session.shipAddressLabel || "Home",
-          fullName: session.shipFullName,
-          phone: session.shipPhone,
-          line1: session.shipLine1,
-          landmark: session.shipLandmark,
-          line2: session.shipLine2,
-          city: session.shipCity,
-          state: session.shipState,
-          country: session.shipCountry,
-          pincode: session.shipPincode,
-        });
+        if (session.userId && session.saveShippingAddress) {
+          await saveShippingAddressForUser(tx, session.userId, {
+            label: session.shipAddressLabel || "Home",
+            fullName: session.shipFullName,
+            phone: session.shipPhone,
+            line1: session.shipLine1,
+            landmark: session.shipLandmark,
+            line2: session.shipLine2,
+            city: session.shipCity,
+            state: session.shipState,
+            country: session.shipCountry,
+            pincode: session.shipPincode,
+          });
+        }
 
-        if (session.mode !== "BUY_NOW") {
+        if (session.userId && session.mode !== "BUY_NOW") {
           await cartService.clearCartInTransaction(tx, session.userId);
         }
 
         await tx.checkoutSession.update({
           where: { id: session.id },
-          data: { status: "COMPLETED", orderId: order.id },
+          data: {
+            status: "COMPLETED",
+            orderId: order.id,
+          },
         });
 
         for (const line of session.items) {
           await tx.product.update({
             where: { id: line.productId },
-            data: { purchaseCount: { increment: line.quantity } },
+            data: {
+              purchaseCount: { increment: line.quantity },
+            },
           });
         }
 
-        return { duplicate: false, order };
-
+        return {
+          duplicate: false,
+          order,
+        };
       },
       {
         maxWait: 10000,
         timeout: 30000,
-      }
+      },
     );
 
     if (result.duplicate) {
@@ -279,10 +328,15 @@ export async function fulfillPaidCheckout({
         webhookEventId,
         orderId: result.orderId,
       });
-      return { ok: true, duplicate: true, orderId: result.orderId };
+
+      return {
+        ok: true,
+        duplicate: true,
+        orderId: result.orderId,
+      };
     }
 
-    if (session.mode !== "BUY_NOW") {
+    if (session.userId && session.mode !== "BUY_NOW") {
       await cartService.invalidateCartCache(session.userId);
     }
 
@@ -300,46 +354,56 @@ export async function fulfillPaidCheckout({
       orderId: result.order.id,
       orderNumber: result.order.orderNumber,
     };
-  }
-  catch (err) {
-    if (err instanceof InsufficientStockError) {
-      throw err;
+  } catch (error) {
+    if (
+      error instanceof InsufficientStockError ||
+      error instanceof PaymentAmountMismatchError
+    ) {
+      throw error;
     }
-    if (err instanceof PaymentAmountMismatchError) {
-      throw err;
-    }
-    if (err.code === "P2002") {
-      const dup = await findProcessedPayment(razorpayPaymentId);
-      if (dup) {
-        if (expectedUserId && dup.order?.userId !== expectedUserId) {
+
+    if (error.code === "P2002") {
+      const duplicate = await findProcessedPayment(razorpayPaymentId);
+
+      if (duplicate) {
+        if (
+          expectedUserId &&
+          duplicate.order?.userId !== expectedUserId
+        ) {
           throw new Error("Payment does not belong to this user");
         }
+
         logDuplicatePayment({
           razorpayPaymentId,
           razorpayOrderId,
           webhookEventId,
-          orderId: dup.orderId,
-          orderNumber: dup.order?.orderNumber,
+          orderId: duplicate.orderId,
+          orderNumber: duplicate.order?.orderNumber,
         });
+
         return {
           ok: true,
           duplicate: true,
-          orderId: dup.orderId,
-          orderNumber: dup.order?.orderNumber,
+          orderId: duplicate.orderId,
+          orderNumber: duplicate.order?.orderNumber,
         };
       }
     }
-    throw err;
-  }
-  finally {
 
+    throw error;
+  } finally {
     await Promise.all(redisLocks.map(releaseLock));
-
   }
 }
+
 export async function markSessionFailed(razorpayOrderId) {
   await prisma.checkoutSession.updateMany({
-    where: { razorpayOrderId, status: "PENDING" },
-    data: { status: "FAILED" },
+    where: {
+      razorpayOrderId,
+      status: "PENDING",
+    },
+    data: {
+      status: "FAILED",
+    },
   });
 }

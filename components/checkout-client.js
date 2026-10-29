@@ -38,6 +38,7 @@ function loadRazorpayScript() {
 const emptyForm = {
   label: "Home",
   fullName: "",
+  email: "",
   phone: "",
   line1: "",
   landmark: "",
@@ -151,10 +152,13 @@ export default function CheckoutClient() {
     e.preventDefault();
     setError("");
 
-    const validation = validateAddressInput({
-      ...form,
-      fullName: form.fullName || customerName,
-    });
+    const validation = validateAddressInput(
+      {
+        ...form,
+        fullName: form.fullName || customerName,
+      },
+      { requireEmail: true },
+    );
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       setError(firstAddressError(validation.errors));
@@ -166,8 +170,8 @@ export default function CheckoutClient() {
 
     const payload =
       addressMode === "saved" && selectedAddressId
-        ? { addressId: selectedAddressId }
-        : { ...form, fullName: form.fullName || customerName };
+        ? { addressId: selectedAddressId, email: validation.address.email }
+        : { ...validation.address };
 
     try {
       const result = await createCartCheckoutSessionRequest({
@@ -221,7 +225,7 @@ export default function CheckoutClient() {
 
             setError(
               persisted.error ||
-                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
             );
           } catch (verificationError) {
             setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
@@ -342,6 +346,7 @@ export default function CheckoutClient() {
               form={{ ...form, fullName: form.fullName || customerName }}
               errors={fieldErrors}
               onChange={updateField}
+              showEmailField
             />
             <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
               <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
