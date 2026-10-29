@@ -221,7 +221,7 @@ export default function CheckoutClient() {
 
             setError(
               persisted.error ||
-                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
             );
           } catch (verificationError) {
             setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
