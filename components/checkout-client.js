@@ -69,7 +69,7 @@ export default function CheckoutClient() {
     user?.fullName ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
   const router = useRouter();
-  const { items, subtotal } = useCart();
+  const { items, subtotal, hydrated, clearCart } = useCart();
   const shippingCost = calculateShipping(subtotal);
   const total = subtotal + shippingCost;
 
@@ -178,6 +178,11 @@ export default function CheckoutClient() {
         ...payload,
         paymentMethod,
         saveShippingAddress: addressMode === "new" && saveAddress,
+        cartItems: items.map((item) => ({
+          productId: item.productId || item.product?.id,
+          size: item.size,
+          quantity: item.quantity,
+        })),
       });
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
@@ -185,6 +190,7 @@ export default function CheckoutClient() {
         return;
       }
       if (paymentMethod === "cod") {
+        await clearCart();
         router.push(`/orders/${result.orderId}?status=confirmed`);
         return;
       }
@@ -219,6 +225,7 @@ export default function CheckoutClient() {
             });
 
             if (persisted.ok) {
+              await clearCart();
               router.push(`/orders/${persisted.orderId}?status=confirmed`);
               return;
             }
@@ -249,6 +256,10 @@ export default function CheckoutClient() {
       setError(err.message || "Checkout error");
       setLoading(false);
     }
+  }
+
+  if (!hydrated) {
+    return <p className="text-sm text-black/60">Loading your cart...</p>;
   }
 
   if (!items.length) {
