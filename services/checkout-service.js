@@ -174,17 +174,21 @@ async function getProductSelection(productId, size) {
   return { product, variant };
 }
 
-// async function createSessionWithRazorpay(userId, address, lines, mode) {
-async function createSessionWithRazorpay(
-  userId,
-  address,
-  lines,
-  mode
-) {
-  const subtotal = lines.reduce((s, l) => s + l.priceAtPurchase * l.quantity, 0);
+
+async function createSessionWithRazorpay(userId, address, lines, mode) {
+  const subtotal = lines.reduce(
+    (sum, line) => sum + line.priceAtPurchase * line.quantity,
+    0,
+  );
   const shippingCost = calculateShipping(subtotal);
   const total = subtotal + shippingCost;
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+
+  // Generate the guest token before creating the session.
+  // Its hash is transferred to the order during fulfilment.
+  const guestAccess = userId
+    ? null
+    : guestOrderAccessService.createToken();
 
   const session = await prisma.checkoutSession.create({
     data: {
@@ -208,38 +212,50 @@ async function createSessionWithRazorpay(
       expiresAt,
       items: { create: lines },
       guestEmail: userId ? null : address.email,
+      guestAccessTokenHash: guestAccess?.tokenHash ?? null,
+      guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
     },
     include: { items: true },
   });
 
-  const razorpayOrder = await razorpayService.createRazorpayOrder({
-    amountPaise: toPaise(total),
-    receipt: session.id,
-    notes: {
-      checkoutSessionId: session.id,
+  try {
+    const razorpayOrder = await razorpayService.createRazorpayOrder({
+      amountPaise: toPaise(total),
+      receipt: session.id,
+      notes: {
+        checkoutSessionId: session.id,
+        mode,
+      },
+    });
+
+    await prisma.checkoutSession.update({
+      where: { id: session.id },
+      data: { razorpayOrderId: razorpayOrder.id },
+    });
+
+    return {
+      sessionId: session.id,
       mode,
-    },
-  });
-
-  await prisma.checkoutSession.update({
-    where: { id: session.id },
-    data: { razorpayOrderId: razorpayOrder.id },
-  });
-
-  return {
-    sessionId: session.id,
-    mode,
-    razorpayOrderId: razorpayOrder.id,
-    amount: total,
-    currency: "INR",
-    keyId: razorpayService.getKeyId(),
-    user: {
-      name: address.fullName,
-      email: address.email,
-      contact: address.phone,
-    },
-  };
+      razorpayOrderId: razorpayOrder.id,
+      amount: total,
+      currency: "INR",
+      keyId: razorpayService.getKeyId(),
+      guestAccessToken: guestAccess?.token ?? null,
+      user: {
+        name: address.fullName,
+        email: address.email,
+        contact: address.phone,
+      },
+    };
+  } catch (error) {
+    await prisma.checkoutSession.updateMany({
+      where: { id: session.id, status: "PENDING" },
+      data: { status: "FAILED" },
+    });
+    throw error;
+  }
 }
+
 
 export const checkoutService = {
   async validateCartStock(userId) {
@@ -419,7 +435,7 @@ export const checkoutService = {
             data: { purchaseCount: { increment: line.quantity } },
           });
 
-          if (address.saveShippingAddress) {
+          if (userId && address.saveShippingAddress) {
             await saveShippingAddressForUser(tx, userId, address);
           }
           return created;
@@ -431,13 +447,43 @@ export const checkoutService = {
       }
     });
   },
+
   async createCartOrder(
     userId,
     address,
     paymentMethod = "cod",
+    guestCartItems = [],
   ) {
     return withPerf("checkout.create.cart.cod", async () => {
-      const { lines, locks } = await this.validateCartStock(userId);
+      const guestAccess = userId
+        ? null
+        : guestOrderAccessService.createToken();
+
+      let lines;
+      let locks = [];
+
+      if (userId) {
+        const validated = await this.validateCartStock(userId);
+        lines = validated.lines;
+        locks = validated.locks;
+      } else {
+        if (!Array.isArray(guestCartItems) || !guestCartItems.length) {
+          throw new Error("Cart is empty");
+        }
+
+        locks = await acquireProductLocks(
+          guestCartItems.map((item) => item.productId),
+          30,
+        );
+
+        try {
+          lines = await buildSessionLineItems(guestCartItems);
+          await validateLinesStock(lines);
+        } catch (error) {
+          await Promise.all(locks.map(releaseLock));
+          throw error;
+        }
+      }
 
       try {
         const subtotal = lines.reduce(
@@ -450,7 +496,7 @@ export const checkoutService = {
 
         const orderNumber = `ORD-${Date.now()}-${Math.random()
           .toString(36)
-          .substr(2, 9)
+          .slice(2, 11)
           .toUpperCase()}`;
 
         const order = await prisma.$transaction(async (tx) => {
@@ -461,9 +507,7 @@ export const checkoutService = {
               subtotal,
               shippingCost,
               total,
-
               status: "PENDING",
-
               shipFullName: address.fullName,
               shipPhone: address.phone,
               shipLine1: address.line1,
@@ -473,27 +517,25 @@ export const checkoutService = {
               shipState: address.state,
               shipCountry: address.country || "India",
               shipPincode: address.pincode,
-
               guestEmail: userId ? null : address.email,
               guestAccessTokenHash: guestAccess?.tokenHash ?? null,
               guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
-
               items: {
                 create: lines,
               },
-
               payments: {
                 create: {
-                  paymentMethod: "Cash on Delivery",
+                  paymentMethod:
+                    paymentMethod === "cod"
+                      ? "Cash on Delivery"
+                      : "Razorpay",
                   status: "PENDING",
                   amount: total,
                   currency: "INR",
                 },
               },
             },
-            include: {
-              items: true,
-            },
+            include: { items: true },
           });
 
           for (const line of lines) {
@@ -509,25 +551,25 @@ export const checkoutService = {
             await tx.product.update({
               where: { id: line.productId },
               data: {
-                purchaseCount: {
-                  increment: line.quantity,
-                },
+                purchaseCount: { increment: line.quantity },
               },
             });
           }
 
-          await cartService.clearCartInTransaction(tx, userId);
+          if (userId) {
+            await cartService.clearCartInTransaction(tx, userId);
+          }
 
           return created;
         });
 
-        // Save the address AFTER the order transaction.
-        // Address saving must not keep the order transaction open.
-        if (address.saveShippingAddress) {
-          await saveShippingAddressForUser(prisma, userId, address);
-        }
+        if (userId) {
+          if (address.saveShippingAddress) {
+            await saveShippingAddressForUser(prisma, userId, address);
+          }
 
-        await cartService.invalidateCartCache(userId);
+          await cartService.invalidateCartCache(userId);
+        }
 
         return {
           ...order,
@@ -538,4 +580,5 @@ export const checkoutService = {
       }
     });
   },
+
 };
