@@ -12,7 +12,6 @@ import { getAddressesAction } from "@/actions/address-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
-import { useAuthSafe } from "@/hooks/use-auth-safe";
 import SafeImage from "./ui/safe-image";
 import AddressFields from "@/components/address-fields";
 import {
@@ -21,7 +20,6 @@ import {
   validateAddressInput,
 } from "@/lib/address-validation";
 
-const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 const fulfillmentStorageKey = "buy-now-fulfillment";
 
 function loadRazorpayScript() {
@@ -93,7 +91,6 @@ function clearPendingFulfillment() {
 
 export default function CheckoutBuyNowClient({ lineItem }) {
   const { user } = useUser();
-  const { isLoaded, isSignedIn } = useAuthSafe();
   const customerName =
     user?.fullName ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
@@ -195,25 +192,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
     }
 
     setFieldErrors({});
-
-    if (hasClerk && !isLoaded) {
-      setError("Authentication is still loading. Please try again.");
-      return;
-    }
-
-    if (hasClerk && !isSignedIn) {
-      savePendingFulfillment({
-        form: validation.address,
-        paymentMethod,
-        saveAddress,
-      });
-      router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(
-          `${window.location.pathname}${window.location.search}`,
-        )}`,
-      );
-      return;
-    }
 
     setLoading(true);
 

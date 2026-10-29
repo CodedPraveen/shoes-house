@@ -2,8 +2,6 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuthSafe } from "@/hooks/use-auth-safe";
 import { Plus } from "lucide-react";
 import RankingBadge from "@/components/ranking-badge";
 import { useCart } from "@/hooks/use-cart";
@@ -14,9 +12,6 @@ import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import { getProductPath } from "@/lib/product-routes";
 import LoadingButton from "@/components/ui/loading-button";
 
-const hasClerk = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-);
 
 function ProductCard({
   product,
@@ -26,8 +21,6 @@ function ProductCard({
 }) {
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const router = useRouter();
-  const { isSignedIn } = useAuthSafe();
 
   const [pendingActions, setPendingActions] = useState(
     new Set(),
@@ -45,19 +38,24 @@ function ProductCard({
 
   const productPath = getProductPath(product);
 
-  const requireAuth = (e, action) => {
+  // const requireAuth = (e, action) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+
+  //   if (hasClerk && !isSignedIn) {
+  //     router.push(
+  //       `/sign-in?redirect_url=${encodeURIComponent(
+  //         productPath,
+  //       )}`,
+  //     );
+  //     return;
+  //   }
+
+  //   action();
+  // };
+  const runWithoutLogin = (e, action) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (hasClerk && !isSignedIn) {
-      router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(
-          productPath,
-        )}`,
-      );
-      return;
-    }
-
     action();
   };
 
@@ -84,7 +82,7 @@ function ProductCard({
   };
 
   const handleQuickAdd = (e) => {
-    requireAuth(e, () => {
+    runWithoutLogin(e, () => {
       const defaultSize = product.sizes?.[0];
 
       if (!defaultSize) {
@@ -106,7 +104,7 @@ function ProductCard({
   };
 
   const handleWishlist = (e) => {
-    requireAuth(e, async () => {
+    runWithoutLogin(e, async () => {
       if (pendingRef.current.has("wishlist")) return;
 
       const previousState = optimisticWishlist;

@@ -30,26 +30,25 @@ export default async function ProfilePage() {
   const allProducts = await productService.getAll();
 
   return (
-    <AuthGate>
-      <main className="pt-20">
-        <PageHeader
-          eyebrow="Account"
-          title="Your profile"
-          description="Orders, wishlist, and recently viewed."
-        />
-        <ProfileClient
-          user={
-            dbUser
-              ? {
-                  firstName: dbUser.name?.split(" ")[0],
-                  lastName: dbUser.name?.split(" ").slice(1).join(" "),
-                  emailAddresses: [{ emailAddress: dbUser.email }],
-                }
-              : null
-          }
-          allProducts={allProducts}
-        />
-      </main>
-    </AuthGate>
+    <main className="pt-20">
+      <PageHeader
+        eyebrow="Account"
+        title="Your profile"
+        description="Orders, wishlist, and recently viewed."
+      />
+
+      <ProfileClient
+        user={
+          dbUser
+            ? {
+              firstName: dbUser.name?.split(" ")[0],
+              lastName: dbUser.name?.split(" ").slice(1).join(" "),
+              emailAddresses: [{ emailAddress: dbUser.email }],
+            }
+            : null
+        }
+        allProducts={allProducts}
+      />
+    </main>
   );
 }
