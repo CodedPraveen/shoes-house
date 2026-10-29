@@ -15,6 +15,7 @@ import {
 } from "@/lib/inventory-errors";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
+import { guestOrderAccessService } from "@/services/guest/guest-order-access-service";
 
 /**
  * Verified-payment fulfillment: create Order, Payment PAID, decrement stock, clear cart.
@@ -122,6 +123,11 @@ export async function fulfillPaidCheckout({
     throw new Error("User not found");
   }
 
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
   const redisLocks = [];
@@ -170,6 +176,10 @@ export async function fulfillPaidCheckout({
           return { duplicate: true, orderId: paidAgain.orderId };
         }
 
+        const guestAccess = session.userId
+          ? null
+          : guestOrderAccessService.createToken();
+
         const order = await tx.order.create({
           data: {
             orderNumber,
@@ -187,6 +197,11 @@ export async function fulfillPaidCheckout({
             shipCity: session.shipCity,
             shipCountry: session.shipCountry,
             shipPincode: session.shipPincode,
+
+            guestEmail: session.guestEmail,
+            guestAccessTokenHash: guestAccess?.tokenHash ?? null,
+            guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+
             items: {
               create: session.items.map((line) => ({
                 productId: line.productId,
@@ -234,18 +249,28 @@ export async function fulfillPaidCheckout({
           },
         });
 
-        if (session.saveShippingAddress) await saveShippingAddressForUser(tx, session.userId, {
-          label: session.shipAddressLabel || "Home",
-          fullName: session.shipFullName,
-          phone: session.shipPhone,
-          line1: session.shipLine1,
-          landmark: session.shipLandmark,
-          line2: session.shipLine2,
-          city: session.shipCity,
-          state: session.shipState,
-          country: session.shipCountry,
-          pincode: session.shipPincode,
-        });
+        if (session.userId && session.saveShippingAddress) {
+          await saveShippingAddressForUser(tx, session.userId, {
+            label: session.shipAddressLabel || "Home",
+            fullName: session.shipFullName,
+            phone: session.shipPhone,
+            line1: session.shipLine1,
+            landmark: session.shipLandmark,
+            line2: session.shipLine2,
+            city: session.shipCity,
+            state: session.shipState,
+            country: session.shipCountry,
+            pincode: session.shipPincode,
+          });
+        }
+
+        if (session.userId && session.mode !== "BUY_NOW") {
+          await cartService.clearCartInTransaction(tx, session.userId);
+        }
+
+        if (session.userId && session.mode !== "BUY_NOW") {
+          await cartService.invalidateCartCache(session.userId);
+        }
 
         if (session.mode !== "BUY_NOW") {
           await cartService.clearCartInTransaction(tx, session.userId);
@@ -263,7 +288,7 @@ export async function fulfillPaidCheckout({
           });
         }
 
-        return { duplicate: false, order };
+        return { guestAccessToken: guestAccess?.token ?? null, duplicate: false, order };
 
       },
       {

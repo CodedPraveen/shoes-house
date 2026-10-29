@@ -7,6 +7,7 @@ import { withPerf } from "@/lib/perf";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
 import { decrementStockForSale } from "@/services/inventory-service";
+import { guestOrderAccessService } from "@/services/guest/guest-order-access-service";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -173,7 +174,13 @@ async function getProductSelection(productId, size) {
   return { product, variant };
 }
 
-async function createSessionWithRazorpay(userId, address, lines, mode) {
+// async function createSessionWithRazorpay(userId, address, lines, mode) {
+async function createSessionWithRazorpay(
+  userId,
+  address,
+  lines,
+  mode
+) {
   const subtotal = lines.reduce((s, l) => s + l.priceAtPurchase * l.quantity, 0);
   const shippingCost = calculateShipping(subtotal);
   const total = subtotal + shippingCost;
@@ -200,6 +207,7 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
       shipPincode: address.pincode,
       expiresAt,
       items: { create: lines },
+      guestEmail: userId ? null : address.email,
     },
     include: { items: true },
   });
@@ -209,7 +217,6 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
     receipt: session.id,
     notes: {
       checkoutSessionId: session.id,
-      userId,
       mode,
     },
   });
@@ -260,16 +267,40 @@ export const checkoutService = {
     }
   },
 
-  async createPaymentSession(userId, address) {
+  async createPaymentSession(userId, address, guestCartItems = []) {
     return withPerf("checkout.create.cart", async () => {
-      const { lines, locks } = await this.validateCartStock(userId);
+      let lines;
+      let locks = [];
+
+      if (userId) {
+        const validated = await this.validateCartStock(userId);
+        lines = validated.lines;
+        locks = validated.locks;
+      } else {
+        if (!Array.isArray(guestCartItems) || !guestCartItems.length) {
+          throw new Error("Cart is empty");
+        }
+
+        locks = await acquireProductLocks(
+          guestCartItems.map(item => item.productId),
+          15
+        );
+
+        try {
+          lines = await buildSessionLineItems(guestCartItems);
+          await validateLinesStock(lines);
+        } catch (error) {
+          await Promise.all(locks.map(releaseLock));
+          throw error;
+        }
+      }
 
       try {
         return await createSessionWithRazorpay(
           userId,
           address,
           lines,
-          "CART",
+          "CART"
         );
       } finally {
         await Promise.all(locks.map(releaseLock));
@@ -312,6 +343,11 @@ export const checkoutService = {
     paymentMethod = "cod",
   ) {
     return withPerf("checkout.create.buy_now.cod", async () => {
+
+      const guestAccess = userId
+        ? null
+        : guestOrderAccessService.createToken();
+
       const quantityNumber = Number(quantity);
       if (!Number.isInteger(quantityNumber) || quantityNumber < 1) {
         throw new Error("Invalid quantity");
@@ -351,6 +387,12 @@ export const checkoutService = {
               shipState: address.state,
               shipCountry: address.country || "India",
               shipPincode: address.pincode,
+
+
+              guestEmail: userId ? null : address.email,
+              guestAccessTokenHash: guestAccess?.tokenHash ?? null,
+              guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+
               items: { create: [line] },
               payments: {
                 create: {
@@ -432,6 +474,10 @@ export const checkoutService = {
               shipCountry: address.country || "India",
               shipPincode: address.pincode,
 
+              guestEmail: userId ? null : address.email,
+              guestAccessTokenHash: guestAccess?.tokenHash ?? null,
+              guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+
               items: {
                 create: lines,
               },
@@ -483,7 +529,10 @@ export const checkoutService = {
 
         await cartService.invalidateCartCache(userId);
 
-        return order;
+        return {
+          ...order,
+          guestAccessToken: guestAccess?.token ?? null,
+        };
       } finally {
         await Promise.all(locks.map(releaseLock));
       }
