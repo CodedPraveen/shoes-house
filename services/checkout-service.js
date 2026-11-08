@@ -8,6 +8,9 @@ import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
 import { decrementStockForSale } from "@/services/inventory-service";
 import { guestOrderAccessService } from "@/services/guest/guest-order-access-service";
+import { encryptNotificationToken } from "@/services/notifications/notification-token-crypto";
+import { createOrderNotificationOutboxes } from "@/services/notifications/order-notification-outbox";
+import { enqueueOrderNotifications } from "@/queues/order-notification.queue";
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -189,6 +192,14 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
   const guestAccess = userId
     ? null
     : guestOrderAccessService.createToken();
+  let guestAccessTokenCiphertext = null;
+  if (guestAccess) {
+    try {
+      guestAccessTokenCiphertext = encryptNotificationToken(guestAccess.token);
+    } catch {
+      // Checkout remains available if notification encryption is misconfigured.
+    }
+  }
 
   const session = await prisma.checkoutSession.create({
     data: {
@@ -213,7 +224,10 @@ async function createSessionWithRazorpay(userId, address, lines, mode) {
       items: { create: lines },
       guestEmail: userId ? null : address.email,
       guestAccessTokenHash: guestAccess?.tokenHash ?? null,
+      guestAccessTokenCiphertext,
       guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+      whatsappConsent: Boolean(address.whatsappConsent),
+      whatsappConsentAt: address.whatsappConsent ? new Date() : null,
     },
     include: { items: true },
   });
@@ -408,6 +422,8 @@ export const checkoutService = {
               guestEmail: userId ? null : address.email,
               guestAccessTokenHash: guestAccess?.tokenHash ?? null,
               guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+              whatsappConsent: Boolean(address.whatsappConsent),
+              whatsappConsentAt: address.whatsappConsent ? new Date() : null,
 
               items: { create: [line] },
               payments: {
@@ -441,7 +457,17 @@ export const checkoutService = {
           return created;
         });
 
-        return order;
+        try {
+          await createOrderNotificationOutboxes(prisma, {
+            order,
+            rawGuestToken: guestAccess?.token ?? null,
+          });
+          await enqueueOrderNotifications(order.id).catch(() => null);
+        } catch {
+          // Notification persistence/delivery never changes checkout success.
+        }
+
+        return { ...order, guestAccessToken: guestAccess?.token ?? null };
       } finally {
         await Promise.all(locks.map(releaseLock));
       }
@@ -520,6 +546,8 @@ export const checkoutService = {
               guestEmail: userId ? null : address.email,
               guestAccessTokenHash: guestAccess?.tokenHash ?? null,
               guestAccessExpiresAt: guestAccess?.expiresAt ?? null,
+              whatsappConsent: Boolean(address.whatsappConsent),
+              whatsappConsentAt: address.whatsappConsent ? new Date() : null,
               items: {
                 create: lines,
               },
@@ -569,6 +597,16 @@ export const checkoutService = {
           }
 
           await cartService.invalidateCartCache(userId);
+        }
+
+        try {
+          await createOrderNotificationOutboxes(prisma, {
+            order,
+            rawGuestToken: guestAccess?.token ?? null,
+          });
+          await enqueueOrderNotifications(order.id).catch(() => null);
+        } catch {
+          // Notification persistence/delivery never changes checkout success.
         }
 
         return {

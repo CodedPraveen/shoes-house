@@ -15,6 +15,29 @@ import {
 } from "@/lib/inventory-errors";
 import { acquireLock, releaseLock } from "@/lib/redis/lock";
 import { saveShippingAddressForUser } from "@/services/address-service";
+import { guestOrderAccessService } from "@/services/guest/guest-order-access-service";
+import { createOrderNotificationOutboxes } from "@/services/notifications/order-notification-outbox";
+import { enqueueOrderNotifications } from "@/queues/order-notification.queue";
+
+async function queueGuestOrderNotifications(session, orderId, rawGuestToken) {
+  if (session.userId || (!rawGuestToken && !session.guestAccessTokenCiphertext)) return;
+  try {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return;
+    await createOrderNotificationOutboxes(prisma, {
+      order,
+      rawGuestToken,
+      encryptedGuestToken: session.guestAccessTokenCiphertext,
+    });
+    await prisma.checkoutSession.update({
+      where: { id: session.id },
+      data: { guestAccessTokenCiphertext: null },
+    });
+    await enqueueOrderNotifications(orderId).catch(() => null);
+  } catch {
+    // Notification persistence/delivery never changes fulfillment success.
+  }
+}
 
 export async function fulfillPaidCheckout({
   razorpayOrderId,
@@ -25,7 +48,24 @@ export async function fulfillPaidCheckout({
   rawPayload = null,
   webhookEventId = null,
   expectedUserId = null,
+  guestAccessToken = null,
 }) {
+  const session = await prisma.checkoutSession.findFirst({
+    where: { razorpayOrderId },
+    include: { items: true },
+  });
+
+  if (!session) {
+    throw new Error("Checkout session not found");
+  }
+
+  if (!session.userId && !fromWebhook && !guestOrderAccessService.validateToken(
+    guestAccessToken,
+    session.guestAccessTokenHash,
+  )) {
+    throw new Error("Guest checkout token is invalid");
+  }
+
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
 
   if (existingPayment) {
@@ -62,11 +102,14 @@ export async function fulfillPaidCheckout({
       orderNumber: existingPayment.order?.orderNumber,
     });
 
+    await queueGuestOrderNotifications(session, existingPayment.orderId, guestAccessToken);
+
     return {
       ok: true,
       duplicate: true,
       orderId: existingPayment.orderId,
       orderNumber: existingPayment.order?.orderNumber,
+      guestAccessToken: session.userId ? null : guestAccessToken,
     };
   }
 
@@ -84,15 +127,6 @@ export async function fulfillPaidCheckout({
     throw new Error("Invalid Razorpay payment signature");
   }
 
-  const session = await prisma.checkoutSession.findFirst({
-    where: { razorpayOrderId },
-    include: { items: true },
-  });
-
-  if (!session) {
-    throw new Error("Checkout session not found");
-  }
-
   if (expectedUserId && session.userId !== expectedUserId) {
     throw new Error("Checkout session does not belong to this user");
   }
@@ -105,10 +139,13 @@ export async function fulfillPaidCheckout({
       orderId: session.orderId,
     });
 
+    await queueGuestOrderNotifications(session, session.orderId, guestAccessToken);
+
     return {
       ok: true,
       duplicate: true,
       orderId: session.orderId,
+      guestAccessToken: session.userId ? null : guestAccessToken,
     };
   }
 
@@ -227,6 +264,8 @@ export async function fulfillPaidCheckout({
             guestAccessTokenHash: session.guestAccessTokenHash,
             guestAccessExpiresAt: session.guestAccessExpiresAt,
             guestAccessRevokedAt: session.guestAccessRevokedAt,
+            whatsappConsent: session.whatsappConsent,
+            whatsappConsentAt: session.whatsappConsentAt,
 
             items: {
               create: session.items.map((line) => ({
@@ -329,10 +368,13 @@ export async function fulfillPaidCheckout({
         orderId: result.orderId,
       });
 
+      await queueGuestOrderNotifications(session, result.orderId, guestAccessToken);
+
       return {
         ok: true,
         duplicate: true,
         orderId: result.orderId,
+        guestAccessToken: session.userId ? null : guestAccessToken,
       };
     }
 
@@ -348,11 +390,14 @@ export async function fulfillPaidCheckout({
       webhookEventId,
     });
 
+    await queueGuestOrderNotifications(session, result.order.id, guestAccessToken);
+
     return {
       ok: true,
       duplicate: false,
       orderId: result.order.id,
       orderNumber: result.order.orderNumber,
+      guestAccessToken: session.userId ? null : guestAccessToken,
     };
   } catch (error) {
     if (
@@ -381,11 +426,14 @@ export async function fulfillPaidCheckout({
           orderNumber: duplicate.order?.orderNumber,
         });
 
+        await queueGuestOrderNotifications(session, duplicate.orderId, guestAccessToken);
+
         return {
           ok: true,
           duplicate: true,
           orderId: duplicate.orderId,
           orderNumber: duplicate.order?.orderNumber,
+          guestAccessToken: session.userId ? null : guestAccessToken,
         };
       }
     }

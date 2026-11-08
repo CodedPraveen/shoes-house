@@ -8,3 +8,4 @@ export {
   retryProductImages,
 } from "./product.queue.js";
 export { PRODUCT_IMAGE_QUEUE } from "./image.queue.js";
+export { enqueueOrderNotifications } from "./order-notification.queue.js";

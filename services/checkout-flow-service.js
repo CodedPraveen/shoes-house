@@ -8,8 +8,14 @@ import { razorpayService } from "@/services/payment/razorpay-service";
 import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
 import { revalidatePath } from "next/cache";
 
-async function getCurrentUser() {
-  return requireDbUser({ throwIfMissing: false });
+async function getCurrentUser(authenticatedUser = null) {
+  if (authenticatedUser) return authenticatedUser;
+  try {
+    return await requireDbUser({ throwIfMissing: false });
+  } catch {
+    // A stale Clerk session must not make the guest storefront unusable.
+    return null;
+  }
 }
 
 async function resolveShippingAddress(userId, input, options = {}) {
@@ -55,7 +61,7 @@ async function getCheckoutIdentity(user, input) {
   };
 }
 
-export async function createBuyNowCheckoutSession(input) {
+export async function createBuyNowCheckoutSession(input, authenticatedUser = null) {
   try {
     await assertRateLimit({
       prefix: "checkout-buy-now",
@@ -63,7 +69,7 @@ export async function createBuyNowCheckoutSession(input) {
       windowMs: 60000,
     });
 
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(authenticatedUser);
     const identity = await getCheckoutIdentity(user, input);
 
     const shipping = await resolveShippingAddress(
@@ -90,6 +96,7 @@ export async function createBuyNowCheckoutSession(input) {
     const address = {
       ...shipping,
       email: identity.email,
+      whatsappConsent: input.whatsappConsent === true,
     };
 
     if (paymentMethod === "cod") {
@@ -123,7 +130,7 @@ export async function createBuyNowCheckoutSession(input) {
   }
 }
 
-export async function createCartCheckoutSession(input) {
+export async function createCartCheckoutSession(input, authenticatedUser = null) {
   try {
     await assertRateLimit({
       prefix: "checkout",
@@ -131,7 +138,7 @@ export async function createCartCheckoutSession(input) {
       windowMs: 60000,
     });
 
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(authenticatedUser);
     const identity = await getCheckoutIdentity(user, input);
 
     const shipping = await resolveShippingAddress(
@@ -147,6 +154,7 @@ export async function createCartCheckoutSession(input) {
     const address = {
       ...shipping,
       email: identity.email,
+      whatsappConsent: input.whatsappConsent === true,
     };
 
     const paymentMethod = input.paymentMethod || "razorpay";
@@ -182,7 +190,7 @@ export async function createCartCheckoutSession(input) {
   }
 }
 
-export async function verifyRazorpayPayment(input) {
+export async function verifyRazorpayPayment(input, authenticatedUser = null) {
   try {
     await assertRateLimit({
       prefix: "checkout-verify",
@@ -190,12 +198,13 @@ export async function verifyRazorpayPayment(input) {
       windowMs: 60000,
     });
 
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(authenticatedUser);
 
     const {
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
+      guestAccessToken,
     } = input || {};
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
@@ -232,6 +241,7 @@ export async function verifyRazorpayPayment(input) {
       razorpaySignature,
       amountPaise: Number(payment.amount),
       expectedUserId: user?.id ?? null,
+      guestAccessToken,
       rawPayload: {
         source: "checkout-verification",
         payment: {

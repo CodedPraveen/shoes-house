@@ -1,5 +1,5 @@
-import { getResendClient } from "@/services/email/resend-client";
-import { buildOrderConfirmationEmail } from "@/emails/order-confirmation";
+import { getResendClient } from "./resend-client.js";
+import { buildOrderConfirmationEmail } from "../../emails/order-confirmation.js";
 
 export async function sendOrderConfirmationEmail({ order, accessUrl, idempotencyKey }) {
   const recipient = order.guestEmail;
