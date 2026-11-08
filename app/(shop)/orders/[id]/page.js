@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { formatPrice } from "@/lib/format-price";
 import { Download, Truck, Hash, PackageCheck, FileText } from "lucide-react";
@@ -14,6 +13,8 @@ import { getOrderStatusConfig } from "@/lib/order-status";
 export default function OrderDetailPage() {
   const params = useParams();
   const orderId = params?.id;
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,10 +25,15 @@ export default function OrderDetailPage() {
 
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`/api/orders/${orderId}`);
+        const response = await fetch(
+          token
+            ? `/api/guest-orders/${encodeURIComponent(token)}?orderId=${encodeURIComponent(orderId)}`
+            : `/api/orders/${encodeURIComponent(orderId)}`,
+          { cache: "no-store" },
+        );
 
         if (!response.ok) {
-          throw new Error("Order not found");
+          throw new Error(response.status === 410 ? "This private order link has expired." : "This order link is invalid or you do not have access.");
         }
 
         const data = await response.json();
@@ -40,37 +46,32 @@ export default function OrderDetailPage() {
     };
 
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, token]);
 
   if (loading) {
     return (
-      <AuthGate>
         <main className="pt-20">
           <PageHeader eyebrow="Order" title="Loading..." />
           <p className="px-5 text-sm text-black/60">Loading order details...</p>
         </main>
-      </AuthGate>
     );
   }
 
   if (error || !order) {
     return (
-      <AuthGate>
         <main className="pt-20">
           <PageHeader eyebrow="Order" title="Not found" />
           <div className="mx-auto w-full max-w-[1400px] px-5 pb-20 sm:px-8">
             <p className="text-sm text-red-600">{error || "Order not found"}</p>
-            <Link href="/orders" className="mt-4 inline-block text-sm text-blue-600 underline">
-              Back to orders
+            <Link href="/shoes" className="mt-4 inline-block text-sm text-blue-600 underline">
+              Continue shopping
             </Link>
           </div>
         </main>
-      </AuthGate>
     );
   }
 
   return (
-    <AuthGate>
       <main className="pt-20">
         <PageHeader
           eyebrow="Order Details"
@@ -213,7 +214,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <a
-                  href={`/api/orders/${order.id}/invoice`}
+                  href={`/api/orders/${order.id}/invoice${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                   className="mt-6 flex w-full items-center justify-center gap-2 no54123-full border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
                 >
                   <Download size={16} />
@@ -223,11 +224,10 @@ export default function OrderDetailPage() {
             </aside>
           </div>
 
-          <Link href="/orders" className="mt-8 inline-block text-sm text-blue-600 underline">
-            Back to all orders
+          <Link href="/shoes" className="mt-8 inline-block text-sm text-blue-600 underline">
+            Continue shopping
           </Link>
         </div>
       </main>
-    </AuthGate>
   );
 }

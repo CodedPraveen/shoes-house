@@ -7,13 +7,15 @@ export async function GET(request, { params }) {
     const { token } = await params;
     try {
         await assertRateLimit({ prefix: "guest-order-access", limit: 20, windowMs: 60_000 });
-        const order = await guestOrderAccessService.findOrderByToken(prisma, token);
-        if (!order) {
+        const orderId = new URL(request.url).searchParams.get("orderId");
+        const access = await guestOrderAccessService.getOrderAccess(prisma, token, orderId);
+        if (access.status !== "valid") {
             return NextResponse.json({ error: "Order link is invalid or expired" }, {
-                status: 404,
+                status: access.status === "expired" ? 410 : 404,
                 headers: { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
             });
         }
+        const order = access.order;
         const { userId, guestAccessTokenHash, guestAccessExpiresAt, guestAccessRevokedAt, ...safeOrder } = order;
         return NextResponse.json(safeOrder, {
             headers: { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
