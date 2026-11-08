@@ -455,6 +455,9 @@ export const checkoutService = {
             await saveShippingAddressForUser(tx, userId, address);
           }
           return created;
+        }, {
+          maxWait: 10000,
+          timeout: 15000,
         });
 
         try {
@@ -589,6 +592,9 @@ export const checkoutService = {
           }
 
           return created;
+        }, {
+          maxWait: 10000,
+          timeout: 15000,
         });
 
         if (userId) {
