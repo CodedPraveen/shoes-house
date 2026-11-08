@@ -35,6 +35,12 @@ function loadRazorpayScript() {
   });
 }
 
+function getOrderUrl(order) {
+  const params = new URLSearchParams({ status: "confirmed" });
+  if (order.guestAccessToken) params.set("token", order.guestAccessToken);
+  return `/orders/${order.orderId}?${params.toString()}`;
+}
+
 const emptyForm = {
   label: "Home",
   fullName: "",
@@ -84,6 +90,7 @@ export default function CheckoutClient() {
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(false);
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
 
   useEffect(() => {
@@ -183,6 +190,7 @@ export default function CheckoutClient() {
           size: item.size,
           quantity: item.quantity,
         })),
+        whatsappConsent,
       });
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
@@ -191,7 +199,7 @@ export default function CheckoutClient() {
       }
       if (paymentMethod === "cod") {
         await clearCart();
-        router.push(`/orders/${result.orderId}?status=confirmed`);
+        router.push(getOrderUrl(result));
         return;
       }
       const loaded = await loadRazorpayScript();
@@ -222,11 +230,12 @@ export default function CheckoutClient() {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              guestAccessToken: result.guestAccessToken,
             });
 
             if (persisted.ok) {
               await clearCart();
-              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              router.push(getOrderUrl(persisted));
               return;
             }
 
@@ -371,14 +380,11 @@ export default function CheckoutClient() {
             {error}
           </p>
         ) : null}
-        <p className="text-xs text-black/50">
-          Online payment is verified before your order is confirmed, with the
-          secure webhook as an idempotent fallback. Manage addresses on your{" "}
-          <a href="/profile#saved-addresses" className="underline">
-            profile
-          </a>
-          .
-        </p>
+        <label className="flex items-start gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+          <input type="checkbox" checked={whatsappConsent} onChange={(event) => setWhatsappConsent(event.target.checked)} className="mt-1" />
+          <span>I agree to receive a WhatsApp order confirmation from Shoes House.</span>
+        </label>
+        <p className="text-xs text-black/50">Online payment is verified before your order is confirmed.</p>
       </div>
 
       <section className="space-y-6 no54123-3xl border border-black/10 p-6">

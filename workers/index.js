@@ -1,9 +1,13 @@
 import { prisma } from "../lib/db.js";
 import { getWorkerEnvironment } from "../schemas/queue.schema.js";
 import { createProductWorker } from "./product.worker.js";
+import { createOrderNotificationWorker } from "./order-notification.worker.js";
+import { scheduleNotificationSweep } from "../queues/order-notification.queue.js";
 
 getWorkerEnvironment();
 const worker = createProductWorker();
+const notificationWorker = createOrderNotificationWorker();
+await scheduleNotificationSweep();
 let shuttingDown = false;
 
 console.info(JSON.stringify({ service: "bullmq-worker", event: "started" }));
@@ -15,6 +19,7 @@ async function shutdown(signal, exitCode = 0) {
 
   try {
     await worker.close();
+    await notificationWorker.close();
     await prisma.$disconnect();
     process.exitCode = exitCode;
   } catch (error) {

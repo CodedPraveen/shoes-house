@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, } from "react";
 import { useAuthSafe } from "@/hooks/use-auth-safe";
-import { addToCartAction, getCartAction, removeFromCartAction, updateCartQuantityAction, } from "@/actions/cart-actions";
+import { addToCartAction, clearCartAction, getCartAction, removeFromCartAction, updateCartQuantityAction, } from "@/actions/cart-actions";
 import { CART_STORAGE_KEY } from "@/lib/constants";
 import { buildCartSummary, optimisticAddItem } from "@/lib/cart-utils";
 

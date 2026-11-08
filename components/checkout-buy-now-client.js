@@ -89,6 +89,12 @@ function clearPendingFulfillment() {
   window.sessionStorage.removeItem(fulfillmentStorageKey);
 }
 
+function getOrderUrl(order) {
+  const params = new URLSearchParams({ status: "confirmed" });
+  if (order.guestAccessToken) params.set("token", order.guestAccessToken);
+  return `/orders/${order.orderId}?${params.toString()}`;
+}
+
 export default function CheckoutBuyNowClient({ lineItem }) {
   const { user } = useUser();
   const customerName =
@@ -128,6 +134,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [saveAddress, setSaveAddress] = useState(
     pendingFulfillment?.saveAddress ?? true,
   );
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
   const pendingFulfillmentRef = useRef(pendingFulfillment);
   const [showMobileAddressFields, setShowMobileAddressFields] = useState(false);
@@ -208,6 +215,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         quantity,
         paymentMethod,
         saveShippingAddress: addressMode === "new" && saveAddress,
+        whatsappConsent,
       });
 
       if (!result.ok) {
@@ -219,7 +227,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       clearPendingFulfillment();
 
       if (paymentMethod === "cod") {
-        router.push(`/orders/${result.orderId}?status=confirmed`);
+        router.push(getOrderUrl(result));
         return;
       }
 
@@ -251,10 +259,11 @@ export default function CheckoutBuyNowClient({ lineItem }) {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              guestAccessToken: result.guestAccessToken,
             });
 
             if (persisted.ok) {
-              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              router.push(getOrderUrl(persisted));
               return;
             }
 
@@ -559,6 +568,10 @@ export default function CheckoutBuyNowClient({ lineItem }) {
             </label>
           </div>
         )}
+        <label className="flex items-start gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+          <input type="checkbox" checked={whatsappConsent} onChange={(event) => setWhatsappConsent(event.target.checked)} className="mt-1" />
+          <span>I agree to receive a WhatsApp order confirmation from Shoes House.</span>
+        </label>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
       <section className="space-y-6 no54123-3xl border border-black/10 p-6">

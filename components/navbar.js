@@ -5,8 +5,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 
-import AuthNav from "@/components/auth-nav";
-
 import ShoesMobileMenuDrawer from "@/components/shoes/mobile-menu-drawer";
 import JewelleryMobileMenuDrawer from "@/components/jewellery/mobile-menu-drawer";
 
@@ -377,10 +375,6 @@ export default function Navbar({
                   )}
                 </Link>
 
-                {/* ACCOUNT */}
-                <div className="ml-1 flex items-center">
-                  <AuthNav />
-                </div>
               </div>
             </div>
           </div>
