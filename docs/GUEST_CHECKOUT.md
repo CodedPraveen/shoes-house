@@ -1,107 +1,84 @@
-git# Guest Checkout and Private Order Access
+# Guest Checkout and Private Order Access
 
-## Status
+## Phase 1 status
 
-**Planned — not implemented in the current `main` branch.**
+Implemented on `new-guest-checkout`; production readiness is not claimed until the separate Phase 2 test and security review passes.
 
-This document records the approved customer-facing direction. It is not evidence that guest checkout, private order links, or email delivery are already available.
+Customers can complete cart or Buy Now checkout without a customer account using COD or Razorpay. Clerk remains installed for administrators and for the unchanged mobile API contracts.
 
-## Product decision
+## Checkout flows
 
-1. Customers do not need to register or sign in to buy.
-2. Customer login, signup, customer OTP login, and customer profile UI are removed from the intended storefront experience.
-3. Checkout supports both existing purchase modes: cart checkout and Buy Now.
-4. Customers provide the contact and shipping information required to fulfill the order.
-5. Customers receive a private order link by transactional email.
-6. The private link grants access to that order without OTP. An order number or database ID alone never grants access.
-7. Clerk remains in place for administrator authentication and authorization.
-8. Resend is the selected initial transactional email provider; integration and sender-domain verification remain pending.
+### COD
 
-## Existing implementation constraints
+1. The server validates email, Indian mobile number, shipping data, products, prices, variants, and stock.
+2. It creates the order and pending COD payment and atomically decrements stock with `SALE` movements.
+3. A 32-byte guest token is generated. Only its SHA-256 hash and expiry are stored on the order.
+4. Email and optional WhatsApp outbox records are created independently of order success.
+5. The browser clears only a cart checkout and opens `/orders/ORDER_ID?status=confirmed&token=TOKEN`.
 
-The current schema has required `userId` relations on `Order` and `CheckoutSession`. Existing checkout actions and services resolve a Clerk-backed database user. Order detail and invoice endpoints authorize an authenticated owner or administrator. These are current-state facts and must not be documented as already converted.
+Buy Now never reads or clears the existing cart.
 
-The current `Cart` and `Wishlist` are also user-linked in the Prisma schema. Guest cart behavior must be assessed separately: a browser-local cart may already exist in the UI, but persistence and checkout must be verified in source before claiming it is fully guest-safe.
+### Razorpay
 
-## Target checkout flow
+1. The checkout session stores the token hash and an AES-256-GCM encrypted, short-lived notification copy.
+2. The raw token is returned to the browser and sent back with payment verification.
+3. The server independently verifies the Razorpay signature, captured payment, amount, checkout session, and exact guest token.
+4. Idempotent fulfillment transfers the original token hash to the order, writes payment/order/inventory data, and completes the session.
+5. Duplicate browser verification returns the same browser-supplied token after validating it. Webhooks fulfill from the stored hash/encrypted notification payload and never require the raw browser token.
 
-```text
-Guest storefront
-  → cart or Buy Now
-  → collect contact + shipping details
-  → validate products, variants, price, stock and address
-  → create guest CheckoutSession
-  → create Razorpay order
-  → customer completes payment
-  → verify signature/payment and amount on server
-  → idempotent fulfillment transaction
-  → create Order + OrderItems + Payment
-  → apply existing paid-inventory rules
-  → complete CheckoutSession
-  → create private order-access token
-  → send order confirmation email with private link
-```
+## Private order and invoice access
 
-Razorpay browser success must never be treated as final payment proof. Preserve the existing webhook and server-side verification/idempotency rules.
+- `GET /api/guest-orders/[token]?orderId=...` validates the token hash, requested order, expiry, and revocation state.
+- The customer order page uses that endpoint when a token is present. Missing or invalid tokens do not authorize access.
+- `GET /api/orders/[orderId]/invoice?token=...` supports the same guest authorization.
+- Existing authenticated-owner and administrator access remains available through the existing order/invoice APIs.
+- Private responses use `no-store`, `private`, and `no-referrer` headers.
 
-## Private order-link design requirements
+The default token lifetime is 168 hours. `GUEST_ORDER_TOKEN_TTL_HOURS` may be set from 1 through 720 hours.
 
-- Generate a cryptographically secure, high-entropy random token (at least 256 bits).
-- Store only a one-way hash/digest of the token in the database; do not store the raw token.
-- Put the raw token only in the emailed HTTPS URL. Do not log it, expose it in analytics, or return it from unrelated APIs.
-- The route must validate the token using a constant-time comparison where applicable and resolve only the associated order.
-- The order ID may appear in a URL for routing, but it must not authorize access without the matching token.
-- Use HTTPS in production and a restrictive referrer policy so the token is not leaked to third-party origins.
-- Avoid caching private order responses in shared caches. Set appropriate private/no-store response headers.
-- Support token expiry and revocation/rotation. Define the expiry policy before implementation; do not invent an indefinite token lifetime.
-- Rate-limit token attempts and avoid revealing whether an order ID or token exists.
-- Administrator order access continues to use Clerk administrator authorization and must not depend on the customer token.
+## Notifications
 
-The exact token table/model, token rotation policy, and route shape must be finalized against the current service and routing structure before coding.
+The existing `OrderEmailOutbox` is used for Resend. `OrderWhatsAppOutbox` is an independent optional channel. Both are processed through the existing BullMQ worker and a one-minute durable sweep.
 
-## Database migration direction
+- Provider calls happen after order persistence and never control checkout/payment success.
+- Unique order and idempotency keys prevent duplicate confirmations.
+- Failed email deliveries are retried with bounded exponential delays.
+- WhatsApp requires explicit, unchecked consent and a valid normalized Indian E.164 number.
+- Missing WhatsApp credentials, invalid numbers, timeouts, and Meta errors never surface to the customer or affect email.
+- The encrypted token payload is cleared after delivery or an intentional WhatsApp skip.
 
-The implementation will likely need to make `Order.userId` and `CheckoutSession.userId` nullable while adding guest contact and private-access-token data. This is a design direction, not a ready-to-run migration.
-
-Before changing the schema:
-
-1. Inspect all `userId` reads, writes, indexes, relations, exports, reports, and admin queries.
-2. Preserve historical customer-linked orders.
-3. Add guest fields and token-hash storage in an additive migration.
-4. Ensure guest sessions and orders can be created without fabricating Clerk users.
-5. Backfill or retain existing user relations without deleting customer history.
-6. Test migration against a copy of production-shaped data.
-7. Never reset or truncate the production database to introduce guest checkout.
-
-Do not make unrelated `User`, `Cart`, `Wishlist`, `Address`, `Review`, or mobile identity schema changes unless a verified dependency requires them.
-
-## Email integration
-
-Resend is selected but not integrated. The implementation should send email from a server-only service after the order is safely persisted. Email failure must not undo a successfully verified payment or corrupt fulfillment state. Define retry/idempotency behavior and a durable delivery status before production rollout.
-
-Expected configuration names (confirm exact names against the implementation before adding them to `.env.example`):
+Required email configuration:
 
 ```env
 RESEND_API_KEY=
 EMAIL_FROM=
+NOTIFICATION_TOKEN_ENCRYPTION_KEY=
+NEXT_PUBLIC_APP_URL=https://your-domain.example
 ```
 
-Keep these server-only. Verify the sending domain and sender identity before production email is enabled.
+`EMAIL_FROM` must use a sender on a domain verified in Resend. The encryption key must decode to exactly 32 bytes (base64) or be 64 hexadecimal characters.
 
-## Acceptance checklist
+Optional Meta WhatsApp Cloud API configuration:
 
-- [ ] A logged-out customer can browse and add items to a cart.
-- [ ] A guest can complete CART checkout.
-- [ ] A guest can complete BUY_NOW checkout without modifying the existing cart.
-- [ ] Guest details are validated server-side and snapshotted on the order.
-- [ ] Payment signature, captured state, amount, ownership/session linkage, and idempotency are verified server-side.
-- [ ] Duplicate browser requests and duplicate webhooks do not create duplicate orders or decrement stock twice.
-- [ ] A successful order gets a high-entropy private access token; only its hash is stored.
-- [ ] The customer can open the private link without login or OTP.
-- [ ] An order ID without a valid token cannot reveal order details or invoice data.
-- [ ] Expired/revoked tokens are rejected safely.
-- [ ] Customer profile/login/signup links and guards are removed from storefront navigation and routes.
-- [ ] Clerk admin login, `/admin`, `/new-admin`, admin actions, and admin APIs continue to work.
-- [ ] Existing customer-linked orders remain accessible to administrators.
-- [ ] Resend delivery, retries, and failure handling are tested.
-- [ ] Database migration, rollback plan, and production backup are reviewed.
+```env
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_BUSINESS_ACCOUNT_ID=
+WHATSAPP_API_VERSION=
+WHATSAPP_ORDER_TEMPLATE_NAME=
+WHATSAPP_ORDER_TEMPLATE_LANGUAGE=en
+```
+
+The Meta business and sending phone number must be approved, and the configured utility template must accept order number, amount, payment method, and private order URL body parameters in that order.
+
+## Database migrations
+
+- `20261028000000_guest_checkout`: nullable ownership, guest token/email fields, and email outbox.
+- `20261028183005_guest_checkout`: safely converts delivery state from text to the Prisma enum without dropping data.
+- `20261108000000_guest_notifications`: WhatsApp consent/status/outbox and encrypted notification-token payloads.
+
+## Known limitations pending Phase 2
+
+- Real Resend, Meta, Razorpay, Clerk, Redis, and production-shaped database behavior has not been tested in this phase.
+- Token abuse/rate-limit behavior remains per-process and needs multi-instance verification.
+- No production migration or deployment has been executed.

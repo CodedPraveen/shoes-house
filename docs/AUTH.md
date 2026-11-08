@@ -4,7 +4,7 @@
 
 Authentication proves who a user is. Authorization decides what an identity is allowed to access.
 
-Clerk is the existing authentication provider. Server code performs authorization. The customer-authentication removal described below is a planned storefront change; it does not remove administrator authentication.
+Clerk remains the administrator and mobile API authentication provider. The storefront checkout and private order-link experience no longer requires customer authentication.
 
 ## Target customer access model
 
@@ -17,7 +17,7 @@ The approved customer experience is:
 - The private order link does not require an OTP. Possession of the unguessable token is the authorization capability; the token must be treated as a secret.
 - Transactional order email is intended to deliver the private link. Resend has been selected as the initial email provider, but integration is pending.
 
-**Implementation status:** The current `main` source still contains Clerk customer authentication and owner-authenticated order access. The current Prisma `Order.userId` and `CheckoutSession.userId` fields are required. Do not treat the target guest model as implemented until code and a production migration establish it.
+**Phase 1 status:** `Order.userId` and `CheckoutSession.userId` are nullable on `new-guest-checkout`. Customer login/signup/profile entry points are removed from the storefront, while historical authenticated-owner access remains supported. Production verification is deferred to Phase 2.
 
 ## Clerk remains for administrators
 
@@ -52,7 +52,7 @@ Every new-admin page calls the guard before service or Prisma access. The shared
 - Product actions call `requireAdmin()`.
 - New-admin order actions call `requireAdmin()`.
 - CSV export calls `requireAdmin()` and returns 401 or 403.
-- Shared order/invoice APIs currently authenticate first and then authorize the order owner or an administrator. The customer branch must be replaced with private-token authorization when guest order access is implemented; administrator access must remain.
+- Shared order/invoice APIs retain authenticated-owner and administrator authorization. Guest order and invoice access additionally require the exact private token for the requested order.
 
 ### Existing admin
 

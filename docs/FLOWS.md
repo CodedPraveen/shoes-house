@@ -19,16 +19,16 @@ On edit, existing image records are retained by default. Explicitly removed reco
 
 Current local metadata maps to `/images/...`; historical HTTPS Cloudinary URLs continue to render. `SafeImage` validates before calling `next/image` and falls back safely if an allowed source fails to load.
 
-## Current cart and Buy Now checkout
+## Cart and Buy Now checkout
 
 ```text
 CART: active cart lines → CheckoutSession(CART) → payment/order → clear cart
 BUY_NOW: selected variant → CheckoutSession(BUY_NOW) → payment/order → preserve cart
 ```
 
-The current documented checkout is customer-authenticated and loads saved addresses with ownership checks. Manual addresses pass server validation.
+Guests use browser-local cart state; authenticated historical customers may still use the server cart. A failed Clerk/database identity resolution falls back to the isolated browser cart. Manual addresses pass server validation; saved-address mutations remain authenticated and owner-scoped.
 
-## Target guest checkout (planned)
+## Guest checkout
 
 ```text
 Guest storefront
@@ -43,16 +43,16 @@ Guest storefront
   → Order + OrderItems + Payment
   → inventory decrement using existing paid-order rules
   → complete CheckoutSession; clear cart only for CART
-  → create private order token; store token hash only
-  → send confirmation email with HTTPS private order link
+  → transfer the original private order token hash
+  → enqueue Resend email and optional consented WhatsApp independently
 ```
 
-This is a target flow, not current production behavior. Preserve the existing separation between CART and BUY_NOW. Do not trust browser-submitted prices, totals, stock, or payment success.
+This is implemented on the branch but not production-verified. CART clears only after successful creation/fulfillment; BUY_NOW preserves the cart. Browser-submitted prices, totals, stock, and payment success are never trusted.
 
 ## Razorpay payment
 
 ```text
-Current authenticated customer
+Guest or existing authenticated customer
   → server creates CheckoutSession
   → server creates Razorpay order
   → browser opens Razorpay Checkout
@@ -74,7 +74,7 @@ The Razorpay webhook is also authoritative and uses the same idempotent fulfillm
 
 The operational order sequence is `PENDING -> CONFIRMED -> PROCESSING -> READY_TO_SEND -> SHIPPED -> DELIVERED`, with cancellation only while the order is still cancellable. Each transition uses a conditional database update and records a server-derived actor. COD payment remains a separate pending payment record and is not automatically changed to PAID on delivery.
 
-Known gap: COD creation currently validates but does not atomically decrement stock or write a sale movement.
+COD creation atomically decrements stock and writes a sale movement in the same order transaction. Cancellation restores stock only when a sale movement exists and no prior restock/refund movement has restored it.
 
 ## Storefront configuration
 
@@ -92,22 +92,14 @@ Order
   → customer/admin UI
 ```
 
-## Current order access
+## Order access
 
-Order detail and invoice routes currently:
+Guest order detail and invoice access:
 
-1. Authenticate the Clerk session.
-2. Validate the order ID format.
-3. Load the database user and order.
-4. Allow only the owning customer or an administrator.
-5. Synchronize tracking or generate the invoice only after authorization.
-
-## Target guest order access (planned)
-
-- Customer opens the private HTTPS order link delivered by email.
-- Server validates the high-entropy token against its stored hash and resolves only the associated order.
+- Customer opens the private HTTPS order link delivered by email or consented WhatsApp.
+- Server validates the high-entropy token against its stored hash and the requested order.
 - The order ID alone is insufficient.
 - The response is private/no-store and must not leak the token to third parties.
-- Administrator access continues through Clerk admin authorization.
+- Existing owner and administrator access continues through Clerk authorization.
 
 See [GUEST_CHECKOUT.md](./GUEST_CHECKOUT.md) for token requirements, migration design, and acceptance tests.

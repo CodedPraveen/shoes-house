@@ -27,9 +27,10 @@ The schema source of truth is `prisma/schema.prisma`. Prisma 6.19.0 connects to 
 
 ### Checkout, orders, and payments
 
-- `CheckoutSession` currently requires `userId` and snapshots totals, mode, shipping information, expiry, Razorpay order, and resulting order.
+- `CheckoutSession.userId` is nullable and snapshots guest email, token hash/expiry/revocation, encrypted notification token payload, WhatsApp consent, totals, mode, shipping information, expiry, Razorpay order, and resulting order.
 - `CheckoutSessionItem` snapshots product and variant details for checkout.
-- `Order` currently requires `userId` and stores the customer, totals, shipping snapshot, fulfilment state, confirmation state, tracking fields, payments, items, checkpoints, and status history.
+- `Order.userId` is nullable and stores guest email, private-token hash/lifecycle, WhatsApp consent/delivery state, totals, shipping snapshot, fulfilment state, tracking fields, payments, items, checkpoints, and status history.
+- `OrderEmailOutbox` and `OrderWhatsAppOutbox` provide one-record-per-order idempotent notification delivery. Raw tokens are never stored; retry payloads are AES-256-GCM encrypted and cleared after delivery/skip.
 - `OrderStatusHistory` records each operational status transition, its previous/new state, a server-derived actor identifier, timestamp, and optional note.
 - `MediaAsset` supports a nullable historical URL or current relative storage path plus dimensions; `HeroSlide`, `StorefrontSection`, `StorefrontSectionItem`, and `NavbarItem` provide the lightweight storefront CMS.
 - `OrderItem` snapshots name, image, SKU, price, color, size, and quantity so catalog edits do not rewrite order history.
@@ -54,23 +55,15 @@ PaymentStatus: PENDING, PAID, FAILED, REFUNDED
 CheckoutSessionStatus: PENDING, COMPLETED, EXPIRED, FAILED
 CheckoutSessionMode: CART, BUY_NOW
 InventoryMovementType: SALE, RESTOCK, ADMIN_ADJUSTMENT, REFUND
+EmailDeliveryStatus: NOT_QUEUED, QUEUED, SENDING, SENT, FAILED
+NotificationDeliveryStatus: NOT_QUEUED, QUEUED, SENDING, SENT, FAILED, SKIPPED
 ```
 
 `WebhookLogStatus` includes invalid signature, duplicate event, amount mismatch, out-of-stock, fulfilled, failed, and ignored outcomes.
 
-## Guest checkout schema impact — planned, not migrated
+## Guest checkout migrations
 
-The current `Order.userId` and `CheckoutSession.userId` fields are required. Guest checkout cannot be implemented safely by changing UI alone.
-
-The likely migration direction is:
-
-- Make `Order.userId` nullable while retaining historical values and the relation for existing customer orders.
-- Make `CheckoutSession.userId` nullable while preserving user-linked sessions.
-- Store validated guest contact details needed for fulfillment and communication.
-- Store only a one-way hash of a high-entropy private order-access token, with expiry/revocation metadata.
-- Add indexes and constraints that match actual query and uniqueness requirements.
-
-This is a design outline, not a migration specification. Before implementation, inspect every use of these fields, relation behavior, admin reports, exports, webhook fulfillment, cleanup jobs, and mobile API dependencies. Decide whether token data belongs on `Order` or a separate token model. Do not store raw tokens.
+The additive migrations `20261028000000_guest_checkout`, `20261028183005_guest_checkout`, and `20261108000000_guest_notifications` preserve historical user relations while adding guest and notification data. The enum conversion uses an in-place cast rather than dropping delivery-state columns. These migrations have not been deployed or tested against a production copy in Phase 1.
 
 Do not remove `User`, Clerk identity fields, customer history, or unrelated cart/address/wishlist/review relations as part of this change. Do not fabricate Clerk users for guests.
 

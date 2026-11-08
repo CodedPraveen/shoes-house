@@ -6,7 +6,7 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 | Feature | Status | Priority | Description | Dependencies |
 | --- | --- | --- | --- | --- |
-| COD inventory accounting | Planned | P0 | Atomically decrement stock and write SALE movements for COD without double-decrementing later | Checkout/order lifecycle decision |
+| COD inventory accounting | Implemented; verify | P0 | Atomic decrement, SALE movement, and exactly-once cancellation restoration | Phase 2 tests |
 | Product variant edit safety | Planned | P0 | Preserve referenced variants and inventory history during product edits | Schema/service migration design |
 | Authentication integration tests | Planned | P1 | Test logged-out, customer, and admin page/API/action behavior, including the retained admin-only Clerk boundary | Clerk test identities |
 | Product upload integration tests | Partial | P1 | Automate one/multiple images, ordering, edit preservation, persistence, and cleanup | Isolated DB and Docker stack |
@@ -26,9 +26,10 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 | Feature | Status | Priority | Description | Dependencies |
 | --- | --- | --- | --- | --- |
-| Guest checkout without customer accounts | Planned | P0 | Complete CART and BUY_NOW checkout without customer login, signup, or OTP | Guest-compatible checkout/order schema and services |
-| Private order access link | Planned | P0 | Replace customer owner-session access with high-entropy private token access; retain admin authorization | Token hash storage, expiry/revocation, security tests |
-| Resend order email | Planned | P1 | Send order confirmation and private order link with durable retry/idempotency | Verified sender domain and email service |
+| Guest checkout without customer accounts | Implemented; verify | P0 | CART and BUY_NOW support COD/Razorpay without customer login, signup, or OTP | Phase 2 E2E |
+| Private order access link | Implemented; verify | P0 | Hashed token detail/invoice access with retained admin/owner authorization | Phase 2 security tests |
+| Resend order email | Implemented; configure | P1 | Durable idempotent order confirmation and private link | Verified Resend domain |
+| Optional WhatsApp confirmation | Implemented; configure | P1 | Explicit consent, Meta utility template, isolated failure path | Approved Meta business/template |
 | Review submission/display | Partial | P1 | Finish the existing Review foundation | Moderation/product UI |
 | Search/filter improvements | Planned | P2 | Extend verified catalog discovery | Search data strategy |
 
@@ -52,11 +53,10 @@ Priorities: P0 critical, P1 important, P2 useful, P3 later.
 
 ## Current known issues
 
-- COD can oversell because stock is validated but not decremented atomically on order creation.
 - Product edit recreates variants and can affect referenced order variants or movement history.
 - Historical Cloudinary records are readable but are not managed by the new local lifecycle.
 - Rate limiting is local to one application process.
 - Review and refund workflows are unfinished.
 - New-admin inventory is read-only.
 - No automated test suite was found.
-- Guest checkout, private order access, and Resend delivery are not implemented in the current baseline; required schema and service changes remain.
+- Guest checkout and notifications require Phase 2 provider, security, migration, and failure-isolation verification before production.

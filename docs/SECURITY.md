@@ -6,7 +6,7 @@
 - Clerk server APIs establish the current authenticated identity.
 - Server-side role and ownership checks establish administrator/current customer authorization.
 - Third-party webhook signatures establish event authenticity.
-- Guest order access, once implemented, must be established by a high-entropy private token, never by an order ID or email address alone.
+- Guest order access is established by a high-entropy private token matched to the requested order, never by an order ID or email address alone.
 
 ## New-admin protection
 
@@ -16,21 +16,15 @@
 - CSV export independently returns 401 for logged-out callers and 403 for non-admin callers.
 - Authenticated non-admin page requests use `notFound()` to avoid exposing the panel.
 
-## IDOR prevention — current implementation
+## IDOR prevention
 
-For current order detail and invoice resources:
-
-1. Authenticate.
-2. Validate the route ID.
-3. Load the Clerk/Prisma identity and resource.
-4. Require resource ownership or administrator authorization.
-5. Only then perform tracking synchronization or invoice generation.
+Authenticated order resources retain owner/admin checks. Guest detail and invoice resources validate token shape, constrain the hash lookup to the requested non-deleted order, check expiry/revocation, and use a timing-safe digest comparison. Failures are generic and private responses use no-store/no-referrer headers.
 
 Never accept an arbitrary customer/admin `userId` when the server can derive it.
 
-## Guest private-order access — planned requirements
+## Guest private-order access
 
-The target customer model does not use customer login or OTP. It uses a secret order-access link.
+The customer model does not use customer login or OTP. It uses a secret order-access link.
 
 - Generate at least 256 bits of cryptographically secure randomness.
 - Persist only a one-way token hash; never store or log the raw token.
@@ -42,7 +36,7 @@ The target customer model does not use customer login or OTP. It uses a secret o
 - Return generic failure responses that do not disclose whether an order or token exists.
 - Keep admin access separate and protected by Clerk plus server-side admin authorization.
 
-These are requirements for future implementation, not a statement that token protection exists today.
+Notification retries store only an AES-256-GCM encrypted token payload under `NOTIFICATION_TOKEN_ENCRYPTION_KEY`; the payload is removed after delivery or skip. Raw tokens and provider credentials are not logged.
 
 ## Redirect safety
 
@@ -65,8 +59,7 @@ These are requirements for future implementation, not a statement that token pro
 - Paid amounts must match the checkout session.
 - Fulfillment is idempotent on payment/session identifiers.
 - Paid stock decrement is atomic and records inventory movements.
-- COD stock accounting remains a high-priority gap.
-- Guest checkout must preserve payment and inventory invariants.
+- COD and paid stock decrements are atomic and record movements. Cancellation restores a previously recorded sale at most once.
 
 ## Webhooks
 
@@ -77,12 +70,11 @@ These are requirements for future implementation, not a statement that token pro
 
 ## Secrets
 
-Never expose database URLs, `CLERK_SECRET_KEY`, Razorpay secrets, AfterShip secrets, Redis credentials, Resend API keys, or server Google keys through `NEXT_PUBLIC_*`, browser code, logs, documentation, or API responses.
+Never expose database URLs, `CLERK_SECRET_KEY`, Razorpay/AfterShip/Redis/Resend/Meta credentials, `NOTIFICATION_TOKEN_ENCRYPTION_KEY`, or server Google keys through `NEXT_PUBLIC_*`, browser code, logs, documentation, or API responses.
 
 ## Remaining concerns
 
 - In-memory rate limiting is per process and insufficient as the only multi-instance control.
 - No automated E2E security suite was found.
-- COD inventory accounting needs an atomic transaction.
 - Product variant recreation can affect historical movement data and referenced variants.
-- Guest order token lifecycle, abuse controls, and email delivery retries must be tested before production.
+- Guest token lifecycle, notification retries, provider failures, and IDOR cases must be independently tested in Phase 2.
