@@ -4,10 +4,17 @@ import { addressService } from "@/services/address-service";
 import { revalidatePath } from "next/cache";
 import { requireDbUser } from "@/lib/require-db-user";
 
+
 export async function getAddressesAction() {
-  const user = await requireDbUser();
+  const user = await requireDbUser({
+    throwIfMissing: false,
+  });
+
+  if (!user) return [];
+
   return addressService.listByUser(user.id);
 }
+
 
 export async function saveAddressAction(data) {
   const user = await requireDbUser();

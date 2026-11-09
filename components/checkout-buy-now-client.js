@@ -12,7 +12,6 @@ import { getAddressesAction } from "@/actions/address-actions";
 import LoadingButton from "@/components/ui/loading-button";
 import GoogleLocationPicker from "@/components/google-location-picker";
 import { useUser } from "@clerk/nextjs";
-import { useAuthSafe } from "@/hooks/use-auth-safe";
 import SafeImage from "./ui/safe-image";
 import AddressFields from "@/components/address-fields";
 import {
@@ -20,8 +19,8 @@ import {
   mergeGeocodedAddress,
   validateAddressInput,
 } from "@/lib/address-validation";
+import { getCheckoutIdempotencyKey } from "@/lib/checkout-client-idempotency";
 
-const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 const fulfillmentStorageKey = "buy-now-fulfillment";
 
 function loadRazorpayScript() {
@@ -91,9 +90,14 @@ function clearPendingFulfillment() {
   window.sessionStorage.removeItem(fulfillmentStorageKey);
 }
 
+function getOrderUrl(order) {
+  const params = new URLSearchParams({ status: "confirmed" });
+  if (order.guestAccessToken) params.set("token", order.guestAccessToken);
+  return `/orders/${order.orderId}?${params.toString()}`;
+}
+
 export default function CheckoutBuyNowClient({ lineItem }) {
   const { user } = useUser();
-  const { isLoaded, isSignedIn } = useAuthSafe();
   const customerName =
     user?.fullName ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
@@ -129,10 +133,12 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(
-    pendingFulfillment?.saveAddress ?? true,
+    pendingFulfillment?.saveAddress ?? false,
   );
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
   const pendingFulfillmentRef = useRef(pendingFulfillment);
+  const idempotencyRef = useRef(null);
   const [showMobileAddressFields, setShowMobileAddressFields] = useState(false);
 
   useEffect(() => {
@@ -196,25 +202,6 @@ export default function CheckoutBuyNowClient({ lineItem }) {
 
     setFieldErrors({});
 
-    if (hasClerk && !isLoaded) {
-      setError("Authentication is still loading. Please try again.");
-      return;
-    }
-
-    if (hasClerk && !isSignedIn) {
-      savePendingFulfillment({
-        form: validation.address,
-        paymentMethod,
-        saveAddress,
-      });
-      router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(
-          `${window.location.pathname}${window.location.search}`,
-        )}`,
-      );
-      return;
-    }
-
     setLoading(true);
 
     const addressPayload =
@@ -223,14 +210,19 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         : validation.address;
 
     try {
-      const result = await createBuyNowCheckoutSessionRequest({
+      const checkoutRequest = {
         ...addressPayload,
         productId,
         size,
         quantity,
         paymentMethod,
-        saveShippingAddress: addressMode === "new" && saveAddress,
-      });
+        saveShippingAddress: Boolean(user && addressMode === "new" && saveAddress),
+        whatsappConsent,
+      };
+      if (paymentMethod === "cod") {
+        checkoutRequest.idempotencyKey = getCheckoutIdempotencyKey(idempotencyRef, checkoutRequest);
+      }
+      const result = await createBuyNowCheckoutSessionRequest(checkoutRequest);
 
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
@@ -241,7 +233,7 @@ export default function CheckoutBuyNowClient({ lineItem }) {
       clearPendingFulfillment();
 
       if (paymentMethod === "cod") {
-        router.push(`/orders/${result.orderId}?status=confirmed`);
+        router.push(getOrderUrl(result));
         return;
       }
 
@@ -273,10 +265,11 @@ export default function CheckoutBuyNowClient({ lineItem }) {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              guestAccessToken: result.guestAccessToken,
             });
 
             if (persisted.ok) {
-              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              router.push(getOrderUrl(persisted));
               return;
             }
 
@@ -571,16 +564,20 @@ export default function CheckoutBuyNowClient({ lineItem }) {
               />
             </div>
 
-            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+            {user ? <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
               <input
                 type="checkbox"
                 checked={saveAddress}
                 onChange={(event) => setSaveAddress(event.target.checked)}
               />
               Save this address for future orders
-            </label>
+            </label> : null}
           </div>
         )}
+        <label className="flex items-start gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+          <input type="checkbox" checked={whatsappConsent} onChange={(event) => setWhatsappConsent(event.target.checked)} className="mt-1" />
+          <span>I agree to receive a WhatsApp order confirmation from Shoes House.</span>
+        </label>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </div>
       <section className="space-y-6 no54123-3xl border border-black/10 p-6">

@@ -6,11 +6,18 @@ export default clerkMiddleware(async (auth, req) => {
 
   requestHeaders.set("x-pathname", req.nextUrl.pathname);
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+
+  if (req.nextUrl.pathname.startsWith("/orders/")) {
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("Cache-Control", "no-store, private");
+  }
+
+  return response;
 });
 
 export const config = {

@@ -1,23 +1,18 @@
-"use client";
-
-import { Suspense } from "react";
-import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
-import OrdersClient from "@/components/orders-client";
+import Link from "next/link";
 
 export default function OrdersPage() {
   return (
-    <AuthGate>
-      <main className="pt-20">
-        <PageHeader
-          eyebrow="Orders"
-          title="Order history"
-          description="Track status and download invoices when available."
-        />
-        <Suspense fallback={<p className="px-5 text-sm text-black/60">Loading…</p>}>
-          <OrdersClient />
-        </Suspense>
-      </main>
-    </AuthGate>
+    <main className="pt-20">
+      <PageHeader
+        eyebrow="Orders"
+        title="Order history"
+        description="Track status and download invoices when available."
+      />
+      <div className="mx-auto max-w-3xl px-5 pb-20 text-sm text-black/70 sm:px-8">
+        <p>Open the private link in your order confirmation email or WhatsApp message to view an order and download its invoice.</p>
+        <Link href="/shoes" className="mt-5 inline-block underline">Continue shopping</Link>
+      </div>
+    </main>
   );
 }

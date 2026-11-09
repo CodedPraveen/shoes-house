@@ -8,9 +8,6 @@ import {
   logWebhookEvent,
 } from "@/services/payment/webhook-log-service";
 import {
-  findProcessedPayment,
-} from "@/services/payment/payment-idempotency";
-import {
   InsufficientStockError,
   PaymentAmountMismatchError,
 } from "@/lib/inventory-errors";
@@ -65,29 +62,12 @@ export const webhookService = {
         return { ok: false, error: "Missing payment entity" };
       }
 
-      const alreadyPaid = await findProcessedPayment(payment.id);
-      if (alreadyPaid) {
-        await logWebhookEvent({
-          status: "DUPLICATE_EVENT",
-          eventId: webhookEventId,
-          eventType: event,
-          razorpayPaymentId: payment.id,
-          razorpayOrderId: payment.order_id,
-          payload,
-        });
-        return {
-          ok: true,
-          duplicate: true,
-          orderId: alreadyPaid.orderId,
-          code: "DUPLICATE_EVENT",
-        };
-      }
-
       try {
         const result = await fulfillPaidCheckout({
           razorpayOrderId: payment.order_id,
           razorpayPaymentId: payment.id,
           amountPaise: payment.amount,
+          currency: payment.currency,
           fromWebhook: true,
           rawPayload: payload,
           webhookEventId,

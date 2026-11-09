@@ -17,7 +17,7 @@ export const refundService = {
         where: { id: orderId },
         include: {
           items: true,
-          payments: { where: { status: "PAID", deletedAt: null } },
+          payments: { where: { status: { in: ["PAID", "REFUNDED"] }, deletedAt: null } },
         },
       });
 
@@ -28,7 +28,12 @@ export const refundService = {
         return { ok: true, duplicate: true };
       }
 
-      for (const item of order.items) {
+      const alreadyRestocked = await tx.inventoryMovement.findFirst({
+        where: { orderId, type: { in: ["RESTOCK", "REFUND"] }, quantity: { gt: 0 } },
+        select: { id: true },
+      });
+
+      for (const item of alreadyRestocked ? [] : order.items) {
         if (!item.variantId) continue;
         await incrementProductStock(tx, {
           productId: item.productId,

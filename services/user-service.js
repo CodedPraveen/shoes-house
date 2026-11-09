@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/db";
 import { notDeleted } from "@/lib/prisma-helpers";
+export { ClerkIdentityConflictError, isClerkIdentityConflict } from "@/lib/clerk-identity-conflict";
+import { assertEmailIsUnclaimed } from "@/lib/clerk-identity-conflict";
 
 export const userService = {
-  async upsertFromClerk({ clerkId, email, name, role = "customer" }) {
-    const existing = await prisma.user.findUnique({ where: { clerkId } });
+  async upsertFromClerk({ clerkId, email, name, role = "customer" }, db = prisma) {
+    const existing = await db.user.findUnique({ where: { clerkId } });
     if (existing) {
       if (existing.deletedAt) throw new Error("Account unavailable");
-      return prisma.user.update({
+      return db.user.update({
         where: { id: existing.id },
         data: { email, name: name || existing.name },
       });
@@ -14,10 +16,10 @@ export const userService = {
 
     // Email equality is not proof that two independently authenticated
     // identities belong to the same person. Linking has a separate flow.
-    const emailOwner = await prisma.user.findUnique({ where: { email } });
-    if (emailOwner) throw new Error("Email already belongs to another account");
+    const emailOwner = await db.user.findUnique({ where: { email } });
+    assertEmailIsUnclaimed(emailOwner);
 
-    return prisma.user.create({
+    return db.user.create({
       data: { clerkId, email, name, role },
     });
   },

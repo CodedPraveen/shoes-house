@@ -7,7 +7,11 @@ This document focuses on important network and mutation boundaries rather than e
 | Route | Purpose | Current authorization |
 | --- | --- | --- |
 | `GET /api/orders/[orderId]` | Return order detail and synchronize tracking | Authenticated owner or admin |
-| `GET /api/orders/[orderId]/invoice` | Render an HTML invoice | Authenticated owner or admin |
+| `GET /api/orders/[orderId]/invoice` | Render an HTML invoice | Valid matching guest token, authenticated owner, or admin |
+| `GET /api/guest-orders/[token]?orderId=...` | Return private guest order detail | Valid, unexpired, unrevoked token for the requested order |
+| `POST /api/checkout/session` | Create cart COD order or Razorpay session | Guest or existing authenticated customer |
+| `POST /api/checkout/buy-now/session` | Create Buy Now COD order or Razorpay session | Guest or existing authenticated customer |
+| `POST /api/checkout/razorpay/verify` | Verify payment and idempotently fulfill | Razorpay proof plus matching guest token for guest sessions |
 | `GET /new-admin/orders/export` | Export filtered orders as CSV | Admin only; 401/403 responses |
 | `POST /api/webhooks/clerk` | Synchronize Clerk users and roles | Verified Svix signature |
 | `POST /api/webhooks/razorpay` | Process payment events | Verified Razorpay signature |
@@ -16,18 +20,16 @@ This document focuses on important network and mutation boundaries rather than e
 | `GET /images/[...path]` | Serve a validated stored WebP path | Public, immutable cache |
 | `GET/POST /api/admin/products` | Existing admin product API | Inspect the current handler before use |
 
-## Planned guest order-access API change
+## Guest order-access API
 
-The following is a target contract, not a claim about deployed routes:
-
-- Order detail and invoice access for customers will use a high-entropy private token, not Clerk customer authentication.
+- Order detail and invoice access for guests uses a high-entropy private token, not Clerk customer authentication.
 - An order ID alone must not authorize access.
 - The raw token must never be stored or logged; persist only a one-way hash.
 - Administrator access remains Clerk-authenticated and separately authorized.
-- Choose and document the final route shape after inspecting existing route handlers and UI links. Do not add a guessed endpoint or silently break current consumers.
+- The guest detail route takes the token in the path and the order ID as a query constraint. The invoice accepts `token` as a query parameter.
 - Private responses must not be placed in shared caches.
 
-The existing `GET /api/orders/[orderId]` and invoice route are currently owner/admin authenticated. Their customer authorization branch must be deliberately migrated and tested; do not describe them as token-protected until implemented.
+The existing `GET /api/orders/[orderId]` remains owner/admin authenticated for compatibility. Mobile routes and their bearer-session contracts are unchanged.
 
 ## Phase 2 mobile customer API (worktree, not yet deployed)
 

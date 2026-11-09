@@ -4,7 +4,7 @@ Status reflects the documented source inspection baseline. Re-check the current 
 
 ## Complete
 
-- [x] Clerk customer authentication and verified Clerk user webhook — current implementation; customer-facing login is targeted for removal.
+- [x] Clerk administrator authentication and verified user webhook; customer login/signup entry points are removed from the storefront.
 - [x] Shoe and jewellery collection/category hierarchy.
 - [x] Product catalog, variants, product pages, search, and filtering.
 - [x] Guest and signed-in cart behavior as documented by the current implementation; verify persistence and browser behavior before relying on it.
@@ -15,7 +15,11 @@ Status reflects the documented source inspection baseline. Re-check the current 
 - [x] Payment idempotency and amount verification.
 - [x] Orders, immutable order items, order history, and HTML invoices.
 - [x] Paid-order atomic inventory decrement and inventory movement audit.
-- [x] Cash on Delivery order creation and new-admin call-confirmation workflow.
+- [x] Cash on Delivery order creation with atomic inventory movement and new-admin call-confirmation workflow.
+- [x] Guest cart and Buy Now checkout for COD and Razorpay.
+- [x] Private token order detail and invoice access with expiry/revocation.
+- [x] Resend email outbox with idempotency and retry processing.
+- [x] Optional consented Meta WhatsApp confirmation isolated from checkout/email.
 - [x] Validated seven-state new-admin order workflow with stale-action protection and administrator audit history.
 - [x] Admin-managed storefront hero, sections, lifestyle content, selected products, and navbar destinations.
 - [x] Persistent product/banner image paths shared by the Next.js and worker containers.
@@ -31,26 +35,25 @@ Status reflects the documented source inspection baseline. Re-check the current 
 
 ## Partial
 
-- [~] Inventory: paid fulfillment is atomic, but new-admin adjustment UI is not implemented and COD stock accounting is incomplete.
+- [~] Inventory: paid/COD fulfillment and cancellation restoration are atomic; new-admin adjustment UI remains unimplemented.
 - [~] Reviews: schema and guarded placeholder action exist; submission/display UI is planned.
 - [~] Refunds: service foundation exists; no finished admin refund workflow.
 - [~] Historical Cloudinary records remain readable but have not been bulk-migrated to local storage.
 - [~] Rate limiting: implemented in memory per process, not as a complete multi-instance control.
 - [~] Phase 2 mobile API: documented as worktree/not deployed; do not assume production readiness.
 
-## Planned — guest storefront access
+## Implemented in Phase 1 — pending independent verification
 
-- [ ] Remove customer sign-in/sign-up entry points and customer profile UI from the storefront.
-- [ ] Ensure guest cart and Buy Now checkout work without Clerk customer identity.
-- [ ] Make checkout sessions and orders support guest ownership without creating fake Clerk users.
-- [ ] Preserve existing customer-linked historical orders and admin access.
-- [ ] Add private order access using a high-entropy token; persist only its hash.
-- [ ] Convert customer order detail and invoice access from Clerk-owner auth to private-token authorization.
-- [ ] Keep administrator order access protected by Clerk and admin authorization.
-- [ ] Integrate Resend transactional order email and private order link delivery.
-- [ ] Add migration, integration tests, security tests, and deployment/rollback procedure.
+- [x] Remove customer sign-in/sign-up entry points and customer profile UI from the storefront.
+- [x] Guest cart and Buy Now work without Clerk customer identity.
+- [x] Checkout sessions/orders support nullable guest ownership without fake users.
+- [x] Preserve historical customer orders, mobile contracts, and admin access.
+- [x] Add hashed private token access for order details and invoices.
+- [x] Integrate Resend and optional consented Meta WhatsApp via isolated outboxes.
+- [x] Add additive migrations and environment documentation.
+- [ ] Complete Phase 2 integration, security, provider-failure, and production migration tests.
 
-These items are **not implemented** merely because they appear in this list or in `GUEST_CHECKOUT.md`.
+Phase 1 implementation is not a production-readiness claim.
 
 ## Not verified by source-only validation
 
@@ -59,4 +62,4 @@ These items are **not implemented** merely because they appear in this list or i
 - Ongoing production database/seed correctness beyond the verified image migration.
 - Real Razorpay and AfterShip integration credentials.
 - Full end-to-end browser test coverage; no automated E2E suite was found.
-- Production guest checkout, private order links, or Resend delivery.
+- Production guest checkout, private order links, Resend delivery, or Meta WhatsApp delivery.

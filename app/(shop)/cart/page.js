@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import AuthGate from "@/components/auth-gate";
 import PageHeader from "@/components/page-header";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/format-price";
@@ -44,7 +43,6 @@ export default function CartPage() {
   };
 
   return (
-    <AuthGate>
       <main className="pt-20">
         <PageHeader
           eyebrow="Cart"
@@ -196,6 +194,5 @@ export default function CartPage() {
           )}
         </div>
       </main>
-    </AuthGate>
   );
 }

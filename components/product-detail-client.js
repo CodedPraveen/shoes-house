@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuthSafe } from "@/hooks/use-auth-safe";
 import {
   Minus,
   Plus,
@@ -75,7 +74,6 @@ export default function ProductDetailClient({ product }) {
   const { addItem } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
-  const { isSignedIn } = useAuthSafe();
   const isSoldOut = product.stock === 0;
 
   const images = (product.images || []).map(
@@ -203,53 +201,46 @@ export default function ProductDetailClient({ product }) {
     }
   };
 
-  const requireAuth = (action) => {
-    if (hasClerk && !isSignedIn) {
-      router.push(
-        `/sign-in?redirect_url=${encodeURIComponent(
-          getProductPath(product),
-        )}`,
-      );
+  // const requireAuth = (action) => {
+  //   if (hasClerk && !isSignedIn) {
+  //     router.push(
+  //       `/sign-in?redirect_url=${encodeURIComponent(
+  //         getProductPath(product),
+  //       )}`,
+  //     );
 
-      return false;
-    }
+  //     return false;
+  //   }
 
-    action();
+  //   action();
 
-    return true;
-  };
+  //   return true;
+  // };
 
   const handleAddToCart = () => {
     if (isSoldOut) return;
 
     if (!size) {
-      setActionError(
-        "Please select a size before continuing.",
-      );
+      setActionError("Please select a size before continuing.");
       return;
     }
 
-    requireAuth(() =>
-      runAction("cart", () =>
-        addItem({
-          product,
-          size,
-          quantity,
-        }),
-      ).then((success) => {
-        if (!success) return;
-
-        setAdded(true);
-
-        setTimeout(() => {
-          setAdded(false);
-        }, 2000);
+    runAction("cart", () =>
+      addItem({
+        product,
+        size,
+        quantity,
       }),
-    );
+    ).then((success) => {
+      if (!success) return;
+
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    });
   };
 
   const handleWishlist = () => {
-    requireAuth(async () => {
+    (async () => {
       if (pendingRef.current.has("wishlist")) return;
 
       const previousState = optimisticWishlist;

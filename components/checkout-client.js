@@ -19,6 +19,7 @@ import {
   mergeGeocodedAddress,
   validateAddressInput,
 } from "@/lib/address-validation";
+import { getCheckoutIdempotencyKey } from "@/lib/checkout-client-idempotency";
 
 
 function loadRazorpayScript() {
@@ -35,9 +36,16 @@ function loadRazorpayScript() {
   });
 }
 
+function getOrderUrl(order) {
+  const params = new URLSearchParams({ status: "confirmed" });
+  if (order.guestAccessToken) params.set("token", order.guestAccessToken);
+  return `/orders/${order.orderId}?${params.toString()}`;
+}
+
 const emptyForm = {
   label: "Home",
   fullName: "",
+  email: "",
   phone: "",
   line1: "",
   landmark: "",
@@ -68,7 +76,7 @@ export default function CheckoutClient() {
     user?.fullName ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
   const router = useRouter();
-  const { items, subtotal } = useCart();
+  const { items, subtotal, hydrated, clearCart } = useCart();
   const shippingCost = calculateShipping(subtotal);
   const total = subtotal + shippingCost;
 
@@ -83,7 +91,9 @@ export default function CheckoutClient() {
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(false);
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
+  const idempotencyRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -151,10 +161,13 @@ export default function CheckoutClient() {
     e.preventDefault();
     setError("");
 
-    const validation = validateAddressInput({
-      ...form,
-      fullName: form.fullName || customerName,
-    });
+    const validation = validateAddressInput(
+      {
+        ...form,
+        fullName: form.fullName || customerName,
+      },
+      { requireEmail: true },
+    );
     if (!validation.isValid) {
       setFieldErrors(validation.errors);
       setError(firstAddressError(validation.errors));
@@ -166,22 +179,33 @@ export default function CheckoutClient() {
 
     const payload =
       addressMode === "saved" && selectedAddressId
-        ? { addressId: selectedAddressId }
-        : { ...form, fullName: form.fullName || customerName };
+        ? { addressId: selectedAddressId, email: validation.address.email }
+        : { ...validation.address };
 
     try {
-      const result = await createCartCheckoutSessionRequest({
+      const checkoutRequest = {
         ...payload,
         paymentMethod,
-        saveShippingAddress: addressMode === "new" && saveAddress,
-      });
+        saveShippingAddress: Boolean(user && addressMode === "new" && saveAddress),
+        cartItems: items.map((item) => ({
+          productId: item.productId || item.product?.id,
+          size: item.size,
+          quantity: item.quantity,
+        })),
+        whatsappConsent,
+      };
+      if (paymentMethod === "cod") {
+        checkoutRequest.idempotencyKey = getCheckoutIdempotencyKey(idempotencyRef, checkoutRequest);
+      }
+      const result = await createCartCheckoutSessionRequest(checkoutRequest);
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
         setLoading(false);
         return;
       }
       if (paymentMethod === "cod") {
-        router.push(`/orders/${result.orderId}?status=confirmed`);
+        await clearCart();
+        router.push(getOrderUrl(result));
         return;
       }
       const loaded = await loadRazorpayScript();
@@ -212,16 +236,18 @@ export default function CheckoutClient() {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              guestAccessToken: result.guestAccessToken,
             });
 
             if (persisted.ok) {
-              router.push(`/orders/${persisted.orderId}?status=confirmed`);
+              await clearCart();
+              router.push(getOrderUrl(persisted));
               return;
             }
 
             setError(
               persisted.error ||
-                "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
+              "Payment was received, but the order is still being confirmed. Please check My Orders before retrying.",
             );
           } catch (verificationError) {
             setError(verificationError?.message || "Could not verify the payment. Check My Orders before retrying.");
@@ -245,6 +271,10 @@ export default function CheckoutClient() {
       setError(err.message || "Checkout error");
       setLoading(false);
     }
+  }
+
+  if (!hydrated) {
+    return <p className="text-sm text-black/60">Loading your cart...</p>;
   }
 
   if (!items.length) {
@@ -342,11 +372,12 @@ export default function CheckoutClient() {
               form={{ ...form, fullName: form.fullName || customerName }}
               errors={fieldErrors}
               onChange={updateField}
+              showEmailField
             />
-            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+            {user ? <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
               <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
               Save this address for future orders
-            </label>
+            </label> : null}
           </div>
         )}
 
@@ -355,14 +386,11 @@ export default function CheckoutClient() {
             {error}
           </p>
         ) : null}
-        <p className="text-xs text-black/50">
-          Online payment is verified before your order is confirmed, with the
-          secure webhook as an idempotent fallback. Manage addresses on your{" "}
-          <a href="/profile#saved-addresses" className="underline">
-            profile
-          </a>
-          .
-        </p>
+        <label className="flex items-start gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+          <input type="checkbox" checked={whatsappConsent} onChange={(event) => setWhatsappConsent(event.target.checked)} className="mt-1" />
+          <span>I agree to receive a WhatsApp order confirmation from Shoes House.</span>
+        </label>
+        <p className="text-xs text-black/50">Online payment is verified before your order is confirmed.</p>
       </div>
 
       <section className="space-y-6 no54123-3xl border border-black/10 p-6">

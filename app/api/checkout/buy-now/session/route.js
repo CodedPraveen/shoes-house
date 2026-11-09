@@ -13,6 +13,16 @@ export async function POST(request) {
     const result = await createBuyNowCheckoutSession(payload);
     return Response.json(result, { status: result.ok ? 200 : 400 });
   } catch (error) {
-    return checkoutRouteError(error);
+    console.error("[BUY-NOW-CHECKOUT-ERROR]", error);
+
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error
+          ? error.message
+          : "Checkout failed",
+      },
+      { status: 500 }
+    );
   }
 }
