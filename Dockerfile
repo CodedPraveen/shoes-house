@@ -53,5 +53,7 @@ COPY --from=source --chown=node:node /app/lib ./lib
 COPY --from=source --chown=node:node /app/queues ./queues
 COPY --from=source --chown=node:node /app/schemas ./schemas
 COPY --from=source --chown=node:node /app/workers ./workers
+COPY --from=source --chown=node:node /app/services ./services
+COPY --from=source --chown=node:node /app/emails ./emails
 USER node
 CMD ["npm", "run", "worker:prod"]
