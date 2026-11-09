@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { runCheckoutIdempotent } from "@/services/checkout-idempotency-service";
 import { validateRazorpayPaymentState } from "@/services/payment/payment-validation";
 import { getCheckoutIdentity } from "@/lib/checkout-identity";
+import { isClerkIdentityConflict } from "@/services/user-service";
 
 export { getCheckoutIdentity } from "@/lib/checkout-identity";
 
@@ -18,9 +19,13 @@ export async function getCurrentUser(authenticatedUser = null, getDbUser = requi
   try {
     // requireDbUser returns before Clerk/Prisma synchronization for signed-out guests.
     return await getDbUser({ throwIfMissing: false });
-  } catch {
-    // A stale Clerk session must not make the guest storefront unusable.
-    return null;
+  } catch (error) {
+    // Only a known identity ownership conflict can safely proceed as a guest.
+    // Database and Clerk failures must reach the caller instead of being hidden.
+    if (isClerkIdentityConflict(error)) {
+      return null;
+    }
+    throw error;
   }
 }
 

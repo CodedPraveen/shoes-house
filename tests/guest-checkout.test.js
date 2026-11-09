@@ -30,6 +30,7 @@ import {
 import { resolveDbUserFromClerk } from "../lib/db-user-resolution.js";
 import { getCheckoutIdentity } from "../lib/checkout-identity.js";
 import { processClerkWebhookEvent } from "../lib/clerk-webhook-event.js";
+import { guestOrderErrorResponse, guestOrderResponse } from "../lib/guest-order-response.js";
 
 const validAddress = {
   fullName: "Guest Customer",
@@ -102,6 +103,18 @@ test("expected identity conflicts are predictable for optional database users", 
   assert.equal(result, null);
 });
 
+test("unexpected database user-resolution failures are not downgraded to guests", async () => {
+  await assert.rejects(
+    resolveDbUserFromClerk({
+      throwIfMissing: false,
+      auth: async () => ({ userId: "clerk-user" }),
+      userService: { getByClerkId: async () => { throw new Error("database unavailable"); } },
+      clerkClient: async () => { throw new Error("must not load Clerk user"); },
+    }),
+    /database unavailable/,
+  );
+});
+
 test("Clerk webhooks safely acknowledge expected identity conflicts", async () => {
   const result = await processClerkWebhookEvent(
     { type: "user.created", data: { id: "clerk-conflict", email_addresses: [{ email_address: "existing@example.com" }] } },
@@ -171,6 +184,28 @@ test("guest order access binds token to order and rejects expired/revoked links"
   baseOrder.guestAccessExpiresAt = new Date(Date.now() + 60_000);
   baseOrder.guestAccessRevokedAt = new Date();
   assert.equal((await guestOrderAccessService.getOrderAccess(prisma, access.token, baseOrder.id)).status, "invalid");
+});
+
+test("guest order API maps access outcomes to safe HTTP responses", () => {
+  const order = {
+    id: "order_1234567890",
+    userId: null,
+    guestAccessTokenHash: "secret-hash",
+    guestAccessExpiresAt: new Date(),
+    guestAccessRevokedAt: null,
+    guestEmail: "registered@example.com",
+  };
+  const valid = guestOrderResponse({ status: "valid", order });
+  assert.equal(valid.status, 200);
+  assert.equal(valid.body.id, order.id);
+  assert.equal("guestAccessTokenHash" in valid.body, false);
+  assert.equal("userId" in valid.body, false);
+  assert.equal(valid.headers["Cache-Control"], "no-store, private");
+  assert.equal(valid.headers["Referrer-Policy"], "no-referrer");
+  assert.equal(guestOrderResponse({ status: "invalid", order: null }).status, 404);
+  assert.equal(guestOrderResponse({ status: "expired", order: null }).status, 410);
+  assert.equal(guestOrderErrorResponse({ code: "RATE_LIMITED" }).status, 429);
+  assert.equal(guestOrderErrorResponse(new Error("database unavailable")).status, 500);
 });
 
 test("Razorpay signatures and captured payment state are validated", () => {
