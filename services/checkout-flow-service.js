@@ -132,9 +132,19 @@ export async function createBuyNowCheckoutSession(input, authenticatedUser = nul
     return { ok: true, ...session };
   } catch (error) {
     console.error("[BUY-NOW-CHECKOUT-SERVICE-ERROR]", {
+      type: typeof error,
+      constructor: error?.constructor?.name,
       message: error?.message,
       stack: error?.stack,
       name: error?.name,
+      code: error?.code,
+      status: error?.status,
+      description: error?.description,
+      stringValue: String(error),
+      keys:
+        error && typeof error === "object"
+          ? Object.keys(error)
+          : [],
     });
 
     return {

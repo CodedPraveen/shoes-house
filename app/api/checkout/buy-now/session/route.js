@@ -15,9 +15,14 @@ export async function POST(request) {
   } catch (error) {
     console.error("[BUY-NOW-CHECKOUT-ERROR]", error);
 
-    return {
-      ok: false,
-      error: error.message || "Checkout failed",
-    };
+    return Response.json(
+      {
+        ok: false,
+        error: error instanceof Error
+          ? error.message
+          : "Checkout failed",
+      },
+      { status: 500 }
+    );
   }
 }
