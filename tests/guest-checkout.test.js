@@ -22,6 +22,14 @@ import {
   sendWhatsAppOrderConfirmation,
 } from "../services/notifications/whatsapp-client.js";
 import { checkoutPayloadFingerprint } from "../services/checkout-idempotency-service.js";
+import {
+  ClerkIdentityConflictError,
+  assertEmailIsUnclaimed,
+  isClerkIdentityConflict,
+} from "../lib/clerk-identity-conflict.js";
+import { resolveDbUserFromClerk } from "../lib/db-user-resolution.js";
+import { getCheckoutIdentity } from "../lib/checkout-identity.js";
+import { processClerkWebhookEvent } from "../lib/clerk-webhook-event.js";
 
 const validAddress = {
   fullName: "Guest Customer",
@@ -38,6 +46,83 @@ test("guest contact and shipping validation accepts a registered-style email", (
   const result = validateAddressInput(validAddress, { requireEmail: true });
   assert.equal(result.isValid, true);
   assert.equal(result.address.email, "registered@example.com");
+});
+
+test("signed-out guest does not synchronize a Clerk identity", async () => {
+  let lookupCalls = 0;
+  let upsertCalls = 0;
+  const result = await resolveDbUserFromClerk({
+      throwIfMissing: false,
+      auth: async () => ({ userId: null }),
+      userService: {
+        getByClerkId: async () => { lookupCalls += 1; },
+        upsertFromClerk: async () => { upsertCalls += 1; },
+      },
+      clerkClient: async () => { throw new Error("must not load Clerk user"); },
+  });
+  assert.equal(result, null);
+  assert.equal(lookupCalls, 0);
+  assert.equal(upsertCalls, 0);
+});
+
+test("guest checkout keeps form email and nullable ownership", async () => {
+  const email = "existing-customer@example.com";
+  assert.deepEqual(getCheckoutIdentity(null, { email }), { userId: null, email });
+});
+
+test("matching email never links different Clerk identities", async () => {
+  const updates = [];
+  const db = {
+    user: {
+      findUnique: async ({ where }) => (where.email ? { id: "historical-user" } : null),
+      update: async (value) => { updates.push(value); return value; },
+      create: async () => { throw new Error("must not create or link"); },
+    },
+  };
+  await assert.rejects(
+    async () => assertEmailIsUnclaimed(
+      await db.user.findUnique({ where: { email: "existing-customer@example.com" } }),
+    ),
+    (error) => isClerkIdentityConflict(error),
+  );
+  assert.equal(updates.length, 0);
+});
+
+test("expected identity conflicts are predictable for optional database users", async () => {
+  const conflict = new ClerkIdentityConflictError();
+  const result = await resolveDbUserFromClerk({
+      throwIfMissing: false,
+      auth: async () => ({ userId: "clerk-conflict" }),
+      userService: {
+        getByClerkId: async () => null,
+        upsertFromClerk: async () => { throw conflict; },
+      },
+      clerkClient: async () => ({ users: { getUser: async () => ({ id: "clerk-conflict", emailAddresses: [{ emailAddress: "existing@example.com" }] }) } }),
+  });
+  assert.equal(result, null);
+});
+
+test("Clerk webhooks safely acknowledge expected identity conflicts", async () => {
+  const result = await processClerkWebhookEvent(
+    { type: "user.created", data: { id: "clerk-conflict", email_addresses: [{ email_address: "existing@example.com" }] } },
+    {
+      userService: { upsertFromClerk: async () => { throw new ClerkIdentityConflictError(); } },
+      isAdminUser: () => false,
+    },
+  );
+  assert.deepEqual(result, { received: true, skipped: true, reason: "identity_conflict" });
+});
+
+test("Clerk webhook preserves administrator role selection", async () => {
+  let payload;
+  await processClerkWebhookEvent(
+    { type: "user.updated", data: { id: "admin-clerk", email_addresses: [{ email_address: "admin@example.com" }], public_metadata: { role: "admin" } } },
+    {
+      userService: { upsertFromClerk: async (value) => { payload = value; } },
+      isAdminUser: (user) => user.publicMetadata.role === "admin",
+    },
+  );
+  assert.equal(payload.role, "admin");
 });
 
 test("guest validation rejects invalid mobile, missing fields, and invalid address", () => {

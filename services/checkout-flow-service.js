@@ -9,11 +9,15 @@ import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
 import { revalidatePath } from "next/cache";
 import { runCheckoutIdempotent } from "@/services/checkout-idempotency-service";
 import { validateRazorpayPaymentState } from "@/services/payment/payment-validation";
+import { getCheckoutIdentity } from "@/lib/checkout-identity";
 
-async function getCurrentUser(authenticatedUser = null) {
+export { getCheckoutIdentity } from "@/lib/checkout-identity";
+
+export async function getCurrentUser(authenticatedUser = null, getDbUser = requireDbUser) {
   if (authenticatedUser) return authenticatedUser;
   try {
-    return await requireDbUser({ throwIfMissing: false });
+    // requireDbUser returns before Clerk/Prisma synchronization for signed-out guests.
+    return await getDbUser({ throwIfMissing: false });
   } catch {
     // A stale Clerk session must not make the guest storefront unusable.
     return null;
@@ -48,19 +52,6 @@ async function resolveShippingAddress(userId, input, options = {}) {
   }
 
   return result.address;
-}
-
-async function getCheckoutIdentity(user, input) {
-  const email = user?.email || input.email;
-
-  if (!user && !email) {
-    throw new Error("Email address is required for guest checkout");
-  }
-
-  return {
-    userId: user?.id ?? null,
-    email,
-  };
 }
 
 export async function createBuyNowCheckoutSession(input, authenticatedUser = null) {

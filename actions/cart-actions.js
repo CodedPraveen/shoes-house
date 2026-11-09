@@ -4,11 +4,20 @@ import { requireDbUser } from "@/lib/require-db-user";
 import { assertRateLimit } from "@/lib/rate-limit";
 import { withPerf } from "@/lib/perf";
 import { cartService } from "@/services/cart-service";
+import { isClerkIdentityConflict } from "@/services/user-service";
+
+async function getOptionalDbUser() {
+  try {
+    return await requireDbUser({ throwIfMissing: false });
+  } catch (error) {
+    // A conflicting identity has no safe database-cart owner; retain guest cart behavior.
+    if (isClerkIdentityConflict(error)) return null;
+    throw error;
+  }
+}
 
 export async function getCartAction() {
-  const user = await requireDbUser({
-    throwIfMissing: false,
-  });
+  const user = await getOptionalDbUser();
 
   if (!user) {
     return {
@@ -34,9 +43,7 @@ export async function addToCartAction({
     windowMs: 60_000,
   });
 
-  const user = await requireDbUser({
-    throwIfMissing: false,
-  });
+  const user = await getOptionalDbUser();
 
   if (!user) {
     throw new Error("Please sign in first.");
@@ -69,9 +76,7 @@ export async function updateCartQuantityAction(
     windowMs: 60_000,
   });
 
-  const user = await requireDbUser({
-    throwIfMissing: false,
-  });
+  const user = await getOptionalDbUser();
 
   if (!user) {
     throw new Error("Please sign in first.");
@@ -99,9 +104,7 @@ export async function removeFromCartAction(lineId) {
     windowMs: 60_000,
   });
 
-  const user = await requireDbUser({
-    throwIfMissing: false,
-  });
+  const user = await getOptionalDbUser();
 
   if (!user) {
     throw new Error("Please sign in first.");
@@ -118,9 +121,7 @@ export async function removeFromCartAction(lineId) {
 // }
 
 export async function clearCartAction() {
-  const user = await requireDbUser({
-    throwIfMissing: false,
-  });
+  const user = await getOptionalDbUser();
 
   if (!user) {
     return {
