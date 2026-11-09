@@ -1,0 +1,213 @@
+import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
+import test from "node:test";
+
+import { validateAddressInput } from "../lib/address-validation.js";
+import { getCheckoutIdempotencyKey } from "../lib/checkout-client-idempotency.js";
+import { buildOrderConfirmationEmail } from "../emails/order-confirmation.js";
+import { guestOrderAccessService } from "../services/guest/guest-order-access-service.js";
+import { razorpayService } from "../services/payment/razorpay-service.js";
+import {
+  assertPaymentMatchesCheckout,
+  validateRazorpayPaymentState,
+} from "../services/payment/payment-validation.js";
+import {
+  decryptNotificationToken,
+  encryptNotificationToken,
+} from "../services/notifications/notification-token-crypto.js";
+import { buildGuestOrderUrl } from "../services/notifications/order-notification-outbox.js";
+import { normalizeIndianPhone } from "../services/notifications/phone.js";
+import {
+  isWhatsAppConfigured,
+  sendWhatsAppOrderConfirmation,
+} from "../services/notifications/whatsapp-client.js";
+import { checkoutPayloadFingerprint } from "../services/checkout-idempotency-service.js";
+
+const validAddress = {
+  fullName: "Guest Customer",
+  email: "registered@example.com",
+  phone: "9876543210",
+  line1: "12 Market Road",
+  city: "Jaipur",
+  state: "Rajasthan",
+  country: "India",
+  pincode: "302001",
+};
+
+test("guest contact and shipping validation accepts a registered-style email", () => {
+  const result = validateAddressInput(validAddress, { requireEmail: true });
+  assert.equal(result.isValid, true);
+  assert.equal(result.address.email, "registered@example.com");
+});
+
+test("guest validation rejects invalid mobile, missing fields, and invalid address", () => {
+  const invalidPhone = validateAddressInput({ ...validAddress, phone: "123" }, { requireEmail: true });
+  assert.equal(invalidPhone.isValid, false);
+  assert.match(invalidPhone.errors.phone, /valid 10-digit/);
+
+  const missing = validateAddressInput({}, { requireEmail: true });
+  assert.equal(missing.isValid, false);
+  assert.ok(missing.errors.fullName && missing.errors.email && missing.errors.line1);
+
+  const invalidPincode = validateAddressInput({ ...validAddress, pincode: "000000" }, { requireEmail: true });
+  assert.equal(invalidPincode.isValid, false);
+});
+
+test("guest tokens are high entropy and only the matching token validates", () => {
+  const first = guestOrderAccessService.createToken();
+  const second = guestOrderAccessService.createToken();
+  assert.match(first.token, /^[A-Za-z0-9_-]{43}$/);
+  assert.match(first.tokenHash, /^[a-f0-9]{64}$/);
+  assert.equal(guestOrderAccessService.validateToken(first.token, first.tokenHash), true);
+  assert.equal(guestOrderAccessService.validateToken(second.token, first.tokenHash), false);
+});
+
+test("guest order access binds token to order and rejects expired/revoked links", async () => {
+  const access = guestOrderAccessService.createToken();
+  const baseOrder = {
+    id: "order_1234567890",
+    guestAccessTokenHash: access.tokenHash,
+    guestAccessExpiresAt: new Date(Date.now() + 60_000),
+    guestAccessRevokedAt: null,
+  };
+  const prisma = {
+    order: {
+      findFirst: async ({ where }) =>
+        where.id === baseOrder.id && where.guestAccessTokenHash === access.tokenHash
+          ? baseOrder
+          : null,
+    },
+  };
+  assert.equal((await guestOrderAccessService.getOrderAccess(prisma, access.token, baseOrder.id)).status, "valid");
+  assert.equal((await guestOrderAccessService.getOrderAccess(prisma, access.token, "order_other_123")).status, "invalid");
+
+  baseOrder.guestAccessExpiresAt = new Date(Date.now() - 1);
+  assert.equal((await guestOrderAccessService.getOrderAccess(prisma, access.token, baseOrder.id)).status, "expired");
+  baseOrder.guestAccessExpiresAt = new Date(Date.now() + 60_000);
+  baseOrder.guestAccessRevokedAt = new Date();
+  assert.equal((await guestOrderAccessService.getOrderAccess(prisma, access.token, baseOrder.id)).status, "invalid");
+});
+
+test("Razorpay signatures and captured payment state are validated", () => {
+  const originalSecret = process.env.RAZORPAY_KEY_SECRET;
+  process.env.RAZORPAY_KEY_SECRET = "test-secret";
+  try {
+    const orderId = "order_test";
+    const paymentId = "pay_test";
+    const signature = createHmac("sha256", "test-secret")
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+    assert.equal(razorpayService.verifyPaymentSignature({ razorpayOrderId: orderId, razorpayPaymentId: paymentId, signature }), true);
+    assert.equal(razorpayService.verifyPaymentSignature({ razorpayOrderId: orderId, razorpayPaymentId: paymentId, signature: "0".repeat(64) }), false);
+
+    assert.deepEqual(validateRazorpayPaymentState({ order_id: orderId, currency: "INR", status: "captured", captured: true }, orderId), { ok: true });
+    assert.equal(validateRazorpayPaymentState({ order_id: "other", currency: "INR", status: "captured" }, orderId).ok, false);
+    assert.equal(validateRazorpayPaymentState({ order_id: orderId, currency: "USD", status: "captured" }, orderId).ok, false);
+    assert.equal(validateRazorpayPaymentState({ order_id: orderId, currency: "INR", status: "authorized" }, orderId).pending, true);
+  } finally {
+    if (originalSecret === undefined) delete process.env.RAZORPAY_KEY_SECRET;
+    else process.env.RAZORPAY_KEY_SECRET = originalSecret;
+  }
+});
+
+test("checkout amount comparison rejects underpayment, overpayment, and wrong currency", () => {
+  assert.doesNotThrow(() => assertPaymentMatchesCheckout({ amountPaise: 129900, currency: "INR", expectedTotal: 1299 }));
+  assert.throws(() => assertPaymentMatchesCheckout({ amountPaise: 129899, currency: "INR", expectedTotal: 1299 }), /mismatch/);
+  assert.throws(() => assertPaymentMatchesCheckout({ amountPaise: 129901, currency: "INR", expectedTotal: 1299 }), /mismatch/);
+  assert.throws(() => assertPaymentMatchesCheckout({ amountPaise: 129900, currency: "USD", expectedTotal: 1299 }), /mismatch/);
+});
+
+test("COD idempotency fingerprints are stable and client keys rotate only when details change", () => {
+  assert.equal(
+    checkoutPayloadFingerprint({ b: 2, a: { d: 4, c: 3 } }),
+    checkoutPayloadFingerprint({ a: { c: 3, d: 4 }, b: 2 }),
+  );
+  const ref = { current: null };
+  const first = getCheckoutIdempotencyKey(ref, { item: "shoe", quantity: 1 });
+  const replay = getCheckoutIdempotencyKey(ref, { item: "shoe", quantity: 1 });
+  const changed = getCheckoutIdempotencyKey(ref, { item: "shoe", quantity: 2 });
+  assert.equal(first, replay);
+  assert.notEqual(first, changed);
+});
+
+test("notification token payloads are encrypted and private URLs preserve order binding", () => {
+  const originalKey = process.env.NOTIFICATION_TOKEN_ENCRYPTION_KEY;
+  const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+  process.env.NOTIFICATION_TOKEN_ENCRYPTION_KEY = "11".repeat(32);
+  process.env.NEXT_PUBLIC_APP_URL = "https://shop.example";
+  try {
+    const encrypted = encryptNotificationToken("private-token-value");
+    assert.doesNotMatch(encrypted, /private-token-value/);
+    assert.equal(decryptNotificationToken(encrypted), "private-token-value");
+    const url = new URL(buildGuestOrderUrl("order_123", "private-token-value"));
+    assert.equal(url.pathname, "/orders/order_123");
+    assert.equal(url.searchParams.get("token"), "private-token-value");
+  } finally {
+    if (originalKey === undefined) delete process.env.NOTIFICATION_TOKEN_ENCRYPTION_KEY;
+    else process.env.NOTIFICATION_TOKEN_ENCRYPTION_KEY = originalKey;
+    if (originalAppUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+    else process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
+  }
+});
+
+test("phone normalization accepts Indian E.164 input and rejects invalid numbers", () => {
+  assert.equal(normalizeIndianPhone("98765 43210"), "+919876543210");
+  assert.equal(normalizeIndianPhone("+91 98765 43210"), "+919876543210");
+  assert.equal(normalizeIndianPhone("12345"), null);
+});
+
+test("WhatsApp is optional and provider failures stay at the notification boundary", async () => {
+  const names = ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_API_VERSION", "WHATSAPP_ORDER_TEMPLATE_NAME"];
+  const original = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const name of names) delete process.env[name];
+    assert.equal(isWhatsAppConfigured(), false);
+    assert.deepEqual(await sendWhatsAppOrderConfirmation({}), { skipped: true });
+
+    process.env.WHATSAPP_ACCESS_TOKEN = "token";
+    process.env.WHATSAPP_PHONE_NUMBER_ID = "phone-id";
+    process.env.WHATSAPP_API_VERSION = "v1";
+    process.env.WHATSAPP_ORDER_TEMPLATE_NAME = "order_confirmation";
+    globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+    await assert.rejects(
+      sendWhatsAppOrderConfirmation({
+        order: { orderNumber: "ORD-1", total: 1000, payments: [] },
+        recipient: "+919876543210",
+        accessUrl: "https://shop.example/orders/order_1?token=secret",
+      }),
+      /503/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const name of names) {
+      if (original[name] === undefined) delete process.env[name];
+      else process.env[name] = original[name];
+    }
+  }
+});
+
+test("order confirmation email contains order, products, payment, shipping, and escaped customer data", () => {
+  const message = buildOrderConfirmationEmail({
+    order: {
+      orderNumber: "ORD-123",
+      shipFullName: "Guest <Customer>",
+      shipPhone: "9876543210",
+      shipLine1: "12 Market Road",
+      shipCity: "Jaipur",
+      shipState: "Rajasthan",
+      shipPincode: "302001",
+      shipCountry: "India",
+      total: 1499,
+      items: [{ productName: "Runner", size: 9, quantity: 2, priceAtPurchase: 675 }],
+      payments: [{ status: "PAID" }],
+    },
+    accessUrl: "https://shop.example/orders/order_123?token=private",
+  });
+  assert.match(message.subject, /ORD-123/);
+  assert.match(message.html, /Runner/);
+  assert.match(message.html, /Razorpay/);
+  assert.match(message.html, /Jaipur/);
+  assert.match(message.html, /Guest &lt;Customer&gt;/);
+  assert.match(message.html, /Continue shopping/);
+});

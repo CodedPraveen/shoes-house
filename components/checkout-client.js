@@ -19,6 +19,7 @@ import {
   mergeGeocodedAddress,
   validateAddressInput,
 } from "@/lib/address-validation";
+import { getCheckoutIdempotencyKey } from "@/lib/checkout-client-idempotency";
 
 
 function loadRazorpayScript() {
@@ -92,6 +93,7 @@ export default function CheckoutClient() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
+  const idempotencyRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -181,17 +183,21 @@ export default function CheckoutClient() {
         : { ...validation.address };
 
     try {
-      const result = await createCartCheckoutSessionRequest({
+      const checkoutRequest = {
         ...payload,
         paymentMethod,
-        saveShippingAddress: addressMode === "new" && saveAddress,
+        saveShippingAddress: Boolean(user && addressMode === "new" && saveAddress),
         cartItems: items.map((item) => ({
           productId: item.productId || item.product?.id,
           size: item.size,
           quantity: item.quantity,
         })),
         whatsappConsent,
-      });
+      };
+      if (paymentMethod === "cod") {
+        checkoutRequest.idempotencyKey = getCheckoutIdempotencyKey(idempotencyRef, checkoutRequest);
+      }
+      const result = await createCartCheckoutSessionRequest(checkoutRequest);
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
         setLoading(false);
@@ -368,10 +374,10 @@ export default function CheckoutClient() {
               onChange={updateField}
               showEmailField
             />
-            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+            {user ? <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
               <input type="checkbox" checked={saveAddress} onChange={(event) => setSaveAddress(event.target.checked)} />
               Save this address for future orders
-            </label>
+            </label> : null}
           </div>
         )}
 

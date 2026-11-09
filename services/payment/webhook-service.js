@@ -88,6 +88,7 @@ export const webhookService = {
           razorpayOrderId: payment.order_id,
           razorpayPaymentId: payment.id,
           amountPaise: payment.amount,
+          currency: payment.currency,
           fromWebhook: true,
           rawPayload: payload,
           webhookEventId,

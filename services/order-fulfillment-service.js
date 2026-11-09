@@ -2,7 +2,6 @@
 import { prisma } from "@/lib/db";
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { cartService } from "@/services/cart-service";
-import { fromPaise } from "@/lib/shipping";
 import {
   findProcessedPayment,
   logDuplicatePayment,
@@ -18,6 +17,7 @@ import { saveShippingAddressForUser } from "@/services/address-service";
 import { guestOrderAccessService } from "@/services/guest/guest-order-access-service";
 import { createOrderNotificationOutboxes } from "@/services/notifications/order-notification-outbox";
 import { enqueueOrderNotifications } from "@/queues/order-notification.queue";
+import { assertPaymentMatchesCheckout } from "@/services/payment/payment-validation";
 
 async function queueGuestOrderNotifications(session, orderId, rawGuestToken) {
   if (session.userId || (!rawGuestToken && !session.guestAccessTokenCiphertext)) return;
@@ -49,6 +49,7 @@ export async function fulfillPaidCheckout({
   webhookEventId = null,
   expectedUserId = null,
   guestAccessToken = null,
+  currency = "INR",
 }) {
   const session = await prisma.checkoutSession.findFirst({
     where: { razorpayOrderId },
@@ -69,7 +70,10 @@ export async function fulfillPaidCheckout({
   const existingPayment = await findProcessedPayment(razorpayPaymentId);
 
   if (existingPayment) {
-    if (expectedUserId && existingPayment.order?.userId !== expectedUserId) {
+    if (existingPayment.razorpayOrderId !== razorpayOrderId) {
+      throw new Error("Payment does not belong to this checkout");
+    }
+    if (!fromWebhook && session.userId && existingPayment.order?.userId !== expectedUserId) {
       throw new Error("Payment does not belong to this user");
     }
 
@@ -127,7 +131,7 @@ export async function fulfillPaidCheckout({
     throw new Error("Invalid Razorpay payment signature");
   }
 
-  if (expectedUserId && session.userId !== expectedUserId) {
+  if (!fromWebhook && session.userId && session.userId !== expectedUserId) {
     throw new Error("Checkout session does not belong to this user");
   }
 
@@ -149,16 +153,12 @@ export async function fulfillPaidCheckout({
     };
   }
 
-  const paidRupees = fromPaise(amountPaise);
-
-  if (paidRupees !== session.total) {
-    throw new PaymentAmountMismatchError("Payment amount mismatch", {
-      expected: session.total,
-      received: paidRupees,
-      razorpayOrderId,
-      razorpayPaymentId,
-    });
-  }
+  assertPaymentMatchesCheckout({
+    amountPaise,
+    currency,
+    expectedTotal: session.total,
+    expectedCurrency: session.currency,
+  });
 
   if (session.userId) {
     const user = await prisma.user.findFirst({
@@ -412,7 +412,7 @@ export async function fulfillPaidCheckout({
 
       if (duplicate) {
         if (
-          expectedUserId &&
+          !fromWebhook && session.userId &&
           duplicate.order?.userId !== expectedUserId
         ) {
           throw new Error("Payment does not belong to this user");

@@ -19,6 +19,7 @@ import {
   mergeGeocodedAddress,
   validateAddressInput,
 } from "@/lib/address-validation";
+import { getCheckoutIdempotencyKey } from "@/lib/checkout-client-idempotency";
 
 const fulfillmentStorageKey = "buy-now-fulfillment";
 
@@ -132,11 +133,12 @@ export default function CheckoutBuyNowClient({ lineItem }) {
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(
-    pendingFulfillment?.saveAddress ?? true,
+    pendingFulfillment?.saveAddress ?? false,
   );
   const [whatsappConsent, setWhatsappConsent] = useState(false);
   const touchedFieldsRef = useRef(new Set());
   const pendingFulfillmentRef = useRef(pendingFulfillment);
+  const idempotencyRef = useRef(null);
   const [showMobileAddressFields, setShowMobileAddressFields] = useState(false);
 
   useEffect(() => {
@@ -208,15 +210,19 @@ export default function CheckoutBuyNowClient({ lineItem }) {
         : validation.address;
 
     try {
-      const result = await createBuyNowCheckoutSessionRequest({
+      const checkoutRequest = {
         ...addressPayload,
         productId,
         size,
         quantity,
         paymentMethod,
-        saveShippingAddress: addressMode === "new" && saveAddress,
+        saveShippingAddress: Boolean(user && addressMode === "new" && saveAddress),
         whatsappConsent,
-      });
+      };
+      if (paymentMethod === "cod") {
+        checkoutRequest.idempotencyKey = getCheckoutIdempotencyKey(idempotencyRef, checkoutRequest);
+      }
+      const result = await createBuyNowCheckoutSessionRequest(checkoutRequest);
 
       if (!result.ok) {
         setError(result.error || "Could not start checkout");
@@ -558,14 +564,14 @@ export default function CheckoutBuyNowClient({ lineItem }) {
               />
             </div>
 
-            <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
+            {user ? <label className="flex items-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">
               <input
                 type="checkbox"
                 checked={saveAddress}
                 onChange={(event) => setSaveAddress(event.target.checked)}
               />
               Save this address for future orders
-            </label>
+            </label> : null}
           </div>
         )}
         <label className="flex items-start gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm">

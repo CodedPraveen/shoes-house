@@ -5,6 +5,17 @@ import { buildGuestOrderUrl } from "./order-notification-outbox.js";
 import { isWhatsAppConfigured, sendWhatsAppOrderConfirmation } from "./whatsapp-client.js";
 
 const MAX_ATTEMPTS = 5;
+const STALE_SENDING_MS = 10 * 60_000;
+
+function claimableWhere(now = new Date()) {
+  return {
+    attempts: { lt: MAX_ATTEMPTS },
+    OR: [
+      { status: { in: ["PENDING", "FAILED"] }, nextAttemptAt: { lte: now } },
+      { status: "SENDING", updatedAt: { lte: new Date(now.getTime() - STALE_SENDING_MS) } },
+    ],
+  };
+}
 
 function nextAttempt(attempts) {
   return new Date(Date.now() + Math.min(60, 2 ** attempts) * 60_000);
@@ -19,7 +30,7 @@ async function loadOrder(orderId) {
 
 async function processEmail(row) {
   const claimed = await prisma.orderEmailOutbox.updateMany({
-    where: { id: row.id, status: { in: ["PENDING", "FAILED"] }, attempts: { lt: MAX_ATTEMPTS } },
+    where: { id: row.id, ...claimableWhere() },
     data: { status: "SENDING", attempts: { increment: 1 } },
   });
   if (!claimed.count) return;
@@ -54,7 +65,7 @@ async function processWhatsApp(row) {
     return;
   }
   const claimed = await prisma.orderWhatsAppOutbox.updateMany({
-    where: { id: row.id, status: { in: ["PENDING", "FAILED"] }, attempts: { lt: MAX_ATTEMPTS } },
+    where: { id: row.id, ...claimableWhere() },
     data: { status: "SENDING", attempts: { increment: 1 } },
   });
   if (!claimed.count) return;
@@ -77,7 +88,7 @@ async function processWhatsApp(row) {
 }
 
 export async function processOrderNotifications({ orderId = null } = {}) {
-  const due = { status: { in: ["PENDING", "FAILED"] }, nextAttemptAt: { lte: new Date() }, attempts: { lt: MAX_ATTEMPTS }, ...(orderId ? { orderId } : {}) };
+  const due = { ...claimableWhere(), ...(orderId ? { orderId } : {}) };
   const [emails, whatsapp] = await Promise.all([
     prisma.orderEmailOutbox.findMany({ where: due, take: 25 }),
     prisma.orderWhatsAppOutbox.findMany({ where: due, take: 25 }),

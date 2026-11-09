@@ -7,6 +7,8 @@ import { firstAddressError, validateAddressInput } from "@/lib/address-validatio
 import { razorpayService } from "@/services/payment/razorpay-service";
 import { fulfillPaidCheckout } from "@/services/order-fulfillment-service";
 import { revalidatePath } from "next/cache";
+import { runCheckoutIdempotent } from "@/services/checkout-idempotency-service";
+import { validateRazorpayPaymentState } from "@/services/payment/payment-validation";
 
 async function getCurrentUser(authenticatedUser = null) {
   if (authenticatedUser) return authenticatedUser;
@@ -100,19 +102,25 @@ export async function createBuyNowCheckoutSession(input, authenticatedUser = nul
     };
 
     if (paymentMethod === "cod") {
-      const order = await checkoutService.createBuyNowOrder(
-        identity.userId,
-        address,
-        { productId, size, quantity },
-        "cod"
-      );
-
-      return {
-        ok: true,
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        guestAccessToken: order.guestAccessToken ?? null,
-      };
+      return runCheckoutIdempotent({
+        scope: "buy-now-cod",
+        key: input.idempotencyKey,
+        payload: { userId: identity.userId, address, productId, size, quantity },
+        task: async () => {
+          const order = await checkoutService.createBuyNowOrder(
+            identity.userId,
+            address,
+            { productId, size, quantity },
+            "cod"
+          );
+          return {
+            ok: true,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            guestAccessToken: order.guestAccessToken ?? null,
+          };
+        },
+      });
     }
 
     const session = await checkoutService.createBuyNowPaymentSession(
@@ -160,19 +168,25 @@ export async function createCartCheckoutSession(input, authenticatedUser = null)
     const paymentMethod = input.paymentMethod || "razorpay";
 
     if (paymentMethod === "cod") {
-      const order = await checkoutService.createCartOrder(
-        identity.userId,
-        address,
-        "cod",
-        input.cartItems
-      );
-
-      return {
-        ok: true,
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        guestAccessToken: order.guestAccessToken ?? null,
-      };
+      return runCheckoutIdempotent({
+        scope: "cart-cod",
+        key: input.idempotencyKey,
+        payload: { userId: identity.userId, address, cartItems: input.cartItems },
+        task: async () => {
+          const order = await checkoutService.createCartOrder(
+            identity.userId,
+            address,
+            "cod",
+            input.cartItems
+          );
+          return {
+            ok: true,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            guestAccessToken: order.guestAccessToken ?? null,
+          };
+        },
+      });
     }
 
     const session = await checkoutService.createPaymentSession(
@@ -191,6 +205,7 @@ export async function createCartCheckoutSession(input, authenticatedUser = null)
 }
 
 export async function verifyRazorpayPayment(input, authenticatedUser = null) {
+  let capturedPaymentVerified = false;
   try {
     await assertRateLimit({
       prefix: "checkout-verify",
@@ -224,22 +239,16 @@ export async function verifyRazorpayPayment(input, authenticatedUser = null) {
 
     const payment = await razorpayService.getPayment(razorpayPaymentId);
 
-    if (
-      payment.order_id !== razorpayOrderId ||
-      (payment.status !== "captured" && payment.captured !== true)
-    ) {
-      return {
-        ok: false,
-        pending: true,
-        error: "Payment is still being confirmed.",
-      };
-    }
+    const paymentState = validateRazorpayPaymentState(payment, razorpayOrderId);
+    if (!paymentState.ok) return paymentState;
+    capturedPaymentVerified = true;
 
     const result = await fulfillPaidCheckout({
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
       amountPaise: Number(payment.amount),
+      currency: payment.currency,
       expectedUserId: user?.id ?? null,
       guestAccessToken,
       rawPayload: {
@@ -266,11 +275,14 @@ export async function verifyRazorpayPayment(input, authenticatedUser = null) {
       duplicate: Boolean(result.duplicate),
     };
   } catch (error) {
-    console.error("[checkout] verification failed:", error);
+    console.error("[checkout] verification failed:", error?.message || "Unknown error");
 
     return {
       ok: false,
-      error: error.message || "Payment verification failed.",
+      ...(capturedPaymentVerified ? { paid: true, pending: true, recoverable: true } : {}),
+      error: capturedPaymentVerified
+        ? "Payment was received, but the order is still being confirmed. Do not pay again."
+        : "Payment verification failed.",
     };
   }
 }
