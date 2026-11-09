@@ -131,20 +131,25 @@ export async function createBuyNowCheckoutSession(input, authenticatedUser = nul
 
     return { ok: true, ...session };
   } catch (error) {
+    const razorpayError = error?.error;
+
     console.error("[BUY-NOW-CHECKOUT-SERVICE-ERROR]", {
       type: typeof error,
       constructor: error?.constructor?.name,
       message: error?.message,
+      statusCode: error?.statusCode,
+
+      razorpay: razorpayError
+        ? {
+          code: razorpayError.code,
+          description: razorpayError.description,
+          source: razorpayError.source,
+          step: razorpayError.step,
+          reason: razorpayError.reason,
+        }
+        : null,
+
       stack: error?.stack,
-      name: error?.name,
-      code: error?.code,
-      status: error?.status,
-      description: error?.description,
-      stringValue: String(error),
-      keys:
-        error && typeof error === "object"
-          ? Object.keys(error)
-          : [],
     });
 
     return {
