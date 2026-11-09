@@ -6,6 +6,8 @@ Implemented on `new-guest-checkout`; production readiness is not claimed until t
 
 Customers can complete cart or Buy Now checkout without a customer account using COD or Razorpay. Clerk remains installed for administrators and for the unchanged mobile API contracts.
 
+Guest checkout uses the email entered in the checkout form, including when that email is already present on a historical customer record. Signed-out guests are not synchronized into Prisma, and email equality never links an account or changes historical customer/orders ownership.
+
 ## Checkout flows
 
 ### COD

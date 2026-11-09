@@ -19,6 +19,8 @@ The approved customer experience is:
 
 **Phase 1 status:** `Order.userId` and `CheckoutSession.userId` are nullable on `new-guest-checkout`. Customer login/signup/profile entry points are removed from the storefront, while historical authenticated-owner access remains supported. Production verification is deferred to Phase 2.
 
+Signed-out storefront visitors are never synchronized from Clerk into the customer database. A matching email address is contact information only; it never establishes account ownership or links a Clerk identity to an existing customer record. Historical customer records and their orders are preserved when a conflicting identity is safely skipped.
+
 ## Clerk remains for administrators
 
 Do not remove Clerk from the application, `ClerkProvider`, Clerk middleware, or server-side Clerk helpers as part of removing customer authentication. Existing administrator interfaces depend on them.
